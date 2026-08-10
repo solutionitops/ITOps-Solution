@@ -52,6 +52,11 @@ const NAV_GROUPS = [{
     icon: "▣",
     module: "hosts"
   }, {
+    to: "/infrastructure",
+    label: "Infrastructure Map",
+    icon: "◎",
+    module: "hosts"
+  }, {
     to: "/incidents",
     label: "Incidents",
     icon: "⚡",

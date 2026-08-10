@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
-import { createMonitor, deleteMonitor, fetchMonitors, fetchMyPermissions, listHostAgents } from "../api/endpoints";
+import { createMonitor, deleteMonitor, fetchMonitors, fetchWebMonitorsWithHistory, fetchMyPermissions, listHostAgents } from "../api/endpoints";
 import { StatusBadge } from "../components/StatusBadge";
 import { Reveal, SpotlightCard } from "../components/Animated";
 import { SkeletonRows } from "../components/Skeleton";
@@ -115,11 +115,64 @@ const DEVICE_PRESETS = [{
   icon: "💾"
 }];
 const REALTIME_TABLES = ["monitors", "incidents", "check_results"];
-const REALTIME_KEYS = [["monitors"]];
+const REALTIME_KEYS = [["monitors"], ["web-monitors-history"]];
 const inputClass = "rounded-lg border border-white/15 light:border-slate-900/15 bg-black/40 light:bg-slate-900/[0.03] px-3 py-2 text-sm text-white light:text-slate-900 placeholder:text-white/30 light:placeholder:text-slate-400 focus:border-white/40 focus:outline-none";
 function targetLabel(monitor) {
   if (monitor.checkType === "TCP") return `${monitor.url}:${monitor.tcpPort ?? "?"}`;
   return monitor.url;
+}
+// Uptime % over the checks we have on hand (last 24) — a real, honest
+// "recent" figure, not an all-time SLA claim we don't compute.
+function recentUptimePct(checks) {
+  if (!checks || checks.length === 0) return null;
+  const up = checks.filter(c => c.status === "UP").length;
+  return Math.round((up / checks.length) * 100);
+}
+// The compact status strip (à la UptimeRobot/BetterStack): one thin bar per
+// recent check, oldest→newest, colored by outcome. Pure real data.
+function UptimeStrip({ checks }) {
+  if (!checks || checks.length === 0) {
+    return <span className="text-[11px] text-white/30 light:text-slate-400">Pending</span>;
+  }
+  const bars = [...checks].reverse();
+  return <div className="flex items-end gap-[2px]" role="img" aria-label={`Last ${bars.length} checks, ${recentUptimePct(checks)}% up`}>
+      {bars.map((c, i) => {
+      const tone = c.status === "UP" ? "bg-emerald-400" : c.status === "DOWN" ? "bg-red-400" : c.status === "ERROR" ? "bg-amber-400" : "bg-white/20";
+      return <span key={i} title={`${c.status}${c.checkedAt ? ` · ${new Date(c.checkedAt).toLocaleString()}` : ""}`} className={`h-4 w-[3px] rounded-sm ${tone}`} />;
+    })}
+    </div>;
+}
+function SummaryTile({ value, label, tone = "default", sub }) {
+  const toneClass = {
+    default: "text-white light:text-slate-900",
+    good: "text-emerald-300 light:text-emerald-600",
+    bad: "text-red-300 light:text-red-600",
+    warn: "text-amber-300 light:text-amber-600",
+    muted: "text-white/50 light:text-slate-500"
+  }[tone];
+  return <div className="rounded-xl border border-white/10 light:border-slate-900/10 bg-neutral-900/40 light:bg-white px-4 py-3">
+      <p className={`text-2xl font-semibold tabular-nums tracking-tight ${toneClass}`}>{value}</p>
+      <p className="mt-0.5 text-[11px] text-white/50 light:text-slate-500">{label}</p>
+      {sub && <p className="text-[10px] text-white/35 light:text-slate-400">{sub}</p>}
+    </div>;
+}
+// Fleet health at a glance — every figure derived from the monitors already
+// in memory (statuses + embedded open incidents + the latest recent-check
+// response time), so it costs no extra round trip.
+function WebFleetSummary({ monitors }) {
+  const up = monitors.filter(m => m.lastStatus === "UP").length;
+  const downOrError = monitors.filter(m => m.lastStatus === "DOWN" || m.lastStatus === "ERROR").length;
+  const pending = monitors.filter(m => !m.lastStatus).length;
+  const openIncidents = monitors.reduce((n, m) => n + (Array.isArray(m.incidents) ? m.incidents.length : 0), 0);
+  const responseTimes = monitors.map(m => m.recentChecks?.[0]?.responseTimeMs).filter(v => v != null);
+  const avgResponse = responseTimes.length ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length) : null;
+  return <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <SummaryTile value={up} label="Up" tone={up > 0 ? "good" : "muted"} />
+      <SummaryTile value={downOrError} label="Down / error" tone={downOrError > 0 ? "bad" : "muted"} />
+      <SummaryTile value={pending} label="Pending first check" tone={pending > 0 ? "warn" : "muted"} />
+      <SummaryTile value={openIncidents} label="Open incidents" tone={openIncidents > 0 ? "bad" : "good"} />
+      <SummaryTile value={avgResponse == null ? "—" : `${avgResponse}ms`} label="Avg response" tone="default" sub={responseTimes.length ? `across ${responseTimes.length}` : undefined} />
+    </div>;
 }
 // Below `md`, the 6-column table forces horizontal scroll with the most
 // important field (Status) buried three columns in — real "congested on
@@ -135,6 +188,10 @@ function MonitorCards({ monitors, onDelete }) {
             <StatusBadge status={monitor.lastStatus} />
           </div>
           <p className="mt-1 truncate text-xs text-white/50 light:text-slate-500">{targetLabel(monitor)}</p>
+          {monitor.recentChecks && <div className="mt-3 flex items-center gap-2">
+            <UptimeStrip checks={monitor.recentChecks} />
+            {recentUptimePct(monitor.recentChecks) != null && <span className="text-[11px] tabular-nums text-white/40 light:text-slate-400">{recentUptimePct(monitor.recentChecks)}% up</span>}
+          </div>}
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-white/40 light:text-slate-400">
             <span className="rounded-full bg-white/10 px-2 py-0.5 font-medium text-white/70 light:text-slate-600">
               {CHECK_TYPE_LABELS[monitor.checkType]}
@@ -159,6 +216,7 @@ function MonitorTable({
           <th className="px-4 py-2">Type</th>
           <th className="px-4 py-2">Target</th>
           <th className="px-4 py-2">Status</th>
+          <th className="px-4 py-2">Recent (24)</th>
           <th className="px-4 py-2">Interval</th>
           <th className="px-4 py-2">Last Checked</th>
           <th className="px-4 py-2" />
@@ -189,6 +247,12 @@ function MonitorTable({
             <td className="px-4 py-3 text-white/50 light:text-slate-500">{targetLabel(monitor)}</td>
             <td className="px-4 py-3">
               <StatusBadge status={monitor.lastStatus} />
+            </td>
+            <td className="px-4 py-3">
+              <div className="flex items-center gap-2">
+                <UptimeStrip checks={monitor.recentChecks} />
+                {recentUptimePct(monitor.recentChecks) != null && <span className="text-[11px] tabular-nums text-white/40 light:text-slate-400">{recentUptimePct(monitor.recentChecks)}%</span>}
+              </div>
             </td>
             <td className="px-4 py-3 text-white/50 light:text-slate-500">{INTERVAL_LABELS[monitor.interval]}</td>
             <td className="px-4 py-3 text-white/50 light:text-slate-500">
@@ -276,6 +340,9 @@ export default function Monitors({ mode = "web" }) {
   });
   const canCreate = !!can && can("organization", "monitors", "create");
   const canDelete = !!can && can("organization", "monitors", "delete");
+  const isWeb = mode === "web";
+  // Web mode pulls the recent-check history (for the uptime strips + avg
+  // response); network mode doesn't need it, so it uses the lean shared list.
   const {
     data: monitors,
     isLoading,
@@ -283,8 +350,8 @@ export default function Monitors({ mode = "web" }) {
     error,
     refetch
   } = useQuery({
-    queryKey: ["monitors"],
-    queryFn: fetchMonitors,
+    queryKey: isWeb ? ["web-monitors-history"] : ["monitors"],
+    queryFn: isWeb ? fetchWebMonitorsWithHistory : fetchMonitors,
     refetchInterval: 60_000
   });
   // `mode` (route-driven, via App.jsx's key={mode} on this route element) is
@@ -347,9 +414,8 @@ export default function Monitors({ mode = "web" }) {
       setDevicePreset(null);
       setViaHostAgentId("");
       setStep(1);
-      queryClient.invalidateQueries({
-        queryKey: ["monitors"]
-      });
+      queryClient.invalidateQueries({ queryKey: ["monitors"] });
+      queryClient.invalidateQueries({ queryKey: ["web-monitors-history"] });
     },
     onError: err => {
       setFormError(err instanceof Error ? err.message : "Failed to create monitor");
@@ -357,9 +423,10 @@ export default function Monitors({ mode = "web" }) {
   });
   const deleteMutation = useMutation({
     mutationFn: id => deleteMonitor(id),
-    onSuccess: () => queryClient.invalidateQueries({
-      queryKey: ["monitors"]
-    })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["monitors"] });
+      queryClient.invalidateQueries({ queryKey: ["web-monitors-history"] });
+    }
   });
   async function handleDelete(monitor) {
     const ok = await confirm({
@@ -403,6 +470,8 @@ export default function Monitors({ mode = "web" }) {
           {mode === "web" ? `${webMonitors.length} monitor${webMonitors.length === 1 ? "" : "s"}` : `${networkMonitors.length} device${networkMonitors.length === 1 ? "" : "s"}`}
         </span>
       </Reveal>
+
+      {isWeb && webMonitors.length > 0 && <Reveal delay={0.04}><WebFleetSummary monitors={webMonitors} /></Reveal>}
 
       {mode === "network" && <Reveal className="space-y-3 rounded-xl border border-white/10 bg-white/[0.03] light:bg-slate-900/[0.03] px-4 py-3">
           <p className="text-xs leading-relaxed text-white/50 light:text-slate-500">

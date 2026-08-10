@@ -20,6 +20,7 @@ const Monitors = lazy(() => import("./pages/Monitors"));
 const DnsMonitoring = lazy(() => import("./pages/DnsMonitoring"));
 const MonitorDetail = lazy(() => import("./pages/MonitorDetail"));
 const Hosts = lazy(() => import("./pages/Hosts"));
+const Infrastructure = lazy(() => import("./pages/Infrastructure"));
 const Incidents = lazy(() => import("./pages/Incidents"));
 const Assets = lazy(() => import("./pages/Assets"));
 const AlertChannels = lazy(() => import("./pages/AlertChannels"));
@@ -227,6 +228,7 @@ export default function App() {
           <Route path="/dns" element={<DnsMonitoring />} />
           <Route path="/monitors/:id" element={<MonitorDetail />} />
           <Route path="/hosts" element={<Hosts />} />
+          <Route path="/infrastructure" element={<Infrastructure />} />
           <Route path="/incidents" element={<Incidents />} />
           <Route path="/assets" element={<Assets />} />
           <Route path="/settings/alerts" element={<AlertChannels />} />

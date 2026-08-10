@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { createHostAgent, deleteHostAgent, fetchMyPermissions, listHostAgents, regenerateHostAgentKey } from "../api/endpoints";
+import { worstMetric, needsAttention } from "../lib/hostHealth";
 import { useRealtimeInvalidate } from "../hooks/useRealtimeInvalidate";
 import { HostRunbooks } from "../components/HostRunbooks";
 import { HostDiagnosisPanel } from "../components/RootCauseAnalysis";
@@ -230,6 +232,47 @@ function HostCard({
       {showInstall && <InstallSnippet host={host} />}
     </SpotlightCard>;
 }
+function SummaryTile({ value, label, tone = "default", sub }) {
+  const toneClass = {
+    default: "text-white light:text-slate-900",
+    good: "text-emerald-300 light:text-emerald-600",
+    bad: "text-red-300 light:text-red-600",
+    warn: "text-amber-300 light:text-amber-600",
+    muted: "text-white/50 light:text-slate-500"
+  }[tone];
+  return <div className="rounded-xl border border-white/10 light:border-slate-900/10 bg-neutral-900/40 light:bg-white px-4 py-3">
+      <p className={`text-2xl font-semibold tabular-nums tracking-tight ${toneClass}`}>{value}</p>
+      <p className="mt-0.5 text-[11px] text-white/50 light:text-slate-500">{label}</p>
+      {sub && <p className="text-[10px] text-white/35 light:text-slate-400">{sub}</p>}
+    </div>;
+}
+// Fleet health at a glance — computed from the full host list (never the
+// filtered view), so the numbers describe your whole fleet even while you're
+// filtering the grid below.
+function HostsFleetSummary({ hosts }) {
+  const total = hosts.length;
+  const online = hosts.filter(h => h.isOnline).length;
+  const offline = hosts.filter(h => h.lastSeenAt && !h.isOnline).length;
+  const attention = hosts.filter(needsAttention).length;
+  const peak = hosts.reduce((max, h) => { const w = worstMetric(h); return w != null && w > max ? w : max; }, 0);
+  return <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <SummaryTile value={`${online}/${total}`} label="Online" tone={online === total ? "good" : "warn"} />
+      <SummaryTile value={offline} label="Offline" tone={offline > 0 ? "bad" : "muted"} />
+      <SummaryTile value={attention} label="Need attention" tone={attention > 0 ? "bad" : "good"} sub={attention === 0 ? "all healthy" : "offline or ≥90%"} />
+      <SummaryTile value={total ? `${peak.toFixed(0)}%` : "—"} label="Peak resource use" tone={peak >= 90 ? "bad" : peak >= 70 ? "warn" : "good"} sub="busiest host, any metric" />
+    </div>;
+}
+const STATUS_FILTERS = [
+  { key: "all", label: "All" },
+  { key: "online", label: "Online" },
+  { key: "offline", label: "Offline" },
+  { key: "attention", label: "Needs attention" }
+];
+const SORT_OPTIONS = [
+  { key: "health", label: "Busiest first" },
+  { key: "name", label: "Name (A–Z)" },
+  { key: "recent", label: "Last report" }
+];
 export default function Hosts() {
   useRealtimeInvalidate(REALTIME_TABLES, REALTIME_KEYS);
   const queryClient = useQueryClient();
@@ -255,6 +298,22 @@ export default function Hosts() {
   const [name, setName] = useState("");
   const [provider, setProvider] = useState(null);
   const [formError, setFormError] = useState(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("health");
+  const shownHosts = useMemo(() => {
+    let list = hosts ?? [];
+    const q = search.trim().toLowerCase();
+    if (q) list = list.filter(h => h.name.toLowerCase().includes(q) || (h.hostname ?? "").toLowerCase().includes(q));
+    if (statusFilter === "online") list = list.filter(h => h.isOnline);
+    else if (statusFilter === "offline") list = list.filter(h => h.lastSeenAt && !h.isOnline);
+    else if (statusFilter === "attention") list = list.filter(needsAttention);
+    const sorted = [...list];
+    if (sortBy === "name") sorted.sort((a, b) => a.name.localeCompare(b.name));
+    else if (sortBy === "recent") sorted.sort((a, b) => new Date(b.lastSeenAt ?? 0) - new Date(a.lastSeenAt ?? 0));
+    else sorted.sort((a, b) => (worstMetric(b) ?? -1) - (worstMetric(a) ?? -1));
+    return sorted;
+  }, [hosts, search, statusFilter, sortBy]);
   const createMutation = useMutation({
     mutationFn: () => createHostAgent({
       name,
@@ -275,11 +334,16 @@ export default function Hosts() {
     createMutation.mutate();
   }
   return <div className="space-y-6">
-      <Reveal y={12}>
-        <h1 className="text-2xl font-medium tracking-tight text-white light:text-slate-900">Kada Nigrani — Hosts</h1>
-        <p className="mt-1 text-sm text-white/50 light:text-slate-500">
-          Install a lightweight agent on any Linux server to stream CPU, memory, disk, load, and uptime here in real time.
-        </p>
+      <Reveal y={12} className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-medium tracking-tight text-white light:text-slate-900">Kada Nigrani — Hosts</h1>
+          <p className="mt-1 text-sm text-white/50 light:text-slate-500">
+            Install a lightweight agent on any Linux server to stream CPU, memory, disk, load, and uptime here in real time.
+          </p>
+        </div>
+        <Link to="/infrastructure" className="shrink-0 rounded-full border border-white/15 light:border-slate-900/15 px-4 py-2 text-sm text-white/70 light:text-slate-600 transition-colors hover:bg-white/5 light:hover:bg-slate-900/5">
+          ◎ Infrastructure Map →
+        </Link>
       </Reveal>
 
       {!canCreate && <Reveal delay={0.05}>
@@ -311,6 +375,30 @@ export default function Hosts() {
       </form>
       </Reveal>}
 
+      {hosts && hosts.length > 0 && <>
+          <Reveal delay={0.08}><HostsFleetSummary hosts={hosts} /></Reveal>
+          <Reveal delay={0.1} className="flex flex-wrap items-center gap-3">
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search hosts…"
+              aria-label="Search hosts by name or hostname"
+              className="w-full max-w-xs rounded-lg border border-white/15 light:border-slate-900/15 bg-black/40 light:bg-slate-900/[0.03] px-3 py-2 text-sm text-white light:text-slate-900 placeholder:text-white/30 light:placeholder:text-slate-400 focus:border-white/40 focus:outline-none"
+            />
+            <div className="flex flex-wrap gap-1.5">
+              {STATUS_FILTERS.map(f => <button key={f.key} type="button" onClick={() => setStatusFilter(f.key)} className={`rounded-full px-3 py-1.5 text-xs transition-colors ${statusFilter === f.key ? "bg-white text-black" : "border border-white/15 light:border-slate-900/15 text-white/60 light:text-slate-500 hover:text-white light:hover:text-slate-900"}`}>
+                  {f.label}
+                </button>)}
+            </div>
+            <label className="ml-auto flex items-center gap-2 text-xs text-white/50 light:text-slate-500">
+              Sort
+              <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="rounded-lg border border-white/15 light:border-slate-900/15 bg-black/40 light:bg-slate-900/[0.03] px-2.5 py-1.5 text-xs text-white light:text-slate-900 focus:border-white/40 focus:outline-none">
+                {SORT_OPTIONS.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
+              </select>
+            </label>
+          </Reveal>
+        </>}
+
       {isError ? <div className="rounded-2xl border border-white/10 light:border-slate-900/10 bg-neutral-900/60 light:bg-white">
           <ErrorState message="Couldn't load hosts." onRetry={() => refetch()} />
         </div> : isLoading ? <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -319,8 +407,10 @@ export default function Hosts() {
       }).map((_, i) => <Skeleton key={i} className="h-48" />)}
         </div> : !hosts || hosts.length === 0 ? <div className="rounded-2xl border border-white/10 light:border-slate-900/10 bg-neutral-900/60 light:bg-white">
           <EmptyState title="No hosts yet." description="Add one above, then run the install command on your server." />
+        </div> : shownHosts.length === 0 ? <div className="rounded-2xl border border-white/10 light:border-slate-900/10 bg-neutral-900/60 light:bg-white">
+          <EmptyState title="No hosts match your filters." description="Try a different search or status filter." />
         </div> : <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {hosts.map((host, i) => <HostCard key={host.id} host={host} index={i} canDelete={canDelete} />)}
+          {shownHosts.map((host, i) => <HostCard key={host.id} host={host} index={i} canDelete={canDelete} />)}
         </div>}
     </div>;
 }

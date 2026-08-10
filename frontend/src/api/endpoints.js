@@ -79,6 +79,33 @@ export async function fetchMonitors() {
   if (error) throw new Error(error.message);
   return (data ?? []).map(mapMonitor);
 }
+// The web-monitoring page wants a compact recent-status strip per monitor
+// (the uptime bar you see in UptimeRobot/BetterStack) plus a live average
+// response time — both need the last N check_results. Rather than fatten the
+// shared fetchMonitors() (also used by the dashboard, search, and
+// notifications, where that history would be dead weight), this dedicated
+// query embeds only the last 24 checks per web monitor in a SINGLE round
+// trip using PostgREST's per-referenced-table limit — the same pattern
+// fetchDnsMonitors() already uses for its latest-check embed.
+export async function fetchWebMonitorsWithHistory() {
+  const organizationId = await currentOrganizationId();
+  const {
+    data,
+    error
+  } = await supabase.from("monitors").select(`${MONITOR_SELECT}, incidents(*), recentChecks:check_results(status, response_time_ms, checked_at)`).eq("organization_id", organizationId).in("check_type", ["HTTP", "KEYWORD", "STATUS_CODE"]).eq("incidents.status", "OPEN").order("checked_at", {
+    referencedTable: "check_results",
+    ascending: false
+  }).limit(24, {
+    referencedTable: "check_results"
+  }).order("created_at", {
+    ascending: false
+  });
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(row => ({
+    ...mapMonitor(row),
+    recentChecks: Array.isArray(row.recentChecks) ? row.recentChecks.map(mapCheckResult) : []
+  }));
+}
 const DNS_MONITOR_SELECT = "*, incidents(*), latestCheck:check_results(*)";
 
 // DNS monitors don't have SSL/security/asset data (those are HTTP-only), so
