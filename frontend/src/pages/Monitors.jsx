@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { createMonitor, deleteMonitor, fetchMonitors, fetchWebMonitorsWithHistory, fetchMyPermissions, listHostAgents } from "../api/endpoints";
 import { StatusBadge } from "../components/StatusBadge";
+import { WebsiteIntelligence } from "../components/WebsiteIntelligence";
+import { overallHealth, healthBand } from "../lib/websiteHealth";
 import { Reveal, SpotlightCard } from "../components/Animated";
 import { SkeletonRows } from "../components/Skeleton";
 import { EmptyState, ErrorState } from "../components/EmptyState";
@@ -142,37 +144,18 @@ function UptimeStrip({ checks }) {
     })}
     </div>;
 }
-function SummaryTile({ value, label, tone = "default", sub }) {
-  const toneClass = {
-    default: "text-white light:text-slate-900",
-    good: "text-emerald-300 light:text-emerald-600",
-    bad: "text-red-300 light:text-red-600",
-    warn: "text-amber-300 light:text-amber-600",
-    muted: "text-white/50 light:text-slate-500"
-  }[tone];
-  return <div className="rounded-xl border border-white/10 light:border-slate-900/10 bg-neutral-900/40 light:bg-white px-4 py-3">
-      <p className={`text-2xl font-semibold tabular-nums tracking-tight ${toneClass}`}>{value}</p>
-      <p className="mt-0.5 text-[11px] text-white/50 light:text-slate-500">{label}</p>
-      {sub && <p className="text-[10px] text-white/35 light:text-slate-400">{sub}</p>}
-    </div>;
-}
-// Fleet health at a glance — every figure derived from the monitors already
-// in memory (statuses + embedded open incidents + the latest recent-check
-// response time), so it costs no extra round trip.
-function WebFleetSummary({ monitors }) {
-  const up = monitors.filter(m => m.lastStatus === "UP").length;
-  const downOrError = monitors.filter(m => m.lastStatus === "DOWN" || m.lastStatus === "ERROR").length;
-  const pending = monitors.filter(m => !m.lastStatus).length;
-  const openIncidents = monitors.reduce((n, m) => n + (Array.isArray(m.incidents) ? m.incidents.length : 0), 0);
-  const responseTimes = monitors.map(m => m.recentChecks?.[0]?.responseTimeMs).filter(v => v != null);
-  const avgResponse = responseTimes.length ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length) : null;
-  return <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-      <SummaryTile value={up} label="Up" tone={up > 0 ? "good" : "muted"} />
-      <SummaryTile value={downOrError} label="Down / error" tone={downOrError > 0 ? "bad" : "muted"} />
-      <SummaryTile value={pending} label="Pending first check" tone={pending > 0 ? "warn" : "muted"} />
-      <SummaryTile value={openIncidents} label="Open incidents" tone={openIncidents > 0 ? "bad" : "good"} />
-      <SummaryTile value={avgResponse == null ? "—" : `${avgResponse}ms`} label="Avg response" tone="default" sub={responseTimes.length ? `across ${responseTimes.length}` : undefined} />
-    </div>;
+const HEALTH_BADGE = {
+  good: "bg-emerald-400/10 light:bg-emerald-100 text-emerald-300 light:text-emerald-700",
+  warn: "bg-amber-400/10 light:bg-amber-100 text-amber-300 light:text-amber-700",
+  bad: "bg-red-400/10 light:bg-red-100 text-red-300 light:text-red-700",
+  unknown: "bg-white/10 text-white/50 light:text-slate-500"
+};
+function HealthBadge({ monitor }) {
+  const score = overallHealth(monitor);
+  const band = healthBand(score);
+  return <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums ${HEALTH_BADGE[band]}`} title="Composite health score">
+      {score == null ? "—" : score}
+    </span>;
 }
 // Below `md`, the 6-column table forces horizontal scroll with the most
 // important field (Status) buried three columns in — real "congested on
@@ -185,7 +168,10 @@ function MonitorCards({ monitors, onDelete }) {
             <Link to={`/monitors/${monitor.id}`} className="font-medium text-white light:text-slate-900 hover:underline">
               {monitor.name}
             </Link>
-            <StatusBadge status={monitor.lastStatus} />
+            <div className="flex shrink-0 items-center gap-1.5">
+              <HealthBadge monitor={monitor} />
+              <StatusBadge status={monitor.lastStatus} />
+            </div>
           </div>
           <p className="mt-1 truncate text-xs text-white/50 light:text-slate-500">{targetLabel(monitor)}</p>
           {monitor.recentChecks && <div className="mt-3 flex items-center gap-2">
@@ -213,6 +199,7 @@ function MonitorTable({
       <thead className="border-b border-white/10 light:border-slate-900/10 text-xs uppercase text-white/40 light:text-slate-400">
         <tr>
           <th className="px-4 py-2">Name</th>
+          <th className="px-4 py-2">Health</th>
           <th className="px-4 py-2">Type</th>
           <th className="px-4 py-2">Target</th>
           <th className="px-4 py-2">Status</th>
@@ -238,6 +225,9 @@ function MonitorTable({
               <Link to={`/monitors/${monitor.id}`} className="hover:underline">
                 {monitor.name}
               </Link>
+            </td>
+            <td className="px-4 py-3">
+              <HealthBadge monitor={monitor} />
             </td>
             <td className="px-4 py-3">
               <span className="rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium text-white/70 light:text-slate-600">
@@ -471,7 +461,7 @@ export default function Monitors({ mode = "web" }) {
         </span>
       </Reveal>
 
-      {isWeb && webMonitors.length > 0 && <Reveal delay={0.04}><WebFleetSummary monitors={webMonitors} /></Reveal>}
+      {isWeb && webMonitors.length > 0 && <Reveal delay={0.04}><WebsiteIntelligence monitors={webMonitors} /></Reveal>}
 
       {mode === "network" && <Reveal className="space-y-3 rounded-xl border border-white/10 bg-white/[0.03] light:bg-slate-900/[0.03] px-4 py-3">
           <p className="text-xs leading-relaxed text-white/50 light:text-slate-500">

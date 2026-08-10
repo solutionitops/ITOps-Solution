@@ -6,6 +6,7 @@ import { createHostAgent, deleteHostAgent, fetchMyPermissions, listHostAgents, r
 import { worstMetric, needsAttention } from "../lib/hostHealth";
 import { useRealtimeInvalidate } from "../hooks/useRealtimeInvalidate";
 import { HostRunbooks } from "../components/HostRunbooks";
+import { SelfHealing } from "../components/SelfHealing";
 import { HostDiagnosisPanel } from "../components/RootCauseAnalysis";
 import { Reveal, SpotlightCard } from "../components/Animated";
 import { Skeleton } from "../components/Skeleton";
@@ -285,6 +286,7 @@ export default function Hosts() {
   });
   const canCreate = !!can && can("organization", "hosts", "create");
   const canDelete = !!can && can("organization", "hosts", "delete");
+  const canManageHealing = !!can && can("organization", "hosts", "manage");
   const {
     data: hosts,
     isLoading,
@@ -345,6 +347,8 @@ export default function Hosts() {
           ◎ Infrastructure Map →
         </Link>
       </Reveal>
+
+      <Reveal delay={0.04}><SelfHealing canManage={canManageHealing} /></Reveal>
 
       {!canCreate && <Reveal delay={0.05}>
           <p className="rounded-xl border border-white/10 light:border-slate-900/10 bg-white/[0.02] light:bg-slate-900/[0.02] px-4 py-3 text-sm text-white/50 light:text-slate-500">

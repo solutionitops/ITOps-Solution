@@ -92,7 +92,7 @@ export async function fetchWebMonitorsWithHistory() {
   const {
     data,
     error
-  } = await supabase.from("monitors").select(`${MONITOR_SELECT}, incidents(*), recentChecks:check_results(status, response_time_ms, checked_at)`).eq("organization_id", organizationId).in("check_type", ["HTTP", "KEYWORD", "STATUS_CODE"]).eq("incidents.status", "OPEN").order("checked_at", {
+  } = await supabase.from("monitors").select(`${MONITOR_SELECT}, contentAnalysis:content_analysis(*), incidents(*), recentChecks:check_results(status, response_time_ms, checked_at)`).eq("organization_id", organizationId).in("check_type", ["HTTP", "KEYWORD", "STATUS_CODE"]).eq("incidents.status", "OPEN").order("checked_at", {
     referencedTable: "check_results",
     ascending: false
   }).limit(24, {
@@ -101,6 +101,9 @@ export async function fetchWebMonitorsWithHistory() {
     ascending: false
   });
   if (error) throw new Error(error.message);
+  // mapMonitor already reads row.contentAnalysis / row.sslInfo / row.securitySnapshot
+  // from the aliased embeds above, so every health category (availability,
+  // performance, security, ssl, seo) is populated from one query.
   return (data ?? []).map(row => ({
     ...mapMonitor(row),
     recentChecks: Array.isArray(row.recentChecks) ? row.recentChecks.map(mapCheckResult) : []
@@ -740,6 +743,44 @@ export async function listHostCommands(hostAgentId) {
     createdAt: r.created_at,
     finishedAt: r.finished_at ?? null
   }));
+}
+// --- Self-healing (autonomous remediation) ---
+export async function getHealingAutonomy() {
+  const { data, error } = await supabase.rpc("get_healing_autonomy");
+  if (error) throw new Error(error.message);
+  return data ?? "suggest";
+}
+export async function setHealingAutonomy(level) {
+  const { data, error } = await supabase.rpc("set_healing_autonomy", { p_level: level });
+  if (error) throw new Error(error.message);
+  return data;
+}
+export async function listHealingIncidents(limit = 25) {
+  const { data, error } = await supabase.rpc("list_healing_incidents", { p_limit: limit });
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(r => ({
+    id: r.id,
+    hostAgentId: r.host_agent_id,
+    hostName: r.host_name,
+    actionKey: r.action_key,
+    status: r.status,
+    rootCause: r.root_cause,
+    confidence: r.confidence,
+    triggerMetric: r.trigger_metric,
+    verifyResult: r.verify_result,
+    exitCode: r.exit_code,
+    createdAt: r.created_at,
+    finishedAt: r.finished_at ?? null,
+    verifiedAt: r.verified_at ?? null
+  }));
+}
+export async function approveHostCommand(id) {
+  const { error } = await supabase.rpc("approve_host_command", { p_id: id });
+  if (error) throw new Error(error.message);
+}
+export async function dismissHostCommand(id) {
+  const { error } = await supabase.rpc("dismiss_host_command", { p_id: id });
+  if (error) throw new Error(error.message);
 }
 export async function deleteHostAgent(id) {
   const {
