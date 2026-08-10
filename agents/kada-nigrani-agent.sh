@@ -188,6 +188,50 @@ print(json.dumps({
       renew_ssl_certbot)
         if command -v certbot >/dev/null 2>&1; then certbot renew --quiet --no-random-sleep-on-renew 2>&1; return $?; fi
         echo "certbot not installed on this host — install it first (e.g. apt install certbot)"; return 1 ;;
+      apply_security_headers)
+        # Writes a MANAGED snippet of the SAFE protective headers only — never
+        # Content-Security-Policy, which a strict value routinely breaks a site
+        # with and `nginx -t` would still pass. Backs up any existing snippet,
+        # tests the config, reloads, and rolls back if the test fails.
+        if command -v nginx >/dev/null 2>&1; then
+          d=/etc/nginx/conf.d
+          [ -d "$d" ] || { echo "nginx conf.d ($d) not found — can't apply safely"; return 1; }
+          f="$d/itops-security-headers.conf"
+          [ -f "$f" ] && cp "$f" "$f.itops-bak.$(date +%s)"
+          {
+            echo 'add_header X-Frame-Options "SAMEORIGIN" always;'
+            echo 'add_header X-Content-Type-Options "nosniff" always;'
+            echo 'add_header Referrer-Policy "strict-origin-when-cross-origin" always;'
+            echo 'add_header Permissions-Policy "geolocation=(), microphone=(), camera=()" always;'
+            echo 'add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;'
+          } > "$f"
+          if nginx -t >/tmp/kada-nigrani-cfgtest 2>&1; then
+            nginx -s reload 2>>/tmp/kada-nigrani-cfgtest && { echo "applied safe security headers ($f) and reloaded nginx"; return 0; }
+            echo "nginx reload failed:"; cat /tmp/kada-nigrani-cfgtest; return 1
+          fi
+          rm -f "$f"; nginx -s reload >/dev/null 2>&1 || true
+          echo "nginx -t failed after adding headers — rolled back, no change applied:"; cat /tmp/kada-nigrani-cfgtest; return 1
+        elif command -v apachectl >/dev/null 2>&1; then
+          d=""; for cand in /etc/apache2/conf-available /etc/httpd/conf.d; do [ -d "$cand" ] && d="$cand" && break; done
+          [ -n "$d" ] || { echo "apache conf dir not found — can't apply safely"; return 1; }
+          f="$d/itops-security-headers.conf"
+          [ -f "$f" ] && cp "$f" "$f.itops-bak.$(date +%s)"
+          {
+            echo 'Header always set X-Frame-Options "SAMEORIGIN"'
+            echo 'Header always set X-Content-Type-Options "nosniff"'
+            echo 'Header always set Referrer-Policy "strict-origin-when-cross-origin"'
+            echo 'Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"'
+            echo 'Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"'
+          } > "$f"
+          command -v a2enconf >/dev/null 2>&1 && a2enconf itops-security-headers >/dev/null 2>&1
+          if apachectl configtest >/tmp/kada-nigrani-cfgtest 2>&1; then
+            apachectl graceful 2>&1 && { echo "applied safe security headers ($f) and reloaded apache"; return 0; }
+            echo "apache reload failed"; return 1
+          fi
+          rm -f "$f"; command -v a2disconf >/dev/null 2>&1 && a2disconf itops-security-headers >/dev/null 2>&1; apachectl graceful >/dev/null 2>&1 || true
+          echo "apache configtest failed after adding headers — rolled back:"; cat /tmp/kada-nigrani-cfgtest; return 1
+        fi
+        echo "neither nginx nor apache found on this host"; return 1 ;;
       *)
         echo "unknown action: $1"; return 1 ;;
     esac

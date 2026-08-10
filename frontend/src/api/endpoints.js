@@ -744,6 +744,24 @@ export async function listHostCommands(hostAgentId) {
     finishedAt: r.finished_at ?? null
   }));
 }
+// --- One-click website remediation via the agent ---
+export async function applyWebsiteFix(monitorId, hostAgentId) {
+  const { error } = await supabase.rpc("apply_website_fix", { p_monitor_id: monitorId, p_host_agent_id: hostAgentId });
+  if (error) throw new Error(error.message);
+}
+export async function fetchMonitorFixes(monitorId) {
+  const { data, error } = await supabase.from("host_commands")
+    .select("id, action_key, status, verify_result, exit_code, output, created_at, finished_at, verified_at, host_agent_id")
+    .eq("monitor_id", monitorId).eq("action_key", "apply_security_headers")
+    .order("created_at", { ascending: false }).limit(5);
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(r => ({
+    id: r.id, status: r.status, verifyResult: r.verify_result, exitCode: r.exit_code,
+    output: r.output ?? null, createdAt: r.created_at, finishedAt: r.finished_at ?? null,
+    verifiedAt: r.verified_at ?? null, hostAgentId: r.host_agent_id,
+  }));
+}
+
 // --- Self-healing (autonomous remediation) ---
 export async function getHealingAutonomy() {
   const { data, error } = await supabase.rpc("get_healing_autonomy");
