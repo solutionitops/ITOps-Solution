@@ -160,6 +160,7 @@ export default function InviteAccept() {
   }
 
   async function handleGoogle() {
+    setError?.(null);
     // Read on the other side by loadProfile() in AuthContext.jsx once the
     // OAuth redirect completes and a real session exists — OAuth signups
     // never carry the options.data payload handle_new_user() reads an
@@ -169,7 +170,9 @@ export default function InviteAccept() {
       await loginWithGoogle();
     } catch (err) {
       sessionStorage.removeItem(PENDING_INVITE_STORAGE_KEY);
-      toast.error(err instanceof Error ? err.message : "Google sign-in isn't set up yet.");
+      const msg = err instanceof Error ? err.message : "Google sign-in isn't set up yet.";
+      setError?.(msg);
+      toast.error(msg);
     }
   }
 

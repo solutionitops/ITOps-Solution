@@ -193,7 +193,12 @@ export function AuthProvider({
         redirectTo: `${window.location.origin}/dashboard`
       }
     });
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (error.message?.toLowerCase().includes("provider is not enabled") || error.message?.toLowerCase().includes("unsupported provider")) {
+        throw new Error("Google sign-in is not enabled in the Supabase Dashboard yet. Please configure the Google OAuth Client ID & Secret in Supabase Authentication -> Providers.");
+      }
+      throw new Error(error.message);
+    }
     // Browser navigates away to Google — nothing left to do here.
   }, []);
   const register = useCallback(async (organizationName, name, email, password, captchaToken, inviteToken) => {
