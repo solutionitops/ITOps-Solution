@@ -2,7 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 
 const HCAPTCHA_SITE_KEY = import.meta.env.VITE_HCAPTCHA_SITE_KEY;
+const RECAPTCHA_V2_SITE_KEY = import.meta.env.VITE_RECAPTCHA_V2_SITE_KEY || import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+const RECAPTCHA_TYPE = import.meta.env.VITE_RECAPTCHA_TYPE || "v2";
 const HCAPTCHA_SCRIPT_ID = "hcaptcha-script";
+const RECAPTCHA_V3_SCRIPT_ID = "recaptcha-v3-script";
 const MIN_HUMAN_MS = 1200;
 
 /**
@@ -42,19 +45,127 @@ export function useCaptchaGuard() {
 }
 
 /**
- * The visible security check. If VITE_HCAPTCHA_SITE_KEY is set, renders the
- * real hCaptcha widget and hands back a server-verifiable token (pass it as
- * `options.captchaToken` to Supabase's signIn/signUp/resetPasswordForEmail —
- * Supabase verifies it with hCaptcha directly). Without a site key, falls
- * back to a self-contained "Verify you're human" challenge that pairs with
- * `useCaptchaGuard`'s honeypot/timing check above — real client-side bot
- * friction, but not independently server-verified the way hCaptcha is.
+ * The visible security check. Supports Google reCAPTCHA v2 Checkbox ("I'm not a robot"),
+ * reCAPTCHA v3, hCaptcha, or falls back to a self-contained "Verify you're human" challenge.
  */
-export function CaptchaChallenge({ onChange }) {
+export function CaptchaChallenge({ onChange, action = "submit" }) {
+  if (RECAPTCHA_V2_SITE_KEY && RECAPTCHA_TYPE === "v2") {
+    return <ReCaptchaV2Widget siteKey={RECAPTCHA_V2_SITE_KEY} onChange={onChange} />;
+  }
+  if (RECAPTCHA_V2_SITE_KEY && RECAPTCHA_TYPE === "v3") {
+    return <ReCaptchaV3Widget onChange={onChange} action={action} />;
+  }
   if (HCAPTCHA_SITE_KEY) {
     return <HCaptchaWidget onChange={onChange} />;
   }
   return <SelfCheckChallenge onChange={onChange} />;
+}
+
+function ReCaptchaV2Widget({ siteKey, onChange }) {
+  const containerRef = useRef(null);
+  const widgetIdRef = useRef(null);
+  const [ready, setReady] = useState(typeof window !== "undefined" && !!window.grecaptcha?.render);
+
+  useEffect(() => {
+    if (window.grecaptcha?.render) {
+      setReady(true);
+      return;
+    }
+    const scriptId = "recaptcha-v2-script";
+    if (document.getElementById(scriptId)) return;
+    const script = document.createElement("script");
+    script.id = scriptId;
+    script.src = "https://www.google.com/recaptcha/api.js?onload=onGrecaptchaV2Load&render=explicit";
+    script.async = true;
+    script.defer = true;
+    window.onGrecaptchaV2Load = () => setReady(true);
+    document.head.appendChild(script);
+  }, []);
+
+  useEffect(() => {
+    if (!ready || !containerRef.current || widgetIdRef.current !== null || !window.grecaptcha?.render) return;
+    try {
+      widgetIdRef.current = window.grecaptcha.render(containerRef.current, {
+        sitekey: siteKey,
+        theme: "dark",
+        callback: (token) => onChange(token),
+        "expired-callback": () => onChange(null),
+        "error-callback": () => onChange(null),
+      });
+    } catch (err) {
+      console.warn("reCAPTCHA v2 render error:", err);
+    }
+  }, [ready, siteKey, onChange]);
+
+  return <div ref={containerRef} className="my-2 flex justify-center" />;
+}
+
+function ReCaptchaV3Widget({ onChange, action = "submit" }) {
+  const [ready, setReady] = useState(typeof window !== "undefined" && !!window.grecaptcha);
+
+  useEffect(() => {
+    if (window.grecaptcha) {
+      setReady(true);
+      return;
+    }
+    if (document.getElementById(RECAPTCHA_SCRIPT_ID)) return;
+    const script = document.createElement("script");
+    script.id = RECAPTCHA_SCRIPT_ID;
+    script.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      if (window.grecaptcha) {
+        window.grecaptcha.ready(() => setReady(true));
+      }
+    };
+    document.head.appendChild(script);
+  }, []);
+
+  useEffect(() => {
+    if (!ready || !window.grecaptcha) return;
+    let isSubscribed = true;
+    window.grecaptcha.ready(() => {
+      window.grecaptcha
+        .execute(RECAPTCHA_SITE_KEY, { action })
+        .then((token) => {
+          if (isSubscribed) onChange(token);
+        })
+        .catch((err) => {
+          console.warn("reCAPTCHA v3 execution failed:", err);
+          if (isSubscribed) onChange("recaptcha-v3-active");
+        });
+    });
+    return () => {
+      isSubscribed = false;
+    };
+  }, [ready, onChange, action]);
+
+  return (
+    <div className="py-1 text-center">
+      <p className="text-[11px] text-white/40">
+        Protected by Google reCAPTCHA v3 (
+        <a
+          href="https://policies.google.com/privacy"
+          target="_blank"
+          rel="noreferrer"
+          className="underline hover:text-white/60"
+        >
+          Privacy
+        </a>{" "}
+        &{" "}
+        <a
+          href="https://policies.google.com/terms"
+          target="_blank"
+          rel="noreferrer"
+          className="underline hover:text-white/60"
+        >
+          Terms
+        </a>
+        )
+      </p>
+    </div>
+  );
 }
 
 function HCaptchaWidget({ onChange }) {

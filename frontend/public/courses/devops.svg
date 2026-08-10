@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgDevOps" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#042f2e" />
+      <stop offset="50%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#111827" />
+    </linearGradient>
+    <linearGradient id="tealGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#14b8a6" />
+      <stop offset="50%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+    <filter id="glowDev">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <rect width="800" height="450" fill="url(#bgDevOps)" />
+
+  {/* Glowing Infinity CI/CD Loop */}
+  <g transform="translate(400, 210)" filter="url(#glowDev)">
+    <path d="M -160 0 C -240 -100, -320 0, -160 100 C 0 200, 0 -200, 160 -100 C 320 0, 240 100, 160 0 C 0 -100, 0 100, -160 0 Z" fill="none" stroke="url(#tealGrad)" stroke-width="14" stroke-linecap="round" opacity="0.9" />
+    
+    {/* Pipeline Stage Nodes */}
+    <circle cx="-240" cy="-40" r="16" fill="#14b8a6" stroke="#ffffff" stroke-width="3" />
+    <text x="-240" y="-70" text-anchor="middle" fill="#5eead4" font-family="monospace" font-size="14" font-weight="bold">PLAN</text>
+
+    <circle cx="-160" cy="80" r="16" fill="#06b6d4" stroke="#ffffff" stroke-width="3" />
+    <text x="-160" y="120" text-anchor="middle" fill="#67e8f9" font-family="monospace" font-size="14" font-weight="bold">CODE</text>
+
+    <circle cx="0" cy="0" r="18" fill="#3b82f6" stroke="#ffffff" stroke-width="3" />
+    <text x="0" y="-30" text-anchor="middle" fill="#93c5fd" font-family="monospace" font-size="15" font-weight="bold">BUILD</text>
+
+    <circle cx="160" cy="-80" r="16" fill="#6366f1" stroke="#ffffff" stroke-width="3" />
+    <text x="160" y="-110" text-anchor="middle" fill="#c7d2fe" font-family="monospace" font-size="14" font-weight="bold">TEST</text>
+
+    <circle cx="240" cy="40" r="16" fill="#a855f7" stroke="#ffffff" stroke-width="3" />
+    <text x="240" y="80" text-anchor="middle" fill="#e9d5ff" font-family="monospace" font-size="14" font-weight="bold">DEPLOY</text>
+  </g>
+
+  {/* Header Title Banner HUD */}
+  <rect x="250" y="360" width="300" height="40" rx="20" fill="#0f172a" stroke="#14b8a6" stroke-width="2" />
+  <text x="400" y="385" text-anchor="middle" fill="#2dd4bf" font-family="monospace" font-size="14" font-weight="bold">CONTINUOUS INTEGRATION &amp; DEPLOYMENT</text>
+</svg>

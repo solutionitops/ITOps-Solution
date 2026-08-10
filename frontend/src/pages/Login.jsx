@@ -66,10 +66,13 @@ export default function Login() {
     }
   }
   async function handleGoogle() {
+    setError(null);
     try {
       await loginWithGoogle();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Google sign-in isn't set up yet.");
+      const msg = err instanceof Error ? err.message : "Google sign-in isn't set up yet.";
+      setError(msg);
+      toast.error(msg);
       throw err;
     }
   }

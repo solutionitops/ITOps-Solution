@@ -1622,3 +1622,82 @@ export function getLocalStats(userId) {
     badges
   };
 }
+
+export const CERTIFICATION_TIERS = [
+  {
+    tier: "Bronze",
+    title: "Security Awareness",
+    badge: "🥉",
+    description: "Complete all 8 core security awareness modules.",
+    requirement: "Complete all 8 modules",
+    validityMonths: 12,
+    color: "from-amber-700 to-amber-900"
+  },
+  {
+    tier: "Silver",
+    title: "Security Champion",
+    badge: "🥈",
+    description: "Complete all 8 modules with an 80%+ quiz average across the platform.",
+    requirement: "Complete all 8 modules with 80%+ quiz average",
+    validityMonths: 12,
+    color: "from-slate-400 to-slate-600"
+  },
+  {
+    tier: "Gold",
+    title: "Cyber Guardian",
+    badge: "🥇",
+    description: "Complete all 8 modules with a 90%+ quiz average AND pass the 120-question Final Assessment.",
+    requirement: "Complete all 8 modules with 90%+ quiz average + Pass 120-Q Final Assessment (80%+)",
+    validityMonths: 12,
+    color: "from-amber-400 to-yellow-500"
+  }
+];
+
+export const SECURITY_POLICIES = [
+  {
+    name: "Password Policy",
+    icon: "🔑",
+    rules: [
+      "Minimum 12 characters, passphrase style recommended (e.g. River-Mountain-Coffee-Sky-2026).",
+      "MFA required on all systems that support it.",
+      "No password reuse across the last 10 passwords.",
+      "Never share passwords or MFA one-time codes with anyone, including IT support."
+    ]
+  },
+  {
+    name: "Email Security Policy",
+    icon: "✉️",
+    rules: [
+      "Report suspected phishing using the 'Report Phishing' button before taking any other action.",
+      "No forwarding of company email to personal accounts.",
+      "Never click suspicious attachments (.exe, .zip, .scr) from unverified senders."
+    ]
+  },
+  {
+    name: "Device Security Policy",
+    icon: "💻",
+    rules: [
+      "Screen lock required with a maximum 5-minute auto-lock timeout.",
+      "Only approved, IT-managed devices may access company email and internal data.",
+      "Never plug in unknown USB devices or use public USB charging ports ('juice jacking')."
+    ]
+  },
+  {
+    name: "Data Handling Policy",
+    icon: "📊",
+    rules: [
+      "Classify data before sharing: Public, Internal, Confidential, or Restricted/PII.",
+      "Confidential and Restricted data must be encrypted in transit and at rest.",
+      "Practice data minimization: collect and retain only data actually needed for stated purposes."
+    ]
+  }
+];
+
+export const ENTERPRISE_METRICS = [
+  { metric: "Employee Security Score", description: "Composite score from quiz performance, completion, and phishing simulation results", value: "92 / 100", trend: "+4.2%" },
+  { metric: "Phishing Test Click Rate", description: "Percentage of employees who click a simulated phishing email", value: "2.4%", trend: "-8.1%" },
+  { metric: "Phishing Test Report Rate", description: "Percentage of employees who correctly report a simulated phishing email", value: "84.6%", trend: "+12.3%" },
+  { metric: "Training Completion Rate", description: "Percentage of employees who have completed all required modules", value: "96.8%", trend: "+5.0%" },
+  { metric: "Incident Reports Submitted", description: "Volume of employee-reported suspicious activity (leading indicator of threat awareness)", value: "148 Reports", trend: "+18%" },
+  { metric: "Risk Reduction Trend", description: "Change in click rate and incident severity over successive quarters", value: "High Impact", trend: "Sustained" }
+];

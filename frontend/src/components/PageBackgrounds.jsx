@@ -217,9 +217,9 @@ export function CircuitTraceBackground({
         strokeDashoffset: 1,
         animation: `pbg-draw 2.4s ease-out ${0.2 + i * 0.25}s forwards`
       }} />)}
-        {paths.map((d, i) => <circle key={`dot-${i}`} r={0.7} fill={c.dot}>
-            <animateMotion dur={`${6 + i}s`} repeatCount="indefinite" path={d} begin={`${1.5 + i * 0.4}s`} />
-          </circle>)}
+        {paths.map((d, i) => <circle key={`dot-${i}`} cx={0} cy={0} r={0.7} fill={c.dot}>
+          <animateMotion dur={`${6 + i}s`} repeatCount="indefinite" path={d} begin={`${1.5 + i * 0.4}s`} />
+        </circle>)}
       </svg>
       <style>{`@keyframes pbg-draw { to { stroke-dashoffset: 0; } }`}</style>
     </div>;
