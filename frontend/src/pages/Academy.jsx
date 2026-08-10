@@ -12,6 +12,7 @@ import { EmptyState } from "../components/EmptyState";
 import { AcademyMark } from "../components/AcademyBrand";
 import { CategoryIcon } from "../components/CyberSachetTheme";
 import { CATEGORY_LABELS } from "../data/cybersachetCourses";
+import { AnimatedCourseHeaderBackground, COURSE_IMAGES, CATEGORY_IMAGES } from "./CyberSachetTraining";
 
 const LIVE_TODAY = [{
   title: "Structured Courses",
@@ -59,13 +60,26 @@ const FAQ = [{
 }];
 
 function CoursePreviewCard({ course, index }) {
-  return <SpotlightCard tint="amber" delay={index * 0.05} className="h-full">
-      <div className="flex h-full flex-col p-6">
+  const bgImage = COURSE_IMAGES[course.slug] ?? CATEGORY_IMAGES[course.category] ?? "/courses/cloud.png";
+
+  return (
+    <SpotlightCard tint="amber" delay={index * 0.05} className="h-full overflow-hidden relative group">
+      <div className="relative h-36 w-full overflow-hidden bg-slate-950 border-b border-white/10">
+        <AnimatedCourseHeaderBackground courseSlug={course.slug} category={course.category} />
+        <img
+          src={bgImage}
+          alt={course.title}
+          className="h-full w-full object-cover opacity-80 transition-transform duration-500 group-hover:scale-105"
+          loading="lazy"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/50 to-transparent z-10" />
+      </div>
+      <div className="flex h-full flex-col p-6 relative z-10 -mt-6">
         <div className="flex items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.06] light:bg-slate-900/[0.05] px-2.5 py-1 text-[11px] font-medium text-white/60 light:text-slate-500">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-900/80 backdrop-blur-md px-2.5 py-1 text-[11px] font-medium text-white shadow-sm border border-white/15">
             <CategoryIcon category={course.category} size={12} />{CATEGORY_LABELS[course.category] ?? course.category}
           </span>
-          <span className="shrink-0 rounded-full bg-amber-400/10 light:bg-amber-100 px-2.5 py-1 text-[11px] font-medium capitalize text-amber-300 light:text-amber-700">
+          <span className="shrink-0 rounded-full bg-amber-400/20 backdrop-blur-md border border-amber-400/30 px-2.5 py-1 text-[11px] font-medium capitalize text-amber-300">
             {course.level}
           </span>
         </div>
@@ -76,7 +90,8 @@ function CoursePreviewCard({ course, index }) {
           <span>{course.minPlan === "STARTER" ? "Free on every plan" : `Requires ${course.minPlan.charAt(0) + course.minPlan.slice(1).toLowerCase()}+`}</span>
         </div>
       </div>
-    </SpotlightCard>;
+    </SpotlightCard>
+  );
 }
 
 export default function Academy() {
@@ -114,159 +129,159 @@ export default function Academy() {
   return <div className="min-h-screen bg-black light:bg-gradient-to-b light:from-slate-50 light:to-white text-white light:text-slate-900 antialiased" style={{
     fontFamily: "'Readex Pro', system-ui, -apple-system, sans-serif"
   }}>
-      <MarketingNav />
+    <MarketingNav />
 
-      <main className="pb-24 pt-40">
+    <main className="pb-24 pt-40">
+      <ProductShell>
+        <ProductHero itemKey="academy" title="Moonsav ITOps Academy" subtitle="Cloud, DevOps, and Infrastructure training for your team" body="A structured training product for Cloud, DevOps, and Infrastructure skills — real courses, real graded quizzes, and real verifiable certificates, run on the same licensed engine as CyberSachet but shown, filtered, and certified as its own product. Cloud lab environments and instructor-led cohorts are honestly listed as roadmap below, not demoed as if they exist." status="live" capabilities={capabilities} backTo="/solutions" backLabel="Solutions" primaryCta={<Link to="/login" className="inline-block rounded-full bg-white px-7 py-3 text-sm font-normal text-black transition-colors hover:bg-neutral-200">
+          Log In to Start Learning
+        </Link>} secondaryCta={<a href="#courses" className="text-sm font-medium text-white/70 light:text-slate-500 underline decoration-white/20 light:decoration-slate-900/20 underline-offset-4 hover:text-white light:hover:text-slate-900 hover:decoration-white light:hover:decoration-slate-900">
+          Browse the catalog ↓
+        </a>} />
+      </ProductShell>
+
+      {/* course catalog */}
+      <section id="courses" className="mt-20 py-16 light:bg-white light:border-y light:border-slate-900/5 scroll-mt-28">
         <ProductShell>
-          <ProductHero itemKey="academy" title="Moonsav ITOps Academy" subtitle="Cloud, DevOps, and Infrastructure training for your team" body="A structured training product for Cloud, DevOps, and Infrastructure skills — real courses, real graded quizzes, and real verifiable certificates, run on the same licensed engine as CyberSachet but shown, filtered, and certified as its own product. Cloud lab environments and instructor-led cohorts are honestly listed as roadmap below, not demoed as if they exist." status="live" capabilities={capabilities} backTo="/solutions" backLabel="Solutions" primaryCta={<Link to="/login" className="inline-block rounded-full bg-white px-7 py-3 text-sm font-normal text-black transition-colors hover:bg-neutral-200">
-                Log In to Start Learning
-              </Link>} secondaryCta={<a href="#courses" className="text-sm font-medium text-white/70 light:text-slate-500 underline decoration-white/20 light:decoration-slate-900/20 underline-offset-4 hover:text-white light:hover:text-slate-900 hover:decoration-white light:hover:decoration-slate-900">
-                Browse the catalog ↓
-              </a>} />
-        </ProductShell>
+          <Reveal className="mx-auto max-w-2xl text-center">
+            <p className="text-xs font-medium uppercase tracking-[0.15em] text-white/45 light:text-slate-400">The catalog</p>
+            <h2 className="mt-3 text-3xl font-medium tracking-tight md:text-4xl">Every course, real and published</h2>
+            <p className="mt-4 text-sm leading-relaxed text-white/55 light:text-slate-500">
+              Not a curated preview — this is the actual published catalog, fetched live. New courses appear here the
+              moment they're published, nothing staged.
+            </p>
+          </Reveal>
 
-        {/* course catalog */}
-        <section id="courses" className="mt-20 py-16 light:bg-white light:border-y light:border-slate-900/5 scroll-mt-28">
-          <ProductShell>
-            <Reveal className="mx-auto max-w-2xl text-center">
-              <p className="text-xs font-medium uppercase tracking-[0.15em] text-white/45 light:text-slate-400">The catalog</p>
-              <h2 className="mt-3 text-3xl font-medium tracking-tight md:text-4xl">Every course, real and published</h2>
-              <p className="mt-4 text-sm leading-relaxed text-white/55 light:text-slate-500">
-                Not a curated preview — this is the actual published catalog, fetched live. New courses appear here the
-                moment they're published, nothing staged.
+          {coursesLoading ? <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {[0, 1, 2].map(i => <Skeleton key={i} className="h-52 rounded-2xl" />)}
+          </div> : (courses ?? []).length === 0 ? <div className="mt-10">
+            <EmptyState title="No courses published yet." description="The catalog is empty right now — check back soon, or contact us if you expected to see courses here." />
+          </div> : <div className="mt-10 space-y-12">
+            {categories.map(([category, list]) => <div key={category}>
+              <p className="mb-4 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.15em] text-amber-300 light:text-amber-700">
+                <CategoryIcon category={category} size={14} />{CATEGORY_LABELS[category] ?? category}
               </p>
-            </Reveal>
-
-            {coursesLoading ? <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {[0, 1, 2].map(i => <Skeleton key={i} className="h-52 rounded-2xl" />)}
-              </div> : (courses ?? []).length === 0 ? <div className="mt-10">
-                <EmptyState title="No courses published yet." description="The catalog is empty right now — check back soon, or contact us if you expected to see courses here." />
-              </div> : <div className="mt-10 space-y-12">
-                {categories.map(([category, list]) => <div key={category}>
-                    <p className="mb-4 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.15em] text-amber-300 light:text-amber-700">
-                      <CategoryIcon category={category} size={14} />{CATEGORY_LABELS[category] ?? category}
-                    </p>
-                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                      {list.map((course, i) => <CoursePreviewCard key={course.id} course={course} index={i} />)}
-                    </div>
-                  </div>)}
-              </div>}
-          </ProductShell>
-        </section>
-
-        {/* how it works */}
-        <section className="py-16">
-          <ProductShell>
-            <Reveal className="mx-auto max-w-2xl text-center">
-              <p className="text-xs font-medium uppercase tracking-[0.15em] text-white/45 light:text-slate-400">How it works</p>
-              <h2 className="mt-3 text-3xl font-medium tracking-tight md:text-4xl">From login to certificate</h2>
-            </Reveal>
-            <div className="mt-12">
-              <WorkflowFlow steps={WORKFLOW_STEPS} />
-            </div>
-          </ProductShell>
-        </section>
-
-        {/* capabilities */}
-        <section id="capabilities" className="py-16 light:bg-white light:border-y light:border-slate-900/5 scroll-mt-28">
-          <ProductShell>
-            <Reveal>
-              <p className="mb-10 text-xs font-medium uppercase tracking-[0.15em] text-white/45 light:text-slate-400">Capabilities</p>
-            </Reveal>
-            <CapabilitiesSplit live={LIVE_TODAY} roadmap={roadmap} />
-          </ProductShell>
-        </section>
-
-        {/* plan tiers */}
-        <section className="py-16">
-          <ProductShell>
-            <div className="grid grid-cols-1 gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-              <Reveal>
-                <p className="text-xs font-medium uppercase tracking-[0.15em] text-white/45 light:text-slate-400">Access by plan</p>
-                <h2 className="mt-3 text-3xl font-medium tracking-tight md:text-4xl">Every course has a real tier, enforced server-side</h2>
-                <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/55 light:text-slate-500">
-                  There's no separate Academy price — access is part of your organization's existing ITOps Solution
-                  plan. A course's required tier unlocks it for that plan and every plan above it.
-                </p>
-                <Link to="/pricing" className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-amber-300 light:text-amber-700 hover:text-amber-200">
-                  Compare packages <span aria-hidden>→</span>
-                </Link>
-              </Reveal>
-              <Reveal delay={0.1}>
-                <div className="grid grid-cols-2 gap-4">
-                  {PLAN_ORDER.map(plan => <div key={plan} className="rounded-2xl border border-white/10 light:border-slate-900/10 bg-white/[0.02] light:bg-slate-900/[0.02] p-5">
-                      <p className="text-xs font-medium uppercase tracking-wide text-white/40 light:text-slate-400">{plan.charAt(0) + plan.slice(1).toLowerCase()}</p>
-                      <p className="mt-2 text-2xl font-semibold tabular-nums text-white light:text-slate-900">{tierCounts[plan] ?? 0}</p>
-                      <p className="mt-1 text-xs text-white/45 light:text-slate-500">course{(tierCounts[plan] ?? 0) === 1 ? "" : "s"} unlocked</p>
-                    </div>)}
-                </div>
-              </Reveal>
-            </div>
-          </ProductShell>
-        </section>
-
-        {/* organization licensing */}
-        <section className="py-16 light:bg-white light:border-y light:border-slate-900/5">
-          <ProductShell>
-            <div className="mx-auto max-w-3xl text-center">
-              <AcademyMark size={40} className="mx-auto" />
-              <h2 className="mt-5 text-3xl font-medium tracking-tight md:text-4xl">Licensed per organization, assigned per person</h2>
-              <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-white/55 light:text-slate-500">
-                A platform admin licenses training for your organization from the admin portal. Once licensed, an
-                org admin can assign specific courses to specific team members, or open the whole unlocked catalog
-                to everyone — the same real licensing model CyberSachet already uses today.
-              </p>
-              <Link to="/company" className="mt-6 inline-flex items-center gap-1.5 rounded-full border border-white/15 light:border-slate-900/15 px-5 py-2.5 text-sm font-medium text-white/80 light:text-slate-700 hover:bg-white/5 light:hover:bg-slate-900/5">
-                Talk to our team <span aria-hidden>→</span>
-              </Link>
-            </div>
-          </ProductShell>
-        </section>
-
-        {/* FAQ */}
-        <section className="py-16">
-          <ProductShell>
-            <Reveal className="mx-auto max-w-2xl text-center">
-              <p className="text-xs font-medium uppercase tracking-[0.15em] text-white/45 light:text-slate-400">FAQ</p>
-              <h2 className="mt-3 text-3xl font-medium tracking-tight md:text-4xl">Common questions</h2>
-            </Reveal>
-            <div className="mx-auto mt-10 max-w-3xl space-y-3">
-              {FAQ.map((item, i) => <Reveal key={item.q} delay={i * 0.05}>
-                  <details className="group rounded-2xl border border-white/10 light:border-slate-900/10 bg-white/[0.02] light:bg-slate-900/[0.02] px-5 py-4 open:bg-white/[0.04] light:open:bg-slate-900/[0.03]">
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-medium text-white light:text-slate-900">
-                      {item.q}
-                      <span className="shrink-0 text-white/40 light:text-slate-400 transition-transform group-open:rotate-45" aria-hidden>+</span>
-                    </summary>
-                    <p className="mt-3 text-sm leading-relaxed text-white/55 light:text-slate-500">{item.a}</p>
-                  </details>
-                </Reveal>)}
-            </div>
-          </ProductShell>
-        </section>
-
-        {/* cross-link + waitlist */}
-        <section className="py-16">
-          <ProductShell>
-            <div className="mx-auto flex max-w-md flex-col items-center gap-8 text-center">
-              <div>
-                <p className="text-sm text-white/50 light:text-slate-500">
-                  Not a customer yet? Get notified when cloud labs and instructor-led cohorts ship.
-                </p>
-                <div className="mt-4">
-                  <WaitlistForm product="academy" ctaLabel="Join the Waitlist" />
-                </div>
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {list.map((course, i) => <CoursePreviewCard key={course.id} course={course} index={i} />)}
               </div>
-              <p className="text-sm text-white/40 light:text-slate-400">
-                Looking for security-awareness training instead?{" "}
-                <Link to="/cybersachet" className="font-medium text-cyan-300 light:text-cyan-600 hover:text-cyan-200">
-                  See CyberSachet
-                </Link>
-              </p>
-            </div>
-          </ProductShell>
-        </section>
-      </main>
+            </div>)}
+          </div>}
+        </ProductShell>
+      </section>
 
-      <MarketingFooter />
-    </div>;
+      {/* how it works */}
+      <section className="py-16">
+        <ProductShell>
+          <Reveal className="mx-auto max-w-2xl text-center">
+            <p className="text-xs font-medium uppercase tracking-[0.15em] text-white/45 light:text-slate-400">How it works</p>
+            <h2 className="mt-3 text-3xl font-medium tracking-tight md:text-4xl">From login to certificate</h2>
+          </Reveal>
+          <div className="mt-12">
+            <WorkflowFlow steps={WORKFLOW_STEPS} />
+          </div>
+        </ProductShell>
+      </section>
+
+      {/* capabilities */}
+      <section id="capabilities" className="py-16 light:bg-white light:border-y light:border-slate-900/5 scroll-mt-28">
+        <ProductShell>
+          <Reveal>
+            <p className="mb-10 text-xs font-medium uppercase tracking-[0.15em] text-white/45 light:text-slate-400">Capabilities</p>
+          </Reveal>
+          <CapabilitiesSplit live={LIVE_TODAY} roadmap={roadmap} />
+        </ProductShell>
+      </section>
+
+      {/* plan tiers */}
+      <section className="py-16">
+        <ProductShell>
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+            <Reveal>
+              <p className="text-xs font-medium uppercase tracking-[0.15em] text-white/45 light:text-slate-400">Access by plan</p>
+              <h2 className="mt-3 text-3xl font-medium tracking-tight md:text-4xl">Every course has a real tier, enforced server-side</h2>
+              <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/55 light:text-slate-500">
+                There's no separate Academy price — access is part of your organization's existing ITOps Solution
+                plan. A course's required tier unlocks it for that plan and every plan above it.
+              </p>
+              <Link to="/pricing" className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-amber-300 light:text-amber-700 hover:text-amber-200">
+                Compare packages <span aria-hidden>→</span>
+              </Link>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <div className="grid grid-cols-2 gap-4">
+                {PLAN_ORDER.map(plan => <div key={plan} className="rounded-2xl border border-white/10 light:border-slate-900/10 bg-white/[0.02] light:bg-slate-900/[0.02] p-5">
+                  <p className="text-xs font-medium uppercase tracking-wide text-white/40 light:text-slate-400">{plan.charAt(0) + plan.slice(1).toLowerCase()}</p>
+                  <p className="mt-2 text-2xl font-semibold tabular-nums text-white light:text-slate-900">{tierCounts[plan] ?? 0}</p>
+                  <p className="mt-1 text-xs text-white/45 light:text-slate-500">course{(tierCounts[plan] ?? 0) === 1 ? "" : "s"} unlocked</p>
+                </div>)}
+              </div>
+            </Reveal>
+          </div>
+        </ProductShell>
+      </section>
+
+      {/* organization licensing */}
+      <section className="py-16 light:bg-white light:border-y light:border-slate-900/5">
+        <ProductShell>
+          <div className="mx-auto max-w-3xl text-center">
+            <AcademyMark size={40} className="mx-auto" />
+            <h2 className="mt-5 text-3xl font-medium tracking-tight md:text-4xl">Licensed per organization, assigned per person</h2>
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-white/55 light:text-slate-500">
+              A platform admin licenses training for your organization from the admin portal. Once licensed, an
+              org admin can assign specific courses to specific team members, or open the whole unlocked catalog
+              to everyone — the same real licensing model CyberSachet already uses today.
+            </p>
+            <Link to="/company" className="mt-6 inline-flex items-center gap-1.5 rounded-full border border-white/15 light:border-slate-900/15 px-5 py-2.5 text-sm font-medium text-white/80 light:text-slate-700 hover:bg-white/5 light:hover:bg-slate-900/5">
+              Talk to our team <span aria-hidden>→</span>
+            </Link>
+          </div>
+        </ProductShell>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-16">
+        <ProductShell>
+          <Reveal className="mx-auto max-w-2xl text-center">
+            <p className="text-xs font-medium uppercase tracking-[0.15em] text-white/45 light:text-slate-400">FAQ</p>
+            <h2 className="mt-3 text-3xl font-medium tracking-tight md:text-4xl">Common questions</h2>
+          </Reveal>
+          <div className="mx-auto mt-10 max-w-3xl space-y-3">
+            {FAQ.map((item, i) => <Reveal key={item.q} delay={i * 0.05}>
+              <details className="group rounded-2xl border border-white/10 light:border-slate-900/10 bg-white/[0.02] light:bg-slate-900/[0.02] px-5 py-4 open:bg-white/[0.04] light:open:bg-slate-900/[0.03]">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-medium text-white light:text-slate-900">
+                  {item.q}
+                  <span className="shrink-0 text-white/40 light:text-slate-400 transition-transform group-open:rotate-45" aria-hidden>+</span>
+                </summary>
+                <p className="mt-3 text-sm leading-relaxed text-white/55 light:text-slate-500">{item.a}</p>
+              </details>
+            </Reveal>)}
+          </div>
+        </ProductShell>
+      </section>
+
+      {/* cross-link + waitlist */}
+      <section className="py-16">
+        <ProductShell>
+          <div className="mx-auto flex max-w-md flex-col items-center gap-8 text-center">
+            <div>
+              <p className="text-sm text-white/50 light:text-slate-500">
+                Not a customer yet? Get notified when cloud labs and instructor-led cohorts ship.
+              </p>
+              <div className="mt-4">
+                <WaitlistForm product="academy" ctaLabel="Join the Waitlist" />
+              </div>
+            </div>
+            <p className="text-sm text-white/40 light:text-slate-400">
+              Looking for security-awareness training instead?{" "}
+              <Link to="/cybersachet" className="font-medium text-cyan-300 light:text-cyan-600 hover:text-cyan-200">
+                See CyberSachet
+              </Link>
+            </p>
+          </div>
+        </ProductShell>
+      </section>
+    </main>
+
+    <MarketingFooter />
+  </div>;
 }
