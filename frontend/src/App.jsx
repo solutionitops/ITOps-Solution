@@ -21,6 +21,7 @@ const DnsMonitoring = lazy(() => import("./pages/DnsMonitoring"));
 const MonitorDetail = lazy(() => import("./pages/MonitorDetail"));
 const Hosts = lazy(() => import("./pages/Hosts"));
 const Infrastructure = lazy(() => import("./pages/Infrastructure"));
+const _DevInfraPreview = lazy(() => import("./pages/_DevInfraPreview"));
 const Incidents = lazy(() => import("./pages/Incidents"));
 const Assets = lazy(() => import("./pages/Assets"));
 const AlertChannels = lazy(() => import("./pages/AlertChannels"));
@@ -205,6 +206,7 @@ export default function App() {
           check it, logged in or not. */}
       <Route path="/verify" element={<VerifyCertificate />} />
       <Route path="/_dev-cert-preview" element={<_DevCertPreview />} />
+      <Route path="/_dev-infra-preview" element={<_DevInfraPreview />} />
       <Route path="/verify/:certificateNo" element={<VerifyCertificate />} />
 
       {/* Team invite acceptance — reachable logged out (to sign up) or logged

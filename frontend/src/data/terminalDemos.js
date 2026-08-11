@@ -11,6 +11,32 @@
 // this one map covers both without duplication.
 
 export const TERMINAL_DEMOS = {
+  // Red Hat Enterprise Linux Essential Training — Chapter 2 (bash & processes)
+  "Shell variables": [
+    { command: 'set -- web db cache; echo "count=$# first=$1 all=$@"', output: "count=3 first=web all=web db cache" },
+    { command: 'ls /etc/nope; echo "exit=$?"', output: "ls: cannot access '/etc/nope': No such file or directory\nexit=2" },
+    { command: 'echo "pid=$$ uid=$UID home=$HOME"', output: "pid=48213 uid=1000 home=/home/itops" }
+  ],
+  "Conditionals and tests": [
+    { command: 'CPU=85; if [[ $CPU -gt 80 ]]; then echo "ALERT: cpu ${CPU}%"; fi', output: "ALERT: cpu 85%" },
+    { command: '[[ -f /etc/fstab ]] && echo "exists" || echo "missing"', output: "exists" },
+    { command: '(( 4 + 3 > 6 )) && echo "arithmetic true"', output: "arithmetic true" }
+  ],
+  "Loops and control flow": [
+    { command: 'for s in nginx sshd crond; do echo "checking $s"; done', output: "checking nginx\nchecking sshd\nchecking crond" },
+    { command: 'ACT=stop; case $ACT in start) echo up;; stop) echo down;; *) echo "?";; esac', output: "down" },
+    { command: 'i=1; while (( i <= 3 )); do echo "attempt $i"; (( i++ )); done', output: "attempt 1\nattempt 2\nattempt 3" }
+  ],
+  "Reading user input": [
+    { command: 'read -p "Service: " SVC        # user types: nginx', output: "Service: nginx" },
+    { command: 'echo "You chose $SVC"', output: "You chose nginx" },
+    { command: 'read -s -p "Password: " PW; echo   # input is hidden', output: "Password:" }
+  ],
+  "Managing processes": [
+    { command: "pgrep -a sshd", output: "812 /usr/sbin/sshd -D" },
+    { command: "ps -eo pid,comm,%cpu --sort=-%cpu | head -4", output: "    PID COMMAND         %CPU\n   1421 nginx            3.2\n    980 mysqld           1.1\n    812 sshd             0.0" },
+    { command: "kill -HUP 1421            # tell nginx to reload its config", output: "" }
+  ],
   "The filesystem layout": [
     { command: "ls /var/log", output: "auth.log   boot.log   dpkg.log   kern.log   nginx/   syslog   syslog.1   ufw.log" },
     { command: "ls /etc | head -5", output: "apt/\ncron.d/\ndefault/\nfstab\nhostname" }

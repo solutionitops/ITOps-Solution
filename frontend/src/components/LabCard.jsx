@@ -49,6 +49,30 @@ export function LabCard({ lab }) {
             </button>
             {challengeOpen && <p className="mt-1.5 text-[13px] leading-relaxed text-white/70 light:text-slate-600">{lab.challenge}</p>}
           </div>}
+
+        {/* Validate your work — the exact command that confirms the task is
+            done. Shown as a self-check today; it's written to be the same
+            check an automated grader runs against a live terminal environment
+            once that's enabled, so the content is already grading-ready. */}
+        {lab.verify && <ValidateBlock verify={lab.verify} />}
       </div>
     </motion.div>;
+}
+
+function ValidateBlock({ verify }) {
+  const [copied, setCopied] = useState(false);
+  const command = typeof verify === "string" ? verify : verify.command;
+  const pass = typeof verify === "object" ? verify.pass : null;
+  return <div className="rounded-lg border border-emerald-400/25 light:border-emerald-500/25 bg-emerald-400/[0.05] light:bg-emerald-50 p-3">
+      <p className="text-[11px] font-medium uppercase tracking-wide text-emerald-300 light:text-emerald-700">✔ Validate your work</p>
+      <p className="mt-1 text-[12px] leading-relaxed text-white/60 light:text-slate-500">Run this after finishing — passing output confirms the task is correct:</p>
+      <div className="mt-1.5 flex items-start gap-2 rounded bg-black/40 light:bg-slate-900/[0.05] p-2">
+        <span className="shrink-0 font-mono text-[12px] text-emerald-400 light:text-emerald-600">$</span>
+        <code className="min-w-0 flex-1 break-all font-mono text-[12px] text-emerald-100/90 light:text-emerald-800">{command}</code>
+        <button onClick={() => { navigator.clipboard.writeText(command); setCopied(true); setTimeout(() => setCopied(false), 1600); }} aria-label="Copy verification command" className="shrink-0 text-white/35 light:text-slate-400 transition-colors hover:text-white/80 light:hover:text-slate-600">
+          {copied ? <svg className="h-3.5 w-3.5 text-emerald-300 light:text-emerald-600" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg> : <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"><path d="M9 9h10v10H9zM5 15V5h10" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" /></svg>}
+        </button>
+      </div>
+      {pass && <p className="mt-1.5 text-[11px] text-white/45 light:text-slate-500"><span className="text-emerald-300 light:text-emerald-700">Expect:</span> {pass}</p>}
+    </div>;
 }
