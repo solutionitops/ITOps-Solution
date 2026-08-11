@@ -17,6 +17,12 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const EmployeeDashboard = lazy(() => import("./pages/EmployeeDashboard"));
 const Monitors = lazy(() => import("./pages/Monitors"));
+const AutonomousSRE = lazy(() => import("./pages/AutonomousSRE"));
+const ApplicationIntelligence = lazy(() => import("./pages/ApplicationIntelligence"));
+const SecurityCenter = lazy(() => import("./pages/SecurityCenter"));
+const DevSecOpsPipeline = lazy(() => import("./pages/DevSecOpsPipeline"));
+const CostOptimization = lazy(() => import("./pages/CostOptimization"));
+const ComplianceCenter = lazy(() => import("./pages/ComplianceCenter"));
 const DnsMonitoring = lazy(() => import("./pages/DnsMonitoring"));
 const MonitorDetail = lazy(() => import("./pages/MonitorDetail"));
 const Hosts = lazy(() => import("./pages/Hosts"));
@@ -226,6 +232,12 @@ export default function App() {
             direct URL, not just hidden from the sidebar. */}
         <Route element={<RequireConsoleAccess><Outlet /></RequireConsoleAccess>}>
           <Route path="/monitors" element={<Monitors key="web" mode="web" />} />
+          <Route path="/autonomous-sre" element={<AutonomousSRE />} />
+          <Route path="/app-intelligence" element={<ApplicationIntelligence />} />
+          <Route path="/security-center" element={<SecurityCenter />} />
+          <Route path="/pipeline" element={<DevSecOpsPipeline />} />
+          <Route path="/cost-optimization" element={<CostOptimization />} />
+          <Route path="/compliance" element={<ComplianceCenter />} />
           <Route path="/network" element={<Monitors key="network" mode="network" />} />
           <Route path="/dns" element={<DnsMonitoring />} />
           <Route path="/monitors/:id" element={<MonitorDetail />} />

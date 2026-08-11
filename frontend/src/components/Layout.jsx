@@ -13,6 +13,7 @@ import { useExpandedNavGroups } from "../hooks/useExpandedNavGroups";
 import { AppSearch } from "./AppSearch";
 import { NotificationCenter } from "./NotificationCenter";
 import { AcademyMark } from "./AcademyBrand";
+import { AISREAssistantDrawer } from "./AISREAssistantDrawer";
 const PLAN_COLORS = {
   STARTER: "bg-white/10 light:bg-slate-900/8 text-white/60 light:text-slate-600",
   PROFESSIONAL: "bg-blue-400/10 light:bg-blue-500/10 text-blue-300 light:text-blue-700",
@@ -24,7 +25,7 @@ const PLAN_COLORS = {
 // modules it always had access to, so this is purely additive — it only
 // starts hiding items once an org actually assigns a narrower custom role.
 const NAV_GROUPS = [{
-  label: "Monitoring",
+  label: "Monitoring & SRE",
   items: [{
     to: "/dashboard",
     label: "Dashboard",
@@ -32,9 +33,19 @@ const NAV_GROUPS = [{
     end: true,
     module: "dashboard"
   }, {
+    to: "/app-intelligence",
+    label: "App Intelligence",
+    icon: "🔍",
+    module: "monitors"
+  }, {
     to: "/monitors",
     label: "Website & API",
     icon: "◈",
+    module: "monitors"
+  }, {
+    to: "/autonomous-sre",
+    label: "AI SRE Brain",
+    icon: "🧠",
     module: "monitors"
   }, {
     to: "/network",
@@ -63,8 +74,28 @@ const NAV_GROUPS = [{
     module: "incidents"
   }]
 }, {
-  label: "Inventory",
+  label: "DevSecOps & Cloud",
   items: [{
+    to: "/security-center",
+    label: "Security Center",
+    icon: "🛡️",
+    module: "monitors"
+  }, {
+    to: "/pipeline",
+    label: "DevSecOps Pipeline",
+    icon: "🐙",
+    module: "monitors"
+  }, {
+    to: "/cost-optimization",
+    label: "Cost Optimization",
+    icon: "💵",
+    module: "monitors"
+  }, {
+    to: "/compliance",
+    label: "Compliance Center",
+    icon: "📋",
+    module: "monitors"
+  }, {
     to: "/assets",
     label: "Assets",
     icon: "◫",
@@ -320,6 +351,7 @@ export function Layout() {
         <div className="p-4 sm:p-6">
           <Outlet />
         </div>
+        <AISREAssistantDrawer />
       </main>
     </div>;
 }

@@ -185,9 +185,17 @@ function MonitorCards({ monitors, onDelete }) {
             <span>Every {INTERVAL_LABELS[monitor.interval]}</span>
             <span>{monitor.lastCheckedAt ? new Date(monitor.lastCheckedAt).toLocaleString() : "Pending first check"}</span>
           </div>
-          {onDelete && <button onClick={() => onDelete(monitor)} className="mt-3 text-xs text-red-300 light:text-red-600 hover:underline">
-            Delete
-          </button>}
+          <div className="mt-3 flex items-center justify-between">
+            <Link
+              to={`/autonomous-sre?monitorId=${monitor.id}`}
+              className="inline-flex items-center gap-1 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 text-xs font-bold text-cyan-300 transition-colors hover:bg-cyan-400/20"
+            >
+              <span>✨</span> AI Heal & Fix
+            </Link>
+            {onDelete && <button onClick={() => onDelete(monitor)} className="text-xs text-red-300 light:text-red-600 hover:underline">
+              Delete
+            </button>}
+          </div>
         </motion.div>)}
     </div>;
 }
@@ -249,9 +257,18 @@ function MonitorTable({
               {monitor.lastCheckedAt ? new Date(monitor.lastCheckedAt).toLocaleString() : "Pending first check"}
             </td>
             <td className="px-4 py-3 text-right">
-              {onDelete && <button onClick={() => onDelete(monitor)} className="text-red-300 light:text-red-600 transition-colors hover:underline">
-                Delete
-              </button>}
+              <div className="flex items-center justify-end gap-2">
+                <Link
+                  to={`/autonomous-sre?monitorId=${monitor.id}`}
+                  className="inline-flex items-center gap-1 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 text-xs font-bold text-cyan-300 transition-colors hover:bg-cyan-400/20"
+                  title={`Open AI SRE Autonomous Heal for ${monitor.name}`}
+                >
+                  <span>✨</span> AI Heal
+                </Link>
+                {onDelete && <button onClick={() => onDelete(monitor)} className="text-xs text-red-300 light:text-red-600 transition-colors hover:underline">
+                  Delete
+                </button>}
+              </div>
             </td>
           </motion.tr>)}
       </tbody>

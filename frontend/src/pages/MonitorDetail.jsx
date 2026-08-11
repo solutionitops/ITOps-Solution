@@ -8,6 +8,8 @@ import { useToast } from "../components/Toast";
 import { StatusBadge } from "../components/StatusBadge";
 import { ResponseTimeChart } from "../components/ResponseTimeChart";
 import { RootCauseAnalysis } from "../components/RootCauseAnalysis";
+import { PerformanceIntelligence } from "../components/PerformanceIntelligence";
+import { AutoFixController } from "../components/AutoFixController";
 import { DnsRecordsPanel } from "../components/DnsRecordsPanel";
 import { SecurityFixConfig } from "../components/SecurityFixConfig";
 import { Reveal, SpotlightCard } from "../components/Animated";
@@ -364,6 +366,13 @@ export default function MonitorDetail() {
 
       {/* Composite health hero — overall score + the categories behind it */}
       <HealthHero monitor={monitor} history={history ?? []} />
+
+      {/* AI SRE Autonomous Performance & Healing Engine */}
+      {monitor.checkType !== "DNS" && monitor.checkType !== "TCP" && (
+        <Reveal delay={0.06}>
+          <PerformanceIntelligence monitor={monitor} history={history ?? []} />
+        </Reveal>
+      )}
 
       {/* Prominent "solve it" action — appears whenever there are fixable
           security issues on an HTTP-family monitor. */}
