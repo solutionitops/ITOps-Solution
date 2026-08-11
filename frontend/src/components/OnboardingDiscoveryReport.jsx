@@ -7,8 +7,8 @@ import { DiscoveryPerformanceBaseline } from "./DiscoveryPerformanceBaseline";
 import { DiscoverySRERecommendations } from "./DiscoverySRERecommendations";
 import { DiscoveryHistoryTimeline } from "./DiscoveryHistoryTimeline";
 
-export function OnboardingDiscoveryReport({ monitor }) {
-  const discovery = runWebsiteDiscovery(monitor?.url || "https://cloudaxisnp.com");
+export function OnboardingDiscoveryReport({ monitor, liveData }) {
+  const discovery = runWebsiteDiscovery(monitor?.url || "https://cloudaxisnp.com", liveData);
   const siteName = monitor?.name || "Target Application";
   const [expandedLayer, setExpandedLayer] = useState(null);
 

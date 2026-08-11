@@ -3,21 +3,33 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchMonitors } from "../api/endpoints";
 import { DiscoveryProcessScreen } from "../components/DiscoveryProcessScreen";
 import { OnboardingDiscoveryReport } from "../components/OnboardingDiscoveryReport";
+import { fetchLiveDnsRecords, fetchLiveAsnInfo } from "../lib/onboardingDiscovery";
 
 export default function ApplicationIntelligence() {
   const [customUrl, setCustomUrl] = useState("https://cloudaxisnp.com");
   const [activeUrl, setActiveUrl] = useState("https://cloudaxisnp.com");
+  const [liveData, setLiveData] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
 
   const monitorsQuery = useQuery({ queryKey: ["monitors"], queryFn: fetchMonitors });
   const monitors = monitorsQuery.data || [];
 
-  const handleScan = (e) => {
+  const handleScan = async (e) => {
     e.preventDefault();
     if (!customUrl.trim()) return;
 
-    setActiveUrl(customUrl.trim());
+    const url = customUrl.trim();
+    setActiveUrl(url);
     setIsScanning(true);
+
+    const domain = url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+    try {
+      const dns = await fetchLiveDnsRecords(domain);
+      const asn = await fetchLiveAsnInfo(dns.aIp);
+      setLiveData({ ...dns, ...asn });
+    } catch {
+      setLiveData(null);
+    }
   };
 
   return (
@@ -52,7 +64,10 @@ export default function ApplicationIntelligence() {
       {isScanning ? (
         <DiscoveryProcessScreen targetUrl={activeUrl} onComplete={() => setIsScanning(false)} />
       ) : (
-        <OnboardingDiscoveryReport monitor={{ url: activeUrl, name: activeUrl.replace(/^https?:\/\//, "").replace(/\/$/, "") }} />
+        <OnboardingDiscoveryReport
+          monitor={{ url: activeUrl, name: activeUrl.replace(/^https?:\/\//, "").replace(/\/$/, "") }}
+          liveData={liveData}
+        />
       )}
     </div>
   );
