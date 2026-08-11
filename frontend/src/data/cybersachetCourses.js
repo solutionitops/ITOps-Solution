@@ -473,15 +473,21 @@ const COURSES = [
     id: "local-linux-fundamentals",
     slug: "linux-fundamentals-for-it-operations",
     title: "Linux Fundamentals for IT Operations",
-    description: "The commands and concepts you actually use running Linux servers day to day — the filesystem layout, permissions, processes, and package management every other Academy course builds on.",
-    level: "beginner",
-    estimatedMinutes: 20,
+    description: "From the Linux basics you use daily to real ITOps/SRE work: diagnosing slow servers, full disks, dead services, DNS and network faults — the exact commands, the metrics monitoring watches, and how detection becomes automated self-healing.",
+    level: "intermediate",
+    estimatedMinutes: 210,
     category: "infrastructure",
     track: "academy",
     freeTier: true,
     modules: [
       { id: "m1", title: "Finding Your Way Around" },
-      { id: "m2", title: "Permissions, Processes & Packages" }
+      { id: "m2", title: "Permissions, Processes & Packages" },
+      { id: "m3", title: "How Monitoring Works" },
+      { id: "m4", title: "Performance Triage" },
+      { id: "m5", title: "Storage & Logs" },
+      { id: "m6", title: "Networking & Services" },
+      { id: "m7", title: "Access & System" },
+      { id: "m8", title: "From Monitoring to Auto-Remediation" }
     ],
     lessons: [
       {
@@ -515,13 +521,197 @@ const COURSES = [
         body: "ps aux lists every running process; top (or htop if installed) shows them live, sorted by resource usage, which is usually the fastest way to spot what's consuming CPU or memory. Most modern Linux distributions manage background services with systemd — systemctl status nginx shows whether a service is running and its recent log lines, systemctl restart nginx restarts it, and systemctl enable nginx makes it start automatically on boot. To install software, Debian/Ubuntu systems use apt install package-name and Red Hat/CentOS/Fedora systems use dnf install package-name (or the older yum) — same idea, different tool depending on the distribution family.",
         keyTakeaway: "systemctl status/restart/enable is how you check and control services on most modern Linux distributions.",
         check: { question: "Which command shows whether a service is currently running and its recent logs?", choices: ["ps aux", "systemctl status servicename", "apt install servicename", "chmod servicename"], correctIndex: 1 }
+      },
+      {
+        id: "l5", moduleId: "m3", title: "What monitoring actually does",
+        body: "Monitoring is a loop, not a dashboard. Something collects data (an external probe curling your site every 30 seconds, or an agent on the server sampling CPU and disk); a central engine stores that time-series data and compares it to thresholds you set; and when a threshold is crossed for long enough, an alert fires — to a dashboard, a chat channel, or a ticket. Website monitoring watches from the outside: HTTP status codes, response time, SSL expiry, DNS. Server monitoring watches from the inside: CPU load, memory, disk, running processes. The two are complementary — an external probe can tell you the site is down but not that a runaway process ate all the RAM.",
+        keyTakeaway: "Monitoring is collect → store → evaluate against thresholds → alert. External probes see availability/latency; on-host agents see CPU/memory/disk. You need both.",
+        check: { question: "An external HTTP probe says your site is up, but users say it's slow and the app keeps restarting. What is the probe blind to?", choices: ["Nothing — if it is up, it is fine", "On-host signals like memory pressure or a crashing process", "The HTTP status code", "SSL expiry"], correctIndex: 1 }
+      },
+      {
+        id: "l6", moduleId: "m3", title: "The metrics that matter",
+        body: "For websites, the headline metrics are availability (HTTP status — 200 good, 5xx bad), latency (time to first byte, DNS lookup time, SSL handshake time), and certificate health (days until the TLS cert expires). For servers, it's resource utilization (CPU load average, memory used vs cached, swap), storage (per-partition capacity and disk read/write latency), process/service health (is nginx or mysqld actually running), and network throughput (bytes in/out, dropped packets). The skill isn't memorizing every metric — it's knowing which one to look at first for a given symptom.",
+        keyTakeaway: "Know the first metric to reach for per symptom: 5xx → logs, high latency → TTFB/DNS, slow box → load average then top, 'no space' → df/inodes.",
+        check: { question: "A user reports the site 'feels slow.' Which best distinguishes a slow SERVER from a slow NETWORK path?", choices: ["HTTP status code", "Disk capacity", "Response-time breakdown (DNS/handshake/TTFB) vs. network latency (ping/mtr)", "SSL expiry days"], correctIndex: 2 }
+      },
+      {
+        id: "l7", moduleId: "m4", title: "Server is slow: CPU, memory, or I/O?",
+        body: "'Slow' is a symptom, not a cause — the first job is to find which resource is the bottleneck. uptime and top show the load average, three numbers for the last 1, 5, and 15 minutes; read them against your core count (nproc) — load roughly equal to cores is full utilization, load well above cores means processes are queuing. vmstat 1 prints one line per second and is the fastest triage tool: the r column is processes waiting to run (CPU pressure), wa is CPU time lost waiting on disk (I/O pressure), and si/so are swap in/out (memory pressure). Whichever column is pegged tells you where to look next.",
+        keyTakeaway: "Don't guess 'slow' — run vmstat 1 and read r (CPU), wa (I/O wait), si/so (swap) to identify the real bottleneck before fixing anything.",
+        check: { question: "In vmstat 1, a high value in the 'wa' column points at which bottleneck?", choices: ["CPU is overloaded", "The CPU is waiting on disk I/O", "Memory is full", "The network is saturated"], correctIndex: 1 }
+      },
+      {
+        id: "l8", moduleId: "m4", title: "High CPU and runaway processes",
+        body: "When the CPU is the bottleneck, find the culprit process. top sorted by CPU (press P) shows it live; ps aux --sort=-%cpu | head gives a clean top-of-list snapshot you can paste into a ticket. mpstat -P ALL 1 breaks usage down per core — useful when one core is pegged at 100% (a single-threaded hot loop) while the box average looks fine. pidstat -u 1 attributes CPU to specific PIDs over time. High user time points at application code; high system time points at kernel/syscall overhead. Once you've identified the process, the fix is usually restarting the service or fixing the code — not rebooting the box blind.",
+        keyTakeaway: "ps aux --sort=-%cpu | head names the CPU hog fast; mpstat -P ALL catches a single pegged core the average hides.",
+        check: { question: "The box average CPU looks fine but the app is slow. Which command reveals that ONE core is pegged at 100%?", choices: ["free -h", "df -h", "mpstat -P ALL 1", "du -sh"], correctIndex: 2 }
+      },
+      {
+        id: "l9", moduleId: "m4", title: "Memory pressure and the OOM killer",
+        body: "Linux fills unused RAM with disk cache on purpose, so 'used memory is high' is almost never the problem by itself — read free -h and look at the available column and whether swap is being used. Real memory pressure shows up as sustained swap activity (si/so in vmstat) and, at the extreme, the kernel's OOM (out-of-memory) killer terminating a process — you'll see it in dmesg or journalctl -k as 'Out of memory: Killed process'. ps aux --sort=-%mem | head finds the biggest consumer, cat /proc/meminfo gives the full breakdown, and pmap -x <PID> shows where one process's memory is going. A process whose memory only ever grows is the classic memory-leak signature.",
+        keyTakeaway: "Judge memory by 'available' and swap activity, not 'used'. Sustained swap + an OOM-kill in dmesg is real pressure; steadily-growing RSS is a leak.",
+        check: { question: "On a healthy Linux box, most RAM shows as 'used'. Why is that usually fine?", choices: ["It means a memory leak", "Linux uses free RAM for disk cache and releases it on demand — check the available column", "Swap is broken", "The OOM killer is active"], correctIndex: 1 }
+      },
+      {
+        id: "l10", moduleId: "m4", title: "Disk I/O is the hidden bottleneck",
+        body: "A server can have idle CPU and free memory and still crawl because the disk can't keep up. iostat -x 1 is the key tool: %util near 100% means the disk is saturated, and await (average wait per I/O in milliseconds) climbing into the tens or hundreds means requests are queuing. iotop shows which process is doing the I/O (like top for disk), and pidstat -d 1 attributes read/write throughput to PIDs. Common causes: a database doing unindexed scans, a log written in a tight loop, or a backup job running in business hours. The wa column you saw in vmstat is what sent you here.",
+        keyTakeaway: "iostat -x 1: %util ~100% and rising await = disk saturation. iotop / pidstat -d name the process doing the I/O.",
+        check: { question: "CPU is idle and RAM is free, but everything is slow. iostat -x 1 shows %util at 99% and await at 250ms. What's the bottleneck?", choices: ["CPU", "Memory", "Disk I/O saturation", "Network"], correctIndex: 2 }
+      },
+      {
+        id: "l11", moduleId: "m5", title: "Disk is full: bytes, inodes, and ghost files",
+        body: "'No space left on device' stops logs and applications cold. Start with df -h to see which partition is full — it's often /var or /, not the whole disk. Then find the culprit with du -sh /var/* | sort -rh | head or ncdu for an interactive drill-down; lsblk shows the physical layout. Two traps: first, run out of inodes and you get 'no space' while df -h shows free bytes — df -i reveals an exhausted inode table from millions of tiny files. Second, deleting a large file that a process still has open does NOT free the space until that process is restarted — lsof | grep deleted finds these 'ghost' files. That's why the right fix for a runaway log is to truncate or rotate it, not rm it.",
+        keyTakeaway: "df -h to find the full partition, du/ncdu to find the hog. If bytes look free but you're 'full', check df -i (inodes) and lsof for deleted-but-open files.",
+        check: { question: "df -h shows free space, but the system says 'No space left on device'. What do you check next?", choices: ["Reboot immediately", "df -i for exhausted inodes", "Add more RAM", "Restart networking"], correctIndex: 1 }
+      },
+      {
+        id: "l12", moduleId: "m5", title: "Taming huge and noisy logs",
+        body: "Logs are the most common thing to fill a disk. du -sh /var/log/* shows which log is the offender and journalctl --disk-usage reports how much the systemd journal is using. For the journal, journalctl --vacuum-time=7d (or --vacuum-size=500M) trims it safely. For application logs, logrotate (configured in /etc/logrotate.conf and /etc/logrotate.d/) is the proper long-term fix — it rotates, compresses, and deletes old logs on a schedule so a log can never grow unbounded. When you need to read them, tail -f <logfile> follows new lines live and grep -i error <logfile> filters to the failures.",
+        keyTakeaway: "journalctl --vacuum-* trims the journal; logrotate is the permanent fix for app logs. tail -f + grep -i error to actually read them.",
+        check: { question: "What's the correct long-term fix so application logs can never fill the disk again?", choices: ["A cron job that rm's logs nightly", "Configure logrotate to rotate/compress/expire them", "Buy a bigger disk", "Delete /var/log"], correctIndex: 1 }
+      },
+      {
+        id: "l13", moduleId: "m6", title: "Website or application not reachable",
+        body: "When users can't reach an app, localize the fault by climbing the stack instead of guessing. ping <host> tests basic network reachability (but many hosts block ICMP, so a failed ping isn't conclusive). curl -I http://<host> is more precise — it does a real HTTP request and shows the status code and redirect chain. traceroute <host> shows where in the path packets stop. On the server itself, ss -tulpn confirms the application is actually listening on the port you expect, and systemctl status <service> confirms the service is even running. Each rung tells you which layer to blame: network, DNS, the port/bind, or the service.",
+        keyTakeaway: "Climb the stack: ping (network) → curl -I (HTTP) → traceroute (path) → ss -tulpn (listening?) → systemctl status (running?).",
+        check: { question: "ping to the host fails but the site loads fine in a browser. Why is that possible?", choices: ["The browser is cached", "Many hosts block ICMP, so ping can fail while HTTP works fine", "DNS is down", "The disk is full"], correctIndex: 1 }
+      },
+      {
+        id: "l14", moduleId: "m6", title: "Service won't start, port not listening",
+        body: "When a service fails or crash-loops, systemctl status <service> gives the headline, but the real error is in journalctl -u <service> -xe — the actual exception, missing file, or config syntax error. systemctl cat <service> prints the unit file so you can check ExecStart, paths, and user; dmesg | tail catches kernel-level causes like an OOM kill. A related symptom is 'port not listening': ss -tulpn | grep <port> shows what's bound, lsof -i :<port> shows which process, and if it's listening on 127.0.0.1 it's reachable locally but not externally. If the app is fine but external users still can't connect, check the firewall: firewall-cmd --list-ports or ufw status.",
+        keyTakeaway: "journalctl -u <svc> -xe has the real start error. For 'port not listening', ss -tulpn shows the bind (127.0.0.1 vs 0.0.0.0); then check the firewall.",
+        check: { question: "A service is listening on 127.0.0.1:8080 but remote users can't connect. Most likely cause?", choices: ["The disk is full", "It's bound to localhost only (should be 0.0.0.0) and/or the firewall blocks the port", "DNS is misconfigured", "The CPU is overloaded"], correctIndex: 1 }
+      },
+      {
+        id: "l15", moduleId: "m6", title: "DNS failures and slow networks",
+        body: "When hostnames won't resolve, dig <domain> (or nslookup <domain>) shows exactly what the DNS servers return; cat /etc/resolv.conf shows which resolvers the box uses, and systemd-resolve --status shows the effective resolver. The classic isolating test: ping 8.8.8.8 — if pinging an IP works but resolving a name doesn't, the network is fine and the problem is DNS. For a network that's merely slow, mtr <host> combines ping and traceroute to show per-hop latency and packet loss over time, ip -s link shows interface errors and dropped packets, and ethtool <interface> reports the negotiated link speed and duplex — a NIC that quietly fell back to 100Mbps half-duplex is a real, easily-missed cause of 'the network is slow'.",
+        keyTakeaway: "ping 8.8.8.8 working while names fail = DNS config problem. For slow networks, mtr shows per-hop loss/latency; ip -s link shows interface errors.",
+        check: { question: "ping 8.8.8.8 succeeds but ping google.com fails with 'name resolution'. What's broken?", choices: ["The internet connection", "DNS resolution/configuration, not connectivity", "The web server", "The firewall on port 80"], correctIndex: 1 }
+      },
+      {
+        id: "l16", moduleId: "m7", title: "Login failures and permission denied",
+        body: "For a login failure over SSH, the answer is in the auth log: journalctl -xe or tail -f /var/log/auth.log shows the real reason (bad key, wrong password, locked account). last -xe lists recent logins and reboots, and faillock --user <user> shows whether failed attempts locked the account. For 'permission denied' on a file, don't stop at the file's own ls -l — run id <user> to see their groups and, most importantly, namei -l <path> to walk every directory in the path: a missing execute (x) bit on a PARENT directory blocks access even when the file itself is world-readable. getfacl <file> reveals POSIX ACLs beyond the basic mode, and sudo -l shows exactly which commands a user may run with sudo.",
+        keyTakeaway: "auth.log/journalctl explains failed logins. For 'permission denied', namei -l walks the whole path — a parent dir missing +x is the usual culprit, not the file itself.",
+        check: { question: "A file is -rw-r--r-- (world-readable) but a user still gets 'Permission denied'. Most likely cause?", choices: ["The file needs execute permission", "A parent directory in the path is missing execute (x) for that user", "The disk is full", "SELinux is always the cause"], correctIndex: 1 }
+      },
+      {
+        id: "l17", moduleId: "m7", title: "Finding files and reading a crash",
+        body: "When a file or path is missing, find / -name <file> 2>/dev/null searches the whole tree (the redirect hides permission noise), locate <file> is far faster if the mlocate database is present, ls -lah <path> inspects a location, and stat <file> shows exact timestamps and the inode. When the whole system crashes or reboots unexpectedly, the kernel log has the truth: dmesg -T | tail -50 shows recent kernel messages with readable timestamps, and journalctl -k -b -1 reads the kernel log from the PREVIOUS boot — essential after a reboot, because the current boot's log won't contain the crash. A 'kernel panic — not syncing' line, an OOM kill, or repeated hardware errors point respectively at a driver/filesystem issue, memory pressure, or failing hardware.",
+        keyTakeaway: "find/locate/stat to track down files. After an unexpected reboot, journalctl -k -b -1 reads the PREVIOUS boot's kernel log — where the panic/OOM/hardware clue lives.",
+        check: { question: "A server rebooted unexpectedly. Which command shows the kernel log from BEFORE the reboot?", choices: ["dmesg (current only)", "journalctl -k -b -1", "systemctl status", "cat /var/log/syslog | head"], correctIndex: 1 }
+      },
+      {
+        id: "l18", moduleId: "m8", title: "Self-healing with systemd and health checks",
+        body: "The cheapest self-healing needs no extra tools: a systemd drop-in override with Restart=always and RestartSec=5s makes the init system automatically restart a service that crashes. But a process can be alive and not working — running yet returning 500s — so the second layer is an active health check. A small bash script curls the endpoint, reads the HTTP status, and if it isn't 200 logs the event, restarts the service, then re-checks: if it recovered, log success; if not, escalate (in production, fire a Slack/PagerDuty webhook and open a P1). Scheduled every minute with cron, that script is a complete detect → act → verify → escalate loop. The key discipline is the verify step — never assume a restart worked; confirm it, and have a path for when it didn't.",
+        keyTakeaway: "Restart=always handles crashes; a curl-based health check on cron handles 'alive but broken'. Always verify recovery and escalate on failure.",
+        check: { question: "Why isn't Restart=always alone enough for real self-healing?", choices: ["It restarts too fast", "A process can be running but not actually serving (returning 500s) — you also need an active health check that verifies behavior", "It only works on Ubuntu", "It requires root"], correctIndex: 1 }
+      },
+      {
+        id: "l19", moduleId: "m8", title: "How this platform automates remediation",
+        body: "Everything in this module is exactly what ITOps Solution's own Self-Healing does. Detection: an agent on the host reports metrics, and the platform detects a real condition (for example, disk usage crossing 90%). Decision: it maps the condition to a safe, allowlisted runbook action and creates a proposed remediation with a plain-language root cause — gated by an autonomy setting (Off / Suggest / Auto-heal) that defaults to requiring human approval. Action: on approval (or automatically, if the org opted in) the agent runs the fixed action — never a raw command from the database — backing up first, testing, and rolling back on failure. Verify and close: the next scan confirms whether the condition cleared, recording 'recovered' or 'not improved' in an audit trail. Notice what's deliberately NOT automated — a strict Content-Security-Policy is left for human review because it can break a site in ways a config test won't catch. That judgement — which fixes are safe to automate and which aren't — is the real SRE skill.",
+        keyTakeaway: "Real auto-remediation = detect → propose (with autonomy gating) → apply a fixed, allowlisted action via an agent (backup/test/rollback) → verify → audit. Knowing what NOT to auto-apply matters as much as the automation.",
+        check: { question: "Why apply only fixed allowlisted actions via an agent instead of running commands sent from the monitoring system?", choices: ["It's faster", "It bounds the blast radius — the agent can only run vetted actions, never arbitrary remote commands", "It avoids writing logs", "It removes the need to verify"], correctIndex: 1 }
       }
     ],
     quiz: [
       { id: "q1", questionType: "single", question: "Where does most Linux system configuration live?", choices: ["/tmp", "/home", "/etc", "/var"], correctIndex: 2 },
       { id: "q2", questionType: "single", question: "A file shows permissions \"-rwxr--r--\". Can someone outside the owner's group run it as a program?", choices: ["Yes, everyone has execute", "No, only the owner has execute permission", "Only the group can", "Permissions don't affect execution"], correctIndex: 1 },
       { id: "q3", questionType: "single", question: "Which command restarts a systemd-managed service?", choices: ["chmod restart nginx", "systemctl restart nginx", "apt restart nginx", "ps restart nginx"], correctIndex: 1 },
-      { id: "q4", questionType: "single", question: "On Ubuntu, which command installs a new package?", choices: ["dnf install package", "systemctl install package", "apt install package", "chown install package"], correctIndex: 2 }
+      { id: "q4", questionType: "single", question: "On Ubuntu, which command installs a new package?", choices: ["dnf install package", "systemctl install package", "apt install package", "chown install package"], correctIndex: 2 },
+      { id: "q5", questionType: "single", question: "A server is slow. Which command best identifies whether the bottleneck is CPU, memory, or disk I/O?", choices: ["df -h", "vmstat 1", "ls -l", "dig example.com"], correctIndex: 1 },
+      { id: "q6", questionType: "single", question: "df -h shows free space but you get 'No space left on device'. Likely cause?", choices: ["The CPU is full", "Exhausted inodes (df -i) or a deleted-but-open file", "DNS failure", "A firewall rule"], correctIndex: 1 },
+      { id: "q7", questionType: "single", question: "ping 8.8.8.8 works but ping google.com fails. What is broken?", choices: ["The network cable", "DNS resolution/configuration", "The web server", "The disk"], correctIndex: 1 },
+      { id: "q8", questionType: "single", question: "A service returns errors and you want it to auto-recover. Minimum safe pattern?", choices: ["rm the logs on a schedule", "Detect via health check, restart, then VERIFY recovery and escalate if it fails", "Reboot the server hourly", "Increase RAM"], correctIndex: 1 },
+      { id: "q9", questionType: "single", question: "Why is a strict Content-Security-Policy deliberately left OUT of automatic apply?", choices: ["CSP is deprecated", "A strict CSP can break a working site in ways an nginx config test won't catch — it needs human review", "It's not a real header", "Agents can't write it"], correctIndex: 1 }
+    ]
+  },
+  // Red Hat Enterprise Linux Essential Training — same real content as the
+  // seeded 'rhel-essential-training' course in migration 0095, built from the
+  // Red Hat (EX300) exercise material. Chapters 1 & 2 today; designed to grow.
+  {
+    id: "local-rhel-essential",
+    slug: "rhel-essential-training",
+    title: "Red Hat Enterprise Linux Essential Training",
+    description: "Hands-on Red Hat Enterprise Linux for real system administration and RHCE (EX300) prep: managing services with systemd, boot targets, editing config with vi, filesystems and /etc/fstab, and SELinux — then bash scripting and process management to automate it all.",
+    level: "intermediate",
+    estimatedMinutes: 150,
+    category: "infrastructure",
+    track: "academy",
+    minPlan: "PROFESSIONAL",
+    freeTier: false,
+    modules: [
+      { id: "m1", title: "Chapter 1 — Core RHEL Administration" },
+      { id: "m2", title: "Chapter 2 — Bash Scripting & Process Management" }
+    ],
+    lessons: [
+      {
+        id: "l1", moduleId: "m1", title: "Managing services with systemd",
+        body: "On RHEL 7+, systemd manages every background service and systemctl is the one tool you use. systemctl start httpd, stop, restart, and reload (re-read config without a full restart) control a service now; systemctl status httpd shows whether it's running plus its recent log lines. Runtime state and boot state are separate: systemctl enable httpd makes it start automatically on boot (and disable stops that), while systemctl is-enabled and is-active report each independently — a service can be running but not enabled, or enabled but stopped. systemctl list-units -t service --all shows current services; list-unit-files -t service shows every installed unit. To hard-block a service so it can't start even as a dependency, systemctl mask it (unmask to reverse). These replace the legacy service and chkconfig commands you'll still see in older docs.",
+        keyTakeaway: "systemctl is the single service tool: start/stop/restart/reload/status for now, enable/disable for boot, mask to hard-block. Runtime and boot state are independent.",
+        check: { question: "Which command makes a service start automatically on every boot?", choices: ["systemctl start httpd", "systemctl enable httpd", "systemctl status httpd", "systemctl mask httpd"], correctIndex: 1 }
+      },
+      {
+        id: "l2", moduleId: "m1", title: "Boot targets and system state",
+        body: "systemd replaces the old numbered runlevels with named targets. The two you manage most are multi-user.target (full text-mode multi-user system — the normal server default) and graphical.target (adds the GUI). systemctl get-default shows the boot target and systemctl set-default multi-user.target changes it. To switch the running system to a target without rebooting, systemctl isolate multi-user.target; systemctl rescue drops to single-user rescue mode for repairs. Power state is also systemctl: reboot, poweroff, and halt. When a machine boots slowly, systemd-analyze blame lists each unit by how long it took to initialize — the first thing to run on a 'why is boot slow' ticket.",
+        keyTakeaway: "Targets replaced runlevels: multi-user.target (text) and graphical.target (GUI). get-default/set-default control boot; systemd-analyze blame finds slow-starting units.",
+        check: { question: "A RHEL server boots slowly. Which command shows which units take the longest?", choices: ["systemctl status", "systemd-analyze blame", "systemctl isolate", "uptime"], correctIndex: 1 }
+      },
+      {
+        id: "l3", moduleId: "m1", title: "Editing configuration with vi/vim",
+        body: "vi (vim) is on every Linux system, so it's the editor you must be able to use, especially in rescue mode where nothing else exists. It has three modes: command mode (the default — keystrokes are commands), insert mode (i to enter, type normally), and ex mode (: for line commands). Esc always returns to command mode. Saving and quitting are ex commands: :w writes, :q quits, :q! quits discarding changes, and :wq (or :x) saves and quits. In command mode the daily verbs are yy (copy a line), 5yy (copy 5), p (paste), dd (delete/cut a line), 5dd, x (delete a character), and u (undo). Search with /text (forward), ?text (back), then n/N for next/previous. :set number shows line numbers — handy when an error points at a line.",
+        keyTakeaway: "Esc returns to command mode; :wq saves and quits, :q! discards. yy/dd/p edit lines and /text searches — the core you need to fix a config file anywhere.",
+        check: { question: "You made changes you now want to throw away, and need to exit. Which command?", choices: [":wq", ":w", ":q!", ":set number"], correctIndex: 2 }
+      },
+      {
+        id: "l4", moduleId: "m1", title: "Filesystems and /etc/fstab",
+        body: "/etc/fstab tells the system what to mount at boot and how. Each line has six fields: (1) the device — best given as UUID= or LABEL= rather than a /dev/sdaN name, because device names can change when disks are reordered; (2) the mountpoint; (3) the filesystem type (xfs, ext4, swap, nfs...); (4) mount options (defaults, or ro, noexec, nofail); (5) the dump flag (0 = don't back up, 1 = do); and (6) the fsck pass order at boot — 0 skips the check, 1 is reserved for the root filesystem, and 2 for everything else. After editing fstab, always run mount -a to mount everything and catch typos BEFORE you reboot — a bad fstab entry can leave a server unable to boot.",
+        keyTakeaway: "fstab's six fields: device, mountpoint, fstype, options, dump, fsck-pass. Use UUID/LABEL not /dev names, and test with mount -a before rebooting.",
+        check: { question: "What does the 6th field of an /etc/fstab line control?", choices: ["Whether to back up the partition", "The fsck check order at boot (0 = skip)", "The mount options", "The filesystem type"], correctIndex: 1 }
+      },
+      {
+        id: "l5", moduleId: "m1", title: "SELinux essentials",
+        body: "SELinux is mandatory access control layered on top of normal permissions — a process can have Unix permission to a file and still be denied by policy. Check the mode with getenforce or sestatus; setenforce 0 (permissive) / setenforce 1 (enforcing) toggles it at runtime, and /etc/selinux/config sets it persistently — but the right instinct is to keep it enforcing, not disable it. Everything has a context; the type is what matters. View it with ls -Z (files), ps -Z (processes), and id -Z (your user). When a service works in permissive mode but is denied in enforcing, the cause is almost always a wrong file context: restorecon -v resets a file to the policy default (the most common fix), chcon sets one temporarily, and semanage fcontext adds a persistent rule for a non-standard location. Feature toggles are booleans — getsebool -a lists them, setsebool -P sets one permanently. Denials are logged to /var/log/audit/audit.log; sealert/ausearch translate them, and audit2allow builds a module for a genuinely new legitimate access.",
+        keyTakeaway: "Keep SELinux enforcing. Read the denial (audit.log/sealert), then fix the context (restorecon) or flip a boolean (setsebool -P) — audit2allow only for a real new access.",
+        check: { question: "A service runs fine with SELinux permissive but is denied when enforcing. Best FIRST fix?", choices: ["Permanently disable SELinux", "Check the denial and restore the correct file context / boolean", "Run everything as root", "Delete the audit log"], correctIndex: 1 }
+      },
+      {
+        id: "l6", moduleId: "m2", title: "Shell variables",
+        body: "Scripts run on variables. Positional variables carry arguments: $0 is the script name, $1-$9 the first nine arguments (${10} and up need braces), $# is the count, \"$@\" is all arguments as a list (each preserved as its own word), and $* is all arguments joined into one string. Special variables report state: $? is the exit status of the last command (0 = success — the value every script checks), $$ is the current shell's PID, and $! is the PID of the last backgrounded process. Environment/shell variables describe the session: $PWD, $HOME, $UID, $PATH, $IFS (the field separator), and $SECONDS. The single most important habit is quoting: write \"$var\" (not $var) so values with spaces aren't split into multiple words — the source of a large share of script bugs.",
+        keyTakeaway: "$1..$9 are arguments, $# the count, \"$@\" the list, $? the last exit status. Always quote \"$var\" to prevent word-splitting.",
+        check: { question: "Which variable holds the exit status (success/failure) of the command that just ran?", choices: ["$!", "$#", "$?", "$$"], correctIndex: 2 }
+      },
+      {
+        id: "l7", moduleId: "m2", title: "Conditionals and tests",
+        body: "Bash decisions use test expressions. Use [[ ]] for strings and files and (( )) for arithmetic. Numeric comparisons inside [[ ]] use letter operators: -eq (equal), -ne, -lt, -le, -gt, -ge — e.g. if [[ $count -gt 10 ]]. String comparisons use symbols: = / !=, == with a wildcard pattern, =~ for a regular expression, -z (empty) and -n (non-empty). File tests are essential in admin scripts: -e (exists), -f (is a regular file), -d (is a directory), -r / -w / -x (readable/writable/executable), and -s (exists and non-empty). (( )) does math with the familiar ==, <, >. Combine conditions with && (and), || (or), and ! (not).",
+        keyTakeaway: "[[ ]] tests strings/files — -eq for numbers, = for strings, -f/-d/-e for files; (( )) does arithmetic; combine with && || !.",
+        check: { question: "Inside [[ ]], which operator tests whether two NUMBERS are equal?", choices: ["=", "==", "-eq", "-z"], correctIndex: 2 }
+      },
+      {
+        id: "l8", moduleId: "m2", title: "Loops and control flow",
+        body: "Admin scripts are built from a handful of blocks. if ... then ... elif ... else ... fi branches on conditions. case $VAR in pattern) commands ;; *) default ;; esac matches a variable against many fixed patterns — cleaner than a stack of ifs (each branch ends in ;;). Iteration comes in four shapes: for ITEM in a b c loops over a list; the C-style for (( i=0; i<=5; i++ )) loops by count; while [ condition ] repeats while true; and until [ condition ] repeats until true. select builds a quick numbered menu (it uses the $PS3 prompt) and pairs naturally with case. break exits a loop early and continue skips to the next iteration.",
+        keyTakeaway: "if/elif/else for branches, case for many patterns, for/while/until for iteration, select for menus — the building blocks of every admin script.",
+        check: { question: "You need to match one variable against many fixed values (start/stop/restart). Cleanest construct?", choices: ["A long if/elif chain", "a case statement", "a while loop", "a select menu"], correctIndex: 1 }
+      },
+      {
+        id: "l9", moduleId: "m2", title: "Reading user input",
+        body: "Interactive scripts read input with read. read NAME assigns whatever the user types to $NAME; read -p \"Enter name: \" NAME prints the prompt on the same line; giving multiple variable names (read -p \"First and last: \" FIRST LAST) splits the words across them. Two flags matter for real tools: read -s hides typed input (for passwords), and read -t 5 times out after 5 seconds, returning non-zero so you can handle 'no answer' in an if. For proper command-line options (flags like -s <name> -h), use getopts in a while loop with a case: while getopts \":s:h\" opt; do case $opt in s) NAME=$OPTARG;; h) usage;; esac; done — $OPTARG holds an option's argument, and shift $((OPTIND-1)) afterward drops the parsed options so remaining $1 $2... are the normal arguments.",
+        keyTakeaway: "read (-p prompt, -s silent, -t timeout) for interactive input; getopts + case + $OPTARG + shift for -flag options on a script.",
+        check: { question: "Which read flag hides the user's typing, for entering a password?", choices: ["-p", "-t", "-s", "-a"], correctIndex: 2 }
+      },
+      {
+        id: "l10", moduleId: "m2", title: "Managing processes",
+        body: "Finding and controlling processes is core admin work. ps -ef lists every process with full detail; ps -ejH or pstree shows the parent/child tree; ps -eo pid,user,args --sort user picks and sorts custom columns. To find a specific one, pgrep -u root sshd searches by name/user and pidof crond returns its PID. Signals control them: plain kill <pid> sends SIGTERM (graceful stop), kill -HUP <pid> tells many daemons to reload their config without restarting, and kill -9 <pid> sends SIGKILL (forced — last resort, because the process can't clean up); pkill <name> signals by name. Priority is set with nice -n <n> <cmd> at launch and renice for a running one (lower number = higher priority). To watch live use top; lsof lists open files; and nohup <cmd> & runs something that survives you logging out.",
+        keyTakeaway: "ps/pgrep/pidof to find, kill/-HUP/-9 and pkill to signal, nice/renice for priority, top/lsof to inspect, nohup & to detach from your session.",
+        check: { question: "Which signal asks a daemon to re-read its config WITHOUT fully restarting it?", choices: ["kill -9 (SIGKILL)", "kill -HUP (SIGHUP)", "kill -STOP", "nice"], correctIndex: 1 }
+      }
+    ],
+    quiz: [
+      { id: "q1", questionType: "single", question: "Which command starts a service now AND on every future boot?", choices: ["systemctl status httpd then reboot", "systemctl start httpd && systemctl enable httpd", "systemctl mask httpd", "chkconfig httpd"], correctIndex: 1 },
+      { id: "q2", questionType: "single", question: "What is the normal boot target for a text-mode RHEL server (no GUI)?", choices: ["graphical.target", "rescue.target", "multi-user.target", "runlevel5"], correctIndex: 2 },
+      { id: "q3", questionType: "single", question: "A service is denied by SELinux despite correct file permissions. Best practice?", choices: ["setenforce 0 permanently", "Read audit.log and fix the context with restorecon / set the right boolean", "Delete the SELinux package", "Run the service as root"], correctIndex: 1 },
+      { id: "q4", questionType: "single", question: "Safest way to expand all script arguments preserving spaces?", choices: ["$*", "\"$@\"", "$#", "$!"], correctIndex: 1 },
+      { id: "q5", questionType: "single", question: "Which construct parses -flags like -s <name> in a bash script?", choices: ["read -p", "getopts in a while/case loop", "a for loop", "$1 $2 directly"], correctIndex: 1 },
+      { id: "q6", questionType: "single", question: "You must forcibly kill a hung process that ignores a normal stop. Which?", choices: ["kill -HUP <pid>", "kill <pid>", "kill -9 <pid>", "nice -9 <pid>"], correctIndex: 2 }
     ]
   },
   // Second Academy local-preview course — same real content as the seeded
