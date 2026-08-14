@@ -1,287 +1,413 @@
 import { Link } from "react-router-dom";
-import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { motion } from "motion/react";
 import { MarketingNav } from "../components/MarketingNav";
 import { MarketingFooter } from "../components/MarketingFooter";
-import { WaitlistForm } from "../components/WaitlistForm";
-import { fetchContentItems, fetchAcademyPreviewCourses, PLAN_ORDER } from "../api/endpoints";
-import { ProductHero, ProductShell, CapabilitiesSplit, WorkflowFlow } from "../components/ProductLayout";
+import { ProductShell } from "../components/ProductLayout";
 import { Reveal, SpotlightCard } from "../components/Animated";
-import { Skeleton } from "../components/Skeleton";
-import { EmptyState } from "../components/EmptyState";
-import { AcademyMark } from "../components/AcademyBrand";
-import { CategoryIcon } from "../components/CyberSachetTheme";
-import { CATEGORY_LABELS } from "../data/cybersachetCourses";
-import { AnimatedCourseHeaderBackground, COURSE_IMAGES, CATEGORY_IMAGES } from "./CyberSachetTraining";
+import { ITOPS_PROJECTS, CERTIFICATION_PATHS } from "../data/itopsAcademyCourses";
 
-const LIVE_TODAY = [{
-  title: "Structured Courses",
-  detail: "Real courses built from modules and lessons on Linux, cloud computing, and DevOps & CI/CD — organized so a team can actually finish them, not one long video."
-}, {
-  title: "Quizzes & Real Certificates",
-  detail: "Each course ends in a scored quiz. Pass it and a real certificate is issued — with a QR code and a public, verifiable /verify page, not a PDF anyone could fake."
-}, {
-  title: "Tiered Plan Access",
-  detail: "Every course has its own required package tier. Linux Fundamentals is open on every plan; more advanced courses unlock as an organization upgrades — enforced server-side, not just in the UI."
-}, {
-  title: "Per-Organization Licensing",
-  detail: "A platform admin licenses training for an organization from the admin portal — every licensed member then sees their courses on login, and an admin can assign specific courses to specific people."
-}];
+const PHILOSOPHY_STEPS = [
+  "LEARN", "BUILD", "DEPLOY", "OPERATE", "MONITOR", "BREAK",
+  "INVESTIGATE", "FIX", "AUTOMATE", "SECURE", "SCALE", "RECOVER",
+  "DOCUMENT", "IMPROVE"
+];
 
-const WORKFLOW_STEPS = [{
-  title: "Log in",
-  detail: "Your organization's license and your plan tier decide which courses you can see — no separate signup."
-}, {
-  title: "Work through lessons",
-  detail: "Each lesson ends in a quick comprehension check before the next one unlocks."
-}, {
-  title: "Pass the quiz",
-  detail: "A real graded assessment at the end of the course, scored immediately."
-}, {
-  title: "Claim your certificate",
-  detail: "A verifiable certificate is issued instantly, with a QR code linking to a public verification page."
-}];
+const LAB_TIERS = [
+  {
+    tier: "Tier 1",
+    title: "Browser Simulation Engine",
+    badge: "Available Now",
+    color: "cyan",
+    desc: "Zero setup, instant in-browser stateful terminal with interactive topology inspector, simulated command execution, and automated verification."
+  },
+  {
+    tier: "Tier 2",
+    title: "Real Docker Compose Lab",
+    badge: "Hands-On",
+    color: "emerald",
+    desc: "Isolated container environments running real Linux, Docker Engine, PostgreSQL, Redis, MQTT brokers, and Nginx reverse proxies."
+  },
+  {
+    tier: "Tier 3",
+    title: "Real Kubernetes Cluster Lab",
+    badge: "Cloud-Native",
+    color: "indigo",
+    desc: "Dedicated Kubernetes namespace with real kubectl, Deployments, Services, NetworkPolicies, Prometheus scraping, and Grafana dashboards."
+  },
+  {
+    tier: "Tier 4",
+    title: "Full Cloud Infrastructure Lab",
+    badge: "Enterprise",
+    color: "purple",
+    desc: "Multi-VM cloud environments orchestrated via Terraform IaC, Ansible automation, and CI/CD pipelines."
+  }
+];
 
-const FAQ = [{
-  q: "Is this the same as CyberSachet?",
-  a: "No. CyberSachet is our security-awareness training product — phishing, passwords, data handling. Moonsav ITOps Academy is a separate, distinctly branded product for Cloud, DevOps, and Infrastructure skills. Both run on the same real course engine and are licensed together under one training license, but they're shown, filtered, and certified separately."
-}, {
-  q: "How do I get access?",
-  a: "Your organization's platform admin licenses training from the admin portal. Once licensed, log in and your courses appear according to your organization's plan — Linux Fundamentals is open on every plan, including Starter."
-}, {
-  q: "Do I get a real, verifiable certificate?",
-  a: "Yes. Passing a course's quiz issues a real certificate with a unique ID, a SHA-256 hash, and a QR code linking to a public verification page — anyone can confirm it's genuine without an account."
-}, {
-  q: "Can my whole team use it?",
-  a: "Yes. Once your organization is licensed, an admin can assign specific courses to specific team members, or — for admins and on the free tier — everyone can browse the full unlocked catalog."
-}, {
-  q: "What's not built yet?",
-  a: "Hands-on cloud lab environments, live instructor-led cohorts, and an AI learning assistant are on the roadmap, listed honestly below — they are not live today."
-}];
+const TRACKS = [
+  {
+    title: "Track 1 — ITOps Foundation",
+    icon: "🐧",
+    desc: "Linux kernel, process trees, systemd services, TCP/IP sockets, DNS debugging, TLS 1.3, Git branching, and Bash automation.",
+    topics: ["Linux Internals", "Networking & Sockets", "DNS & TLS", "Systemd Services", "Bash Scripting", "Process Triage"]
+  },
+  {
+    title: "Track 2 — DevOps & Orchestration",
+    icon: "🚀",
+    desc: "Multi-stage Docker, Compose networking, Nginx reverse proxies, GitHub Actions CI/CD, Terraform IaC, and Kubernetes zero-downtime rollouts.",
+    topics: ["Docker & Distroless", "Compose Stacks", "Nginx Gateways", "GitHub Actions", "Terraform Modules", "Kubernetes Rollouts"]
+  },
+  {
+    title: "Track 3 — DevSecOps & Cloud Security",
+    icon: "🛡️",
+    desc: "Shift-left SAST scanning, Gitleaks secret detection, Trivy container CVE scans, HashiCorp Vault dynamic secrets, and K8s NetworkPolicies.",
+    topics: ["SAST & Semgrep", "Secret Scanning", "Container CVEs", "HashiCorp Vault", "K8s NetworkPolicy", "Zero Trust"]
+  },
+  {
+    title: "Track 4 — SRE, Observability & Chaos",
+    icon: "📈",
+    desc: "Prometheus metrics, Grafana SLO dashboards, OpenTelemetry distributed tracing, Chaos engineering fault injection, and live incident postmortems.",
+    topics: ["Prometheus & PromQL", "Grafana SLOs", "OpenTelemetry Traces", "Chaos Engineering", "Incident Triage", "Blameless Postmortems"]
+  }
+];
 
-function CoursePreviewCard({ course, index }) {
-  const bgImage = COURSE_IMAGES[course.slug] ?? CATEGORY_IMAGES[course.category] ?? "/courses/cloud.png";
-
-  return (
-    <SpotlightCard tint="amber" delay={index * 0.05} className="h-full overflow-hidden relative group">
-      <div className="relative h-36 w-full overflow-hidden bg-slate-950 border-b border-white/10">
-        <AnimatedCourseHeaderBackground courseSlug={course.slug} category={course.category} />
-        <img
-          src={bgImage}
-          alt={course.title}
-          className="h-full w-full object-cover opacity-80 transition-transform duration-500 group-hover:scale-105"
-          loading="lazy"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/50 to-transparent z-10" />
-      </div>
-      <div className="flex h-full flex-col p-6 relative z-10 -mt-6">
-        <div className="flex items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-900/80 backdrop-blur-md px-2.5 py-1 text-[11px] font-medium text-white shadow-sm border border-white/15">
-            <CategoryIcon category={course.category} size={12} />{CATEGORY_LABELS[course.category] ?? course.category}
-          </span>
-          <span className="shrink-0 rounded-full bg-amber-400/20 backdrop-blur-md border border-amber-400/30 px-2.5 py-1 text-[11px] font-medium capitalize text-amber-300">
-            {course.level}
-          </span>
-        </div>
-        <h3 className="mt-4 text-base font-medium text-white light:text-slate-900">{course.title}</h3>
-        <p className="mt-2 flex-1 text-sm leading-relaxed text-white/55 light:text-slate-500">{course.description}</p>
-        <div className="mt-5 flex items-center justify-between border-t border-white/10 light:border-slate-900/10 pt-4 text-xs text-white/40 light:text-slate-400">
-          <span>{course.estimatedMinutes} min</span>
-          <span>{course.minPlan === "STARTER" ? "Free on every plan" : `Requires ${course.minPlan.charAt(0) + course.minPlan.slice(1).toLowerCase()}+`}</span>
-        </div>
-      </div>
-    </SpotlightCard>
-  );
-}
+const FAQ = [
+  {
+    q: "How does MOONSAV ITOps Academy differ from standard tutorial websites?",
+    a: "MOONSAV ITOps Academy is built around real operating environments. You do not just watch videos; you take control of real architectures (IoT water pumps & distributed microservices), inspect live topologies, execute terminal commands, respond to live production outages, and author blameless postmortems."
+  },
+  {
+    q: "What is the difference between Simulation Mode and Real Lab Mode?",
+    a: "Simulation Mode (Tier 1) provides an instant in-browser stateful shell, interactive topology inspector, and automated validators with zero wait time. Real Lab Mode (Tiers 2-4) provisions isolated Docker containers and Kubernetes namespaces for live containerized execution."
+  },
+  {
+    q: "What are the two flagship practical environments?",
+    a: "1. MOONSAV Smart Infrastructure Lab — our real IoT industrial product with virtual motors, water tanks, telemetry, and MQTT brokers. 2. MOONSAV Distributed Systems Lab — an enterprise e-commerce platform with Nginx gateway, Order/Inventory microservices, RabbitMQ message brokers, Celery workers, and PostgreSQL replication."
+  },
+  {
+    q: "How are MOONSAV certifications verified?",
+    a: "Certifications strictly require passing hands-on lab milestones, solving unknown root cause production incidents under active SLO pressure, and submitting audited blameless postmortems."
+  }
+];
 
 export default function Academy() {
-  const { data: courses, isLoading: coursesLoading } = useQuery({
-    queryKey: ["academy-preview-courses"],
-    queryFn: fetchAcademyPreviewCourses
-  });
-  const { data: plannedRows } = useQuery({
-    queryKey: ["content", "academy", "planned_capabilities"],
-    queryFn: () => fetchContentItems("academy", "planned_capabilities")
-  });
-  const roadmap = (plannedRows ?? []).map(item => ({ title: item.title, detail: item.body }));
-  const capabilities = [...LIVE_TODAY.map(c => ({ ...c, status: "live" })), ...roadmap.map(c => ({ ...c, status: "roadmap" }))];
+  return (
+    <div className="min-h-screen bg-black text-white antialiased font-sans">
+      <MarketingNav />
 
-  const categories = useMemo(() => {
-    const map = new Map();
-    for (const c of courses ?? []) {
-      if (!map.has(c.category)) map.set(c.category, []);
-      map.get(c.category).push(c);
-    }
-    return [...map.entries()];
-  }, [courses]);
+      <main className="pt-32 pb-24 space-y-24">
+        {/* HERO SECTION */}
+        <section className="relative overflow-hidden pt-12 pb-20">
+          {/* Ambient Glows */}
+          <div className="pointer-events-none absolute inset-0">
+            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 h-96 w-[40rem] rounded-full bg-gradient-to-tr from-cyan-500/20 via-blue-600/20 to-purple-600/20 blur-3xl opacity-60" />
+          </div>
 
-  const tierCounts = useMemo(() => {
-    const counts = Object.fromEntries(PLAN_ORDER.map(p => [p, 0]));
-    for (const c of courses ?? []) counts[c.minPlan] = (counts[c.minPlan] ?? 0) + 1;
-    // A course's tier unlocks it AND everything below — Professional sees
-    // Starter + Professional courses, not just courses tagged Professional.
-    let running = 0;
-    const cumulative = {};
-    for (const p of PLAN_ORDER) { running += counts[p] ?? 0; cumulative[p] = running; }
-    return cumulative;
-  }, [courses]);
-
-  return <div className="min-h-screen bg-black light:bg-gradient-to-b light:from-slate-50 light:to-white text-white light:text-slate-900 antialiased" style={{
-    fontFamily: "'Readex Pro', system-ui, -apple-system, sans-serif"
-  }}>
-    <MarketingNav />
-
-    <main className="pb-24 pt-40">
-      <ProductShell>
-        <ProductHero itemKey="academy" title="Moonsav ITOps Academy" subtitle="Cloud, DevOps, and Infrastructure training for your team" body="A structured training product for Cloud, DevOps, and Infrastructure skills — real courses, real graded quizzes, and real verifiable certificates, run on the same licensed engine as CyberSachet but shown, filtered, and certified as its own product. Cloud lab environments and instructor-led cohorts are honestly listed as roadmap below, not demoed as if they exist." status="live" capabilities={capabilities} backTo="/solutions" backLabel="Solutions" primaryCta={<Link to="/login" className="inline-block rounded-full bg-white px-7 py-3 text-sm font-normal text-black transition-colors hover:bg-neutral-200">
-          Log In to Start Learning
-        </Link>} secondaryCta={<a href="#courses" className="text-sm font-medium text-white/70 light:text-slate-500 underline decoration-white/20 light:decoration-slate-900/20 underline-offset-4 hover:text-white light:hover:text-slate-900 hover:decoration-white light:hover:decoration-slate-900">
-          Browse the catalog ↓
-        </a>} />
-      </ProductShell>
-
-      {/* course catalog */}
-      <section id="courses" className="mt-20 py-16 light:bg-white light:border-y light:border-slate-900/5 scroll-mt-28">
-        <ProductShell>
-          <Reveal className="mx-auto max-w-2xl text-center">
-            <p className="text-xs font-medium uppercase tracking-[0.15em] text-white/45 light:text-slate-400">The catalog</p>
-            <h2 className="mt-3 text-3xl font-medium tracking-tight md:text-4xl">Every course, real and published</h2>
-            <p className="mt-4 text-sm leading-relaxed text-white/55 light:text-slate-500">
-              Not a curated preview — this is the actual published catalog, fetched live. New courses appear here the
-              moment they're published, nothing staged.
-            </p>
-          </Reveal>
-
-          {coursesLoading ? <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {[0, 1, 2].map(i => <Skeleton key={i} className="h-52 rounded-2xl" />)}
-          </div> : (courses ?? []).length === 0 ? <div className="mt-10">
-            <EmptyState title="No courses published yet." description="The catalog is empty right now — check back soon, or contact us if you expected to see courses here." />
-          </div> : <div className="mt-10 space-y-12">
-            {categories.map(([category, list]) => <div key={category}>
-              <p className="mb-4 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.15em] text-amber-300 light:text-amber-700">
-                <CategoryIcon category={category} size={14} />{CATEGORY_LABELS[category] ?? category}
-              </p>
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {list.map((course, i) => <CoursePreviewCard key={course.id} course={course} index={i} />)}
+          <ProductShell>
+            <div className="mx-auto max-w-4xl text-center space-y-6">
+              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-cyan-300 backdrop-blur-md">
+                <span className="h-2 w-2 rounded-full bg-cyan-400 animate-ping" />
+                INTERACTIVE ENGINEERING & SRE ACADEMY
               </div>
-            </div>)}
-          </div>}
-        </ProductShell>
-      </section>
 
-      {/* how it works */}
-      <section className="py-16">
-        <ProductShell>
-          <Reveal className="mx-auto max-w-2xl text-center">
-            <p className="text-xs font-medium uppercase tracking-[0.15em] text-white/45 light:text-slate-400">How it works</p>
-            <h2 className="mt-3 text-3xl font-medium tracking-tight md:text-4xl">From login to certificate</h2>
-          </Reveal>
-          <div className="mt-12">
-            <WorkflowFlow steps={WORKFLOW_STEPS} />
-          </div>
-        </ProductShell>
-      </section>
+              <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl bg-gradient-to-b from-white via-white/90 to-white/60 bg-clip-text text-transparent">
+                MOONSAV ITOps Academy
+              </h1>
 
-      {/* capabilities */}
-      <section id="capabilities" className="py-16 light:bg-white light:border-y light:border-slate-900/5 scroll-mt-28">
-        <ProductShell>
-          <Reveal>
-            <p className="mb-10 text-xs font-medium uppercase tracking-[0.15em] text-white/45 light:text-slate-400">Capabilities</p>
-          </Reveal>
-          <CapabilitiesSplit live={LIVE_TODAY} roadmap={roadmap} />
-        </ProductShell>
-      </section>
-
-      {/* plan tiers */}
-      <section className="py-16">
-        <ProductShell>
-          <div className="grid grid-cols-1 gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-            <Reveal>
-              <p className="text-xs font-medium uppercase tracking-[0.15em] text-white/45 light:text-slate-400">Access by plan</p>
-              <h2 className="mt-3 text-3xl font-medium tracking-tight md:text-4xl">Every course has a real tier, enforced server-side</h2>
-              <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/55 light:text-slate-500">
-                There's no separate Academy price — access is part of your organization's existing ITOps Solution
-                plan. A course's required tier unlocks it for that plan and every plan above it.
+              <p className="mx-auto max-w-2xl text-lg text-white/70 leading-relaxed">
+                Interactive DevOps, DevSecOps & SRE learning platform with production-style simulation and progressive real infrastructure labs.
               </p>
-              <Link to="/pricing" className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-amber-300 light:text-amber-700 hover:text-amber-200">
-                Compare packages <span aria-hidden>→</span>
-              </Link>
-            </Reveal>
-            <Reveal delay={0.1}>
-              <div className="grid grid-cols-2 gap-4">
-                {PLAN_ORDER.map(plan => <div key={plan} className="rounded-2xl border border-white/10 light:border-slate-900/10 bg-white/[0.02] light:bg-slate-900/[0.02] p-5">
-                  <p className="text-xs font-medium uppercase tracking-wide text-white/40 light:text-slate-400">{plan.charAt(0) + plan.slice(1).toLowerCase()}</p>
-                  <p className="mt-2 text-2xl font-semibold tabular-nums text-white light:text-slate-900">{tierCounts[plan] ?? 0}</p>
-                  <p className="mt-1 text-xs text-white/45 light:text-slate-500">course{(tierCounts[plan] ?? 0) === 1 ? "" : "s"} unlocked</p>
-                </div>)}
+
+              <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
+                <Link
+                  to="/training/academy"
+                  className="rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-8 py-3.5 text-sm font-bold text-white shadow-xl shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-105 transition-all"
+                >
+                  Launch Engineer Workspace →
+                </Link>
+                <a
+                  href="#projects"
+                  className="rounded-full border border-white/20 bg-white/5 px-6 py-3.5 text-sm font-semibold text-white/80 hover:bg-white/10 transition-colors"
+                >
+                  Explore Flagship Labs ↓
+                </a>
               </div>
-            </Reveal>
-          </div>
-        </ProductShell>
-      </section>
 
-      {/* organization licensing */}
-      <section className="py-16 light:bg-white light:border-y light:border-slate-900/5">
-        <ProductShell>
-          <div className="mx-auto max-w-3xl text-center">
-            <AcademyMark size={40} className="mx-auto" />
-            <h2 className="mt-5 text-3xl font-medium tracking-tight md:text-4xl">Licensed per organization, assigned per person</h2>
-            <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-white/55 light:text-slate-500">
-              A platform admin licenses training for your organization from the admin portal. Once licensed, an
-              org admin can assign specific courses to specific team members, or open the whole unlocked catalog
-              to everyone — the same real licensing model CyberSachet already uses today.
-            </p>
-            <Link to="/company" className="mt-6 inline-flex items-center gap-1.5 rounded-full border border-white/15 light:border-slate-900/15 px-5 py-2.5 text-sm font-medium text-white/80 light:text-slate-700 hover:bg-white/5 light:hover:bg-slate-900/5">
-              Talk to our team <span aria-hidden>→</span>
-            </Link>
-          </div>
-        </ProductShell>
-      </section>
-
-      {/* FAQ */}
-      <section className="py-16">
-        <ProductShell>
-          <Reveal className="mx-auto max-w-2xl text-center">
-            <p className="text-xs font-medium uppercase tracking-[0.15em] text-white/45 light:text-slate-400">FAQ</p>
-            <h2 className="mt-3 text-3xl font-medium tracking-tight md:text-4xl">Common questions</h2>
-          </Reveal>
-          <div className="mx-auto mt-10 max-w-3xl space-y-3">
-            {FAQ.map((item, i) => <Reveal key={item.q} delay={i * 0.05}>
-              <details className="group rounded-2xl border border-white/10 light:border-slate-900/10 bg-white/[0.02] light:bg-slate-900/[0.02] px-5 py-4 open:bg-white/[0.04] light:open:bg-slate-900/[0.03]">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-medium text-white light:text-slate-900">
-                  {item.q}
-                  <span className="shrink-0 text-white/40 light:text-slate-400 transition-transform group-open:rotate-45" aria-hidden>+</span>
-                </summary>
-                <p className="mt-3 text-sm leading-relaxed text-white/55 light:text-slate-500">{item.a}</p>
-              </details>
-            </Reveal>)}
-          </div>
-        </ProductShell>
-      </section>
-
-      {/* cross-link + waitlist */}
-      <section className="py-16">
-        <ProductShell>
-          <div className="mx-auto flex max-w-md flex-col items-center gap-8 text-center">
-            <div>
-              <p className="text-sm text-white/50 light:text-slate-500">
-                Not a customer yet? Get notified when cloud labs and instructor-led cohorts ship.
-              </p>
-              <div className="mt-4">
-                <WaitlistForm product="academy" ctaLabel="Join the Waitlist" />
+              {/* Engineering Philosophy Cycle */}
+              <div className="pt-12 border-t border-white/10 mt-12">
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-white/40 mb-4">
+                  THE PRODUCTION ENGINEERING OPERATING LOOP
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-2 text-xs font-mono font-bold text-cyan-300">
+                  {PHILOSOPHY_STEPS.map((step, idx) => (
+                    <span key={step} className="flex items-center gap-2">
+                      <span className="rounded-lg bg-white/5 border border-white/10 px-2.5 py-1 text-white/90 shadow-sm hover:border-cyan-400 transition-colors">
+                        {step}
+                      </span>
+                      {idx < PHILOSOPHY_STEPS.length - 1 && (
+                        <span className="text-white/30">→</span>
+                      )}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
-            <p className="text-sm text-white/40 light:text-slate-400">
-              Looking for security-awareness training instead?{" "}
-              <Link to="/cybersachet" className="font-medium text-cyan-300 light:text-cyan-600 hover:text-cyan-200">
-                See CyberSachet
-              </Link>
-            </p>
-          </div>
-        </ProductShell>
-      </section>
-    </main>
+          </ProductShell>
+        </section>
 
-    <MarketingFooter />
-  </div>;
+        {/* SECTION: 4 PROGRESSIVE LAB TIERS */}
+        <section className="py-12 bg-white/[0.01] border-y border-white/10">
+          <ProductShell>
+            <div className="text-center max-w-2xl mx-auto mb-12">
+              <span className="text-xs font-semibold uppercase tracking-widest text-cyan-400">
+                PROGRESSIVE INFRASTRUCTURE TIERS
+              </span>
+              <h2 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl text-white">
+                From Browser Simulation to Real Cloud Labs
+              </h2>
+              <p className="mt-3 text-sm text-white/60">
+                Learn concepts with zero setup, then progress into isolated container and Kubernetes environments.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {LAB_TIERS.map((t) => (
+                <div key={t.tier} className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 flex flex-col justify-between space-y-3">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-mono font-bold text-cyan-300">{t.tier}</span>
+                      <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-white/70">
+                        {t.badge}
+                      </span>
+                    </div>
+                    <h3 className="mt-2 text-base font-bold text-white">{t.title}</h3>
+                    <p className="mt-1 text-xs text-white/60 leading-relaxed">{t.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ProductShell>
+        </section>
+
+        {/* SECTION: TWO FLAGSHIP PRACTICAL PROJECTS */}
+        <section id="projects" className="py-12 scroll-mt-20">
+          <ProductShell>
+            <div className="text-center max-w-2xl mx-auto mb-12">
+              <span className="text-xs font-semibold uppercase tracking-widest text-cyan-400">
+                TWO DISTINCT ARCHITECTURES
+              </span>
+              <h2 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl text-white">
+                Two Flagship Practical Environments
+              </h2>
+              <p className="mt-3 text-sm text-white/60">
+                Master both hardware IoT telemetry and high-volume enterprise microservices.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Project A: MOONSAV IoT */}
+              <div className="rounded-3xl border border-cyan-500/30 bg-gradient-to-b from-cyan-950/20 via-slate-950 to-black p-8 shadow-2xl relative overflow-hidden flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="rounded-full bg-cyan-400/20 border border-cyan-400/30 px-3 py-1 text-xs font-bold text-cyan-300">
+                      FLAGSHIP A — IoT / INDUSTRIAL SRE
+                    </span>
+                    <span className="text-2xl">💧</span>
+                  </div>
+
+                  <h3 className="text-2xl font-bold text-white">
+                    MOONSAV Smart Infrastructure Lab
+                  </h3>
+                  <p className="text-sm text-white/70 leading-relaxed">
+                    Our own real IoT product. Features virtual motor pumps, water tanks, ultrasonic level sensors, MQTT broker listeners, TimescaleDB telemetry, and automated dry-run safety cutoff interlocks.
+                  </p>
+
+                  <div className="rounded-2xl bg-black/50 border border-white/10 p-4 space-y-2">
+                    <p className="text-xs font-semibold text-cyan-300 uppercase tracking-wider">What You Operate & Break:</p>
+                    <div className="grid grid-cols-2 gap-2 text-xs font-mono text-white/80">
+                      <div>• MQTT Broker Sockets</div>
+                      <div>• TimescaleDB Telemetry</div>
+                      <div>• Dry-Run Interlocks</div>
+                      <div>• Device Storm DDoS</div>
+                      <div>• Thermal Runaway Triage</div>
+                      <div>• Sensor Calibration Loss</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 pt-4 border-t border-white/10 flex items-center justify-between">
+                  <span className="text-xs text-white/50">25+ IoT Labs & Outages</span>
+                  <Link to="/training/academy" className="text-xs font-bold text-cyan-300 hover:text-cyan-200 underline">
+                    Enter IoT Workspace →
+                  </Link>
+                </div>
+              </div>
+
+              {/* Project B: Distributed Systems */}
+              <div className="rounded-3xl border border-amber-500/30 bg-gradient-to-b from-amber-950/20 via-slate-950 to-black p-8 shadow-2xl relative overflow-hidden flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="rounded-full bg-amber-400/20 border border-amber-400/30 px-3 py-1 text-xs font-bold text-amber-300">
+                      FLAGSHIP B — ENTERPRISE MICROSERVICES
+                    </span>
+                    <span className="text-2xl">🏢</span>
+                  </div>
+
+                  <h3 className="text-2xl font-bold text-white">
+                    MOONSAV Distributed Systems Lab
+                  </h3>
+                  <p className="text-sm text-white/70 leading-relaxed">
+                    High-volume distributed business platform adapted from real DevOps internship methodologies. Features Nginx gateway, Order/Inventory microservices, RabbitMQ message brokers, Celery workers, and PostgreSQL replication.
+                  </p>
+
+                  <div className="rounded-2xl bg-black/50 border border-white/10 p-4 space-y-2">
+                    <p className="text-xs font-semibold text-amber-300 uppercase tracking-wider">What You Operate & Break:</p>
+                    <div className="grid grid-cols-2 gap-2 text-xs font-mono text-white/80">
+                      <div>• RabbitMQ DLQ Cascades</div>
+                      <div>• Celery Worker OOM Kills</div>
+                      <div>• Postgres Pool Exhaustion</div>
+                      <div>• Redis Eviction Storms</div>
+                      <div>• Distributed Traces (Jaeger)</div>
+                      <div>• Zero-Downtime Rollouts</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 pt-4 border-t border-white/10 flex items-center justify-between">
+                  <span className="text-xs text-white/50">30+ Microservice Labs</span>
+                  <Link to="/training/academy" className="text-xs font-bold text-amber-300 hover:text-amber-200 underline">
+                    Enter Distributed Workspace →
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </ProductShell>
+        </section>
+
+        {/* SECTION: 4 COMPREHENSIVE LEARNING TRACKS */}
+        <section className="py-12">
+          <ProductShell>
+            <div className="text-center max-w-2xl mx-auto mb-12">
+              <span className="text-xs font-semibold uppercase tracking-widest text-cyan-400">
+                STRUCTURED PROGRESSION
+              </span>
+              <h2 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl text-white">
+                Four Specialized Engineering Tracks
+              </h2>
+              <p className="mt-3 text-sm text-white/60">
+                100+ practical labs taking you from Linux process triage to distributed Kubernetes chaos experiments.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {TRACKS.map((track, i) => (
+                <SpotlightCard key={track.title} delay={i * 0.1} className="p-6 rounded-2xl border border-white/10 bg-white/[0.02]">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{track.icon}</span>
+                    <h3 className="text-lg font-bold text-white">{track.title}</h3>
+                  </div>
+                  <p className="mt-2 text-xs leading-relaxed text-white/60">
+                    {track.desc}
+                  </p>
+
+                  <div className="mt-4 pt-3 border-t border-white/5 flex flex-wrap gap-1.5">
+                    {track.topics.map((t) => (
+                      <span key={t} className="rounded-md bg-white/5 px-2 py-0.5 text-[10px] font-mono text-cyan-300 border border-white/10">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </SpotlightCard>
+              ))}
+            </div>
+          </ProductShell>
+        </section>
+
+        {/* SECTION: VERIFIABLE CERTIFICATIONS */}
+        <section className="py-12">
+          <ProductShell>
+            <div className="text-center max-w-2xl mx-auto mb-12">
+              <span className="text-xs font-semibold uppercase tracking-widest text-cyan-400">
+                VERIFIABLE CREDENTIALS
+              </span>
+              <h2 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl text-white">
+                MOONSAV Industry Certifications
+              </h2>
+              <p className="mt-3 text-sm text-white/60">
+                Every certification is strictly gated by verified lab completions, resolved production incidents, and audited postmortems.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {CERTIFICATION_PATHS.map((cert) => (
+                <div key={cert.id} className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 space-y-3 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="rounded bg-white/10 px-2 py-0.5 text-[10px] font-mono font-bold text-white/70">
+                        {cert.code}
+                      </span>
+                      <span className="text-[11px] text-cyan-400">{cert.level}</span>
+                    </div>
+                    <h4 className="mt-2 text-base font-bold text-white">{cert.title}</h4>
+                    <p className="mt-1 text-xs text-white/60 leading-relaxed">{cert.description}</p>
+                  </div>
+                  <div className="pt-3 border-t border-white/5 text-[10px] text-white/40">
+                    Requires &ge; {cert.requiredIncidentsCount} Incidents + {cert.requiredLabsCount} Labs
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ProductShell>
+        </section>
+
+        {/* SECTION: FAQ */}
+        <section className="py-12 border-t border-white/10">
+          <ProductShell>
+            <div className="text-center max-w-2xl mx-auto mb-12">
+              <span className="text-xs font-semibold uppercase tracking-widest text-white/40">FAQ</span>
+              <h2 className="mt-2 text-3xl font-bold tracking-tight text-white">Frequently Asked Questions</h2>
+            </div>
+
+            <div className="max-w-3xl mx-auto space-y-4">
+              {FAQ.map((item, i) => (
+                <Reveal key={item.q} delay={i * 0.05}>
+                  <details className="group rounded-2xl border border-white/10 bg-white/[0.02] p-5 open:bg-white/[0.04]">
+                    <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-white">
+                      {item.q}
+                      <span className="text-white/40 transition-transform group-open:rotate-45">+</span>
+                    </summary>
+                    <p className="mt-3 text-xs leading-relaxed text-white/60">{item.a}</p>
+                  </details>
+                </Reveal>
+              ))}
+            </div>
+          </ProductShell>
+        </section>
+
+        {/* FINAL CTA */}
+        <section className="py-16 text-center">
+          <ProductShell>
+            <div className="rounded-3xl border border-cyan-500/30 bg-gradient-to-r from-cyan-950/40 via-indigo-950/40 to-slate-950 p-12 space-y-6 max-w-4xl mx-auto shadow-2xl">
+              <h2 className="text-3xl md:text-4xl font-extrabold text-white">
+                Ready to Operate Real Infrastructure?
+              </h2>
+              <p className="text-sm text-white/70 max-w-xl mx-auto">
+                Join the MOONSAV ITOps Academy and graduate with demonstrated operational mastery across IoT edge systems and distributed enterprise microservices.
+              </p>
+              <div>
+                <Link
+                  to="/training/academy"
+                  className="rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-8 py-3.5 text-sm font-bold text-white shadow-xl hover:scale-105 transition-all inline-block"
+                >
+                  Enter Engineer Workspace →
+                </Link>
+              </div>
+            </div>
+          </ProductShell>
+        </section>
+      </main>
+
+      <MarketingFooter />
+    </div>
+  );
 }

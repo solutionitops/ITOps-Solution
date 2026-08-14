@@ -42,3 +42,24 @@ export function AcademyLogo({ size = 30, className = "", tagline = false }) {
       </span>
     </span>;
 }
+
+export function ITOpsAcademyMark({ size = 32, className = "" }) {
+  return (
+    <svg viewBox="0 0 64 64" width={size} height={size} className={className} fill="none">
+      <defs>
+        <linearGradient id="itops_brand_grad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#00f0ff" />
+          <stop offset="50%" stopColor="#3b82f6" />
+          <stop offset="100%" stopColor="#6366f1" />
+        </linearGradient>
+      </defs>
+      {/* Outer Hexagon */}
+      <path d="M32 4 L56 17.5 V44.5 L32 58 L8 44.5 V17.5 Z" stroke="url(#itops_brand_grad)" strokeWidth="3" strokeLinejoin="round" />
+      {/* Water Droplet + SRE Loop */}
+      <path d="M32 16 C32 16 22 28 22 36 C22 41.5 26.5 46 32 46 C37.5 46 42 41.5 42 36 C42 28 32 16 32 16 Z" fill="url(#itops_brand_grad)" opacity="0.85" />
+      {/* Central Terminal Prompt Chevron */}
+      <path d="M28 33 L32 37 L28 41" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M34 41 L37 41" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" />
+    </svg>
+  );
+}

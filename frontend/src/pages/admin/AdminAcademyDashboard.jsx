@@ -126,5 +126,46 @@ export default function AdminAcademyDashboard() {
               </div>)}
           </div>}
       </SpotlightCard>
+
+      {/* MOONSAV ITOps Academy Flagship Labs & Incident Status */}
+      <SpotlightCard className="p-5" delay={0.32} scan>
+        <div className="flex items-center justify-between border-b border-white/10 pb-3">
+          <div>
+            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+              <span>💧</span> MOONSAV ITOps Academy — Flagship Practical Environments
+            </h2>
+            <p className="text-xs text-white/40">100+ Hands-On Labs, 50+ Production Incidents, 25-Skill Matrix & 6 Certifications.</p>
+          </div>
+          <Link to="/training/academy" className="text-xs text-cyan-300 hover:underline">
+            Launch Learner Control Center →
+          </Link>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="rounded-xl border border-cyan-500/20 bg-cyan-950/20 p-3.5 space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-cyan-300">MOONSAV Smart Water Control</span>
+              <span className="text-[10px] text-emerald-400 font-mono">14/14 Up</span>
+            </div>
+            <p className="text-[11px] text-white/60">IoT, MQTT Broker, Telemetry Streams, Dry-Run Interlocks, TimescaleDB.</p>
+          </div>
+
+          <div className="rounded-xl border border-amber-500/20 bg-amber-950/20 p-3.5 space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-amber-300">DAIG Distributed App Lab</span>
+              <span className="text-[10px] text-emerald-400 font-mono">Ready</span>
+            </div>
+            <p className="text-[11px] text-white/60">Orders, Inventory, RabbitMQ Queues, Celery Workers, Postgres & Redis.</p>
+          </div>
+
+          <div className="rounded-xl border border-indigo-500/20 bg-indigo-950/20 p-3.5 space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-indigo-300">Observability & SRE Stack</span>
+              <span className="text-[10px] text-cyan-400 font-mono">Prometheus / OTel</span>
+            </div>
+            <p className="text-[11px] text-white/60">Full-Stack Metrics, OpenTelemetry Traces, Loki Logs, Grafana SLO Dashboards.</p>
+          </div>
+        </div>
+      </SpotlightCard>
     </div>;
 }

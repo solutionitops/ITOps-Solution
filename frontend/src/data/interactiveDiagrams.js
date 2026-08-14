@@ -178,5 +178,54 @@ export const DIAGRAM_DEMOS = {
       { id: "managed-db", icon: "◆", label: "Managed database", summary: "A real database engine you don't administer, like AWS RDS.",
         detail: { purpose: "Runs an actual database engine (Postgres, MySQL) without you administering the underlying server, patching, or backups yourself." } }
     ]
+  },
+  "MOONSAV IoT Smart Water Platform Architecture": {
+    layout: "chain",
+    caption: "Click each tier to inspect real-time IoT hardware flow, telemetry buffering, and safety cutoffs",
+    nodes: [
+      { id: "sim", icon: "💧", label: "Virtual Motor & Tank", summary: "Edge pump simulator generating RPM, voltage, current, and ultrasonic water level sensor data.",
+        detail: { purpose: "Generates real telemetry sensor streams and responds to physical hardware fault injections like dry-run, voltage sag, and bearing overheating." } },
+      { id: "mqtt", icon: "📡", label: "MQTT Message Broker", summary: "EMQX / Mosquitto handling TLS-encrypted M2M pub/sub topics (`moonsav/+/telemetry`).",
+        detail: { purpose: "High-throughput, low-latency socket multiplexer decoupled from the database; handles 50,000 concurrent edge sensor socket connections.",
+          bestPractice: "Always enforce TLS 1.3, client token certificates, and QoS 1 for safety-critical pump control topics." } },
+      { id: "telemetry", icon: "⚙️", label: "Telemetry Service", summary: "Go/Node ingestion microservice buffering payloads into Redis Streams and TimescaleDB.",
+        detail: { purpose: "Performs payload validation, unit conversion, threshold evaluation (dry-run detection), and fan-out to time-series storage.",
+          commonMistake: "Writing sensor events directly to disk synchronously — always buffer through Redis or Kafka under high device concurrency." } },
+      { id: "motor-svc", icon: "⚡", label: "Motor Control Service", summary: "Automated schedule executor, emergency cutoff interlock, and mobile control API.",
+        detail: { purpose: "Implements automation rules: fill overhead tank when level < 20%, emergency shutdown if flow rate drops to 0 during active pump run." } },
+      { id: "db", icon: "🐘", label: "TimescaleDB + Redis", summary: "Postgres with time-series hypertables and Redis in-memory cache for device state.",
+        detail: { purpose: "Redis holds live 1-second device heartbeats; TimescaleDB retains compressed historical sensor data with automated downsampling." } }
+    ]
+  },
+  "DAIG Distributed Platform Architecture": {
+    layout: "chain",
+    caption: "Click each component to trace the asynchronous order transaction and failure boundaries",
+    nodes: [
+      { id: "ui", icon: "💻", label: "React Storefront UI", summary: "Single-page customer portal executing checkout orders and listening to order status WebSockets.",
+        detail: { purpose: "Provides immediate optimistic UI feedback while background microservices process distributed saga transactions." } },
+      { id: "gw", icon: "🚦", label: "API Gateway (Nginx)", summary: "Edge reverse proxy handling JWT auth verification, SSL termination, and rate limiting.",
+        detail: { purpose: "Protects backend microservices from connection storms and routes `/api/v1/orders` to Order Service and `/api/v1/inventory` to Inventory." } },
+      { id: "orders", icon: "📦", label: "Order Processing Svc", summary: "Node.js service managing order lifecycle state machines and transactional outbox events.",
+        detail: { purpose: "Creates orders in `PENDING` state in Postgres, publishes `order.created` event to RabbitMQ, and awaits inventory confirmation." } },
+      { id: "broker", icon: "🐇", label: "RabbitMQ Message Broker", summary: "AMQP event bus with Dead-Letter Exchanges (DLX) and topic routing.",
+        detail: { purpose: "Decouples synchronous HTTP checkouts from asynchronous inventory reservations, invoice PDFs, and email notifications.",
+          bestPractice: "Always declare Dead-Letter Exchanges (`x-dead-letter-exchange`) so poisoned payloads never crash workers infinitely." } },
+      { id: "workers", icon: "👷", label: "Celery Background Workers", summary: "Python async workers processing invoice generation, fraud scoring, and notification webhooks.",
+        detail: { purpose: "Handles high-latency CPU-intensive background tasks without blocking user checkout HTTP response times." } }
+    ]
+  },
+  "Observability Stack (Prometheus, Loki, Jaeger & Grafana)": {
+    layout: "grid",
+    caption: "The Three Pillars of Observability working in unison",
+    nodes: [
+      { id: "metrics", icon: "📊", label: "Prometheus (Metrics)", summary: "Time-series counters, gauges, and latency histograms scraped every 15 seconds.",
+        detail: { purpose: "Tells you IF the system is degraded and WHERE (e.g. error rate spiked from 0.01% to 15% on `/api/v1/checkout`)." } },
+      { id: "logs", icon: "📑", label: "Loki / Fluentbit (Logs)", summary: "Structured JSON logs indexed by label (namespace, app, pod_id, level).",
+        detail: { purpose: "Tells you WHY a specific process failed by capturing stack traces, unhandled exceptions, and fatal assertions." } },
+      { id: "traces", icon: "🔍", label: "OpenTelemetry / Jaeger (Traces)", summary: "Distributed request context propagation across microservice HTTP/gRPC boundaries.",
+        detail: { purpose: "Tells you WHERE time was spent across an interconnected 5-tier call chain using spans and waterfall graphs." } },
+      { id: "dash", icon: "📈", label: "Grafana Unified Dashboard", summary: "Single glass pane combining metrics, log drill-downs, trace correlations, and SLO alerts.",
+        detail: { purpose: "Enables unified SRE triage — clicking a latency spike in Grafana immediately shows the correlated error logs and slow traces." } }
+    ]
   }
 };

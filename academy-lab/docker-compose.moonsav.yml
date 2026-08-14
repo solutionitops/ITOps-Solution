@@ -1,0 +1,175 @@
+version: '3.8'
+
+services:
+  # 1. Edge IoT Device Simulator (Python / MQTT client)
+  moonsav-device-simulator:
+    build:
+      context: ./services/simulator
+      dockerfile: Dockerfile
+    container_name: moonsav-device-simulator
+    restart: unless-stopped
+    environment:
+      - MQTT_BROKER_HOST=moonsav-mqtt-broker
+      - MQTT_BROKER_PORT=1883
+      - DEVICE_ID=PUMP-01
+      - SAMPLE_RATE_HZ=2
+    depends_on:
+      moonsav-mqtt-broker:
+        condition: service_healthy
+    networks:
+      - moonsav-lab-net
+
+  # 2. MQTT Message Broker (Eclipse Mosquitto)
+  moonsav-mqtt-broker:
+    image: eclipse-mosquitto:2.0-alpine
+    container_name: moonsav-mqtt-broker
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./services/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -t '$$SYS/#' -C 1 -i healthcheck -W 3 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - moonsav-lab-net
+
+  # 3. PostgreSQL Database
+  moonsav-postgres:
+    image: postgres:16-alpine
+    container_name: moonsav-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=moonsav
+      - POSTGRES_PASSWORD=moonsav_secret_pass
+      - POSTGRES_DB=moonsav_iot
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./services/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - moonsav-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U moonsav -d moonsav_iot"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - moonsav-lab-net
+
+  # 4. Redis State Cache
+  moonsav-redis:
+    image: redis:7.2-alpine
+    container_name: moonsav-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - moonsav-lab-net
+
+  # 5. MOONSAV Core API & Motor Control Service
+  moonsav-api:
+    build:
+      context: ./services/api
+      dockerfile: Dockerfile
+    container_name: moonsav-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - DATABASE_URL=postgresql://moonsav:moonsav_secret_pass@moonsav-postgres:5432/moonsav_iot
+      - REDIS_URL=redis://moonsav-redis:6379
+      - MQTT_HOST=moonsav-mqtt-broker
+      - MQTT_PORT=1883
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://moonsav-jaeger:4318
+      - OTEL_SERVICE_NAME=moonsav-api
+    depends_on:
+      moonsav-postgres:
+        condition: service_healthy
+      moonsav-redis:
+        condition: service_healthy
+      moonsav-mqtt-broker:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - moonsav-lab-net
+
+  # 6. Observability Pillar 1: Prometheus Metrics Scraper
+  moonsav-prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: moonsav-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./services/observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - moonsav-lab-net
+
+  # 7. Observability Pillar 2: Loki Centralized Log Aggregator
+  moonsav-loki:
+    image: grafana/loki:2.9.4
+    container_name: moonsav-loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./services/observability/loki-config.yml:/etc/loki/local-config.yaml:ro
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    networks:
+      - moonsav-lab-net
+
+  # 8. Observability Pillar 3: Jaeger Distributed Tracing & OTLP Collector
+  moonsav-jaeger:
+    image: jaegertracing/all-in-one:1.56
+    container_name: moonsav-jaeger
+    restart: unless-stopped
+    ports:
+      - "16686:16686" # Web UI
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - moonsav-lab-net
+
+  # 9. Unified Observability UI: Grafana
+  moonsav-grafana:
+    image: grafana/grafana-oss:10.4.1
+    container_name: moonsav-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./services/observability/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - ./services/observability/grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
+      - ./services/observability/moonsav-operations-dashboard.json:/etc/grafana/provisioning/dashboards/moonsav-operations-dashboard.json:ro
+    depends_on:
+      - moonsav-prometheus
+      - moonsav-loki
+      - moonsav-jaeger
+    networks:
+      - moonsav-lab-net
+
+networks:
+  moonsav-lab-net:
+    driver: bridge
+
+volumes:
+  moonsav-pgdata:

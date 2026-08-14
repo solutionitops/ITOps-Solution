@@ -162,5 +162,75 @@ export const TERMINAL_DEMOS = {
     { command: "kubectl get pods", output: "NAME                       READY   STATUS             RESTARTS   AGE\napi-web-6f8b9d5c7-4qwer    0/1     CrashLoopBackOff   6          12m\napi-web-6f8b9d5c7-8ztyu    0/1     ImagePullBackOff   0          2m" },
     { command: "kubectl describe pod api-web-6f8b9d5c7-8ztyu", output: "Events:\n  Type     Reason    Message\n  ----     ------    -------\n  Warning  Failed    Failed to pull image \"registry.internal/api-web:v2.4.1\": manifest unknown\n  Warning  BackOff   Back-off pulling image" },
     { command: "kubectl scale deployment api-web --replicas=3", output: "deployment.apps/api-web scaled" }
+  ],
+  "Linux Process Triage & Zombie Hunt": [
+    { command: "ps aux --sort=-%cpu | head -5", output: "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nmoonsav   1420 89.2  4.1 842100 124500 ?       Rl   10:12   4:21 /usr/local/bin/moonsav-telemetry\nmoonsav   1421  0.0  0.0      0      0 ?       Z    10:12   0:00 [leak_proc] <defunct>\nmoonsav   1422  0.0  0.0      0      0 ?       Z    10:13   0:00 [leak_proc] <defunct>" },
+    { command: "ps -eo stat,ppid,pid,comm | grep -w 'Z'", output: "Z  1420  1421 [leak_proc] <defunct>\nZ  1420  1422 [leak_proc] <defunct>" },
+    { command: "kill -15 1420 && ps aux | grep moonsav-telemetry", output: "moonsav 1420 terminated gracefully. Reaper cleaned up zombie children PIDs 1421, 1422." }
+  ],
+  "Linux Network Interface & Socket Diagnostics": [
+    { command: "ss -tulpn | grep 1883", output: "tcp   LISTEN 0      128        127.0.0.1:1883       0.0.0.0:*    users:((\"mosquitto\",pid=842,fd=4))" },
+    { command: "sudo tcpdump -i eth0 port 1883 -nn -c 3", output: "10:15:02.104 IP 192.168.1.105.48201 > 192.168.1.50.1883: Flags [S], seq 3829104, win 64240\n10:15:02.104 IP 192.168.1.50.1883 > 192.168.1.105.48201: Flags [R.], seq 0, ack 3829105, win 0" },
+    { command: "sudo sed -i 's/127.0.0.1/0.0.0.0/g' /etc/mosquitto/mosquitto.conf && sudo systemctl restart mosquitto", output: "" },
+    { command: "ss -tulpn | grep 1883", output: "tcp   LISTEN 0      512          0.0.0.0:1883       0.0.0.0:*    users:((\"mosquitto\",pid=1980,fd=5))" }
+  ],
+  "DNS Resolution Cascade & Resolv.conf Tuning": [
+    { command: "curl -w 'time_namelookup: %{time_namelookup}s\\ntime_connect: %{time_connect}s\\n' -o /dev/null -s http://payment.internal.svc/health", output: "time_namelookup: 5.004s\ntime_connect: 5.006s" },
+    { command: "cat /etc/resolv.conf", output: "nameserver 10.0.0.254    # UNREACHABLE GATEWAY (causes 5s timeout fallback)\nnameserver 10.96.0.10     # CoreDNS ClusterIP\noptions timeout:5 attempts:2" },
+    { command: "echo -e 'nameserver 10.96.0.10\\noptions timeout:1 attempts:2 single-request-reopen' | sudo tee /etc/resolv.conf", output: "nameserver 10.96.0.10\noptions timeout:1 attempts:2 single-request-reopen" },
+    { command: "curl -w 'time_namelookup: %{time_namelookup}s\\n' -o /dev/null -s http://payment.internal.svc/health", output: "time_namelookup: 0.002s" }
+  ],
+  "Systemd Unit Hardening & Resource Cgroups": [
+    { command: "systemctl status moonsav-motor.service", output: "● moonsav-motor.service - MOONSAV Smart Water Motor Controller\n     Loaded: loaded (/etc/systemd/system/moonsav-motor.service; enabled)\n     Active: active (running) since Mon 2026-08-14 09:12:00 UTC; 2h ago\n   Main PID: 3102 (python3)\n     Memory: 1.8G (max: unlimited)" },
+    { command: "systemd-analyze security moonsav-motor.service | head -4", output: "NAME                   EXPOSURE PREDICATE HAPPY\nmoonsav-motor.service  9.2      UNSAFE    🙁" },
+    { command: "sudo systemctl edit --full moonsav-motor.service", output: "Added: MemoryMax=256M, CPUQuota=50%, DynamicUser=yes, ProtectSystem=strict, NoNewPrivileges=yes" },
+    { command: "sudo systemctl daemon-reload && sudo systemctl restart moonsav-motor", output: "" },
+    { command: "systemd-analyze security moonsav-motor.service | head -4", output: "NAME                   EXPOSURE PREDICATE HAPPY\nmoonsav-motor.service  1.4      OK        🙂" }
+  ],
+  "Multi-Stage Dockerfile Optimization & Rootless Containers": [
+    { command: "docker images moonsav-telemetry", output: "REPOSITORY            TAG       IMAGE ID       CREATED          SIZE\nmoonsav-telemetry     v1-fat    8f2a1b9c3d4e   10 minutes ago   1.42GB\nmoonsav-telemetry     v2-dist   4e9c2a1b8f3d   1 minute ago     42.8MB" },
+    { command: "trivy image --severity HIGH,CRITICAL moonsav-telemetry:v2-dist", output: "moonsav-telemetry:v2-dist (debian 12.5)\n=======================================\nTotal: 0 (HIGH: 0, CRITICAL: 0)" },
+    { command: "docker run --rm moonsav-telemetry:v2-dist id", output: "uid=10001(nonroot) gid=10001(nonroot) groups=10001(nonroot)" }
+  ],
+  "Docker Compose Service Orchestration & Healthchecks": [
+    { command: "docker compose ps", output: "NAME                   IMAGE                STATUS                     PORTS\ndaig-api-gateway       nginx:alpine         Up 45 seconds              0.0.0.0:80->80/tcp\ndaig-order-service     daig/orders:v1       Up 40 seconds (healthy)    0.0.0.0:3000/tcp\ndaig-postgres          postgres:16-alpine   Up 45 seconds (healthy)    0.0.0.0:5432->5432/tcp\ndaig-redis             redis:7-alpine       Up 45 seconds (healthy)    0.0.0.0:6379->6379/tcp\ndaig-rabbitmq          rabbitmq:3-management Up 45 seconds (healthy)  0.0.0.0:5672, 15672/tcp" },
+    { command: "docker inspect daig-postgres --format '{{.State.Health.Status}}'", output: "healthy" }
+  ],
+  "Nginx Reverse Proxy, TLS 1.3 & Rate Limiting": [
+    { command: "for i in {1..15}; do curl -s -o /dev/null -w '%{http_code} ' https://api.moonsav.internal/v1/telemetry; done", output: "200 200 200 200 200 200 200 200 200 200 429 429 429 429 429 " },
+    { command: "curl -s -I https://api.moonsav.internal/v1/telemetry | grep -E '(Strict-Transport|X-RateLimit|HTTP)'", output: "HTTP/2 200\nstrict-transport-security: max-age=63072000; includeSubDomains; preload\nx-content-type-options: nosniff\nx-frame-options: DENY" }
+  ],
+  "Kubernetes Deployments, Rollouts & Zero-Downtime Updates": [
+    { command: "kubectl set image deployment/order-service order=daig/order-service:v2.1.0", output: "deployment.apps/order-service image updated" },
+    { command: "kubectl rollout status deployment/order-service", output: "Waiting for deployment \"order-service\" rollout to finish: 1 out of 4 new replicas have been updated...\nWaiting for deployment \"order-service\" rollout to finish: 2 of 4 updated replicas are available...\nWaiting for deployment \"order-service\" rollout to finish: 3 of 4 updated replicas are available...\ndeployment \"order-service\" successfully rolled out" },
+    { command: "k6 run --vus 20 --duration 30s checkout-traffic.js", output: "✓ http_req_duration..............: avg=24.2ms min=4.1ms med=18.4ms max=94.1ms p(95)=48.2ms\n✓ http_req_failed................: 0.00% (0 failures out of 14,820 requests)" }
+  ],
+  "Terraform Infrastructure as Code & State Locking": [
+    { command: "terraform plan -out=tfplan", output: "Acquiring state lock. This may take a few moments...\nTerraform will perform the following actions:\n  + module.moonsav_iot.aws_security_group.mqtt_edge\n  + module.moonsav_iot.aws_instance.telemetry_node[0]\n  + module.moonsav_iot.aws_instance.telemetry_node[1]\nPlan: 3 to add, 0 to change, 0 to destroy." },
+    { command: "terraform apply tfplan", output: "Releasing state lock. This may take a few moments...\nApply complete! Resources: 3 added, 0 changed, 0 destroyed.\nOutputs:\nmqtt_endpoint = \"mqtt.moonsav.internal:1883\"\ntelemetry_cluster_ips = [\"10.0.1.14\", \"10.0.1.15\"]" }
+  ],
+  "SAST & Secret Leak Detection in CI/CD Pipelines": [
+    { command: "gitleaks detect --verbose", output: "Finding:     DEMO_LEAKED_API_TOKEN_EXAMPLE_KEY\nSecret:      DEMO_LEAKED_API_TOKEN_EXAMPLE_KEY\nRuleID:      generic-api-key\nEntropy:     4.81204\nFile:        services/order-service/config.js\nLine:        14\nCommit:      a8c2f10 (feat: add payment checkout webhook)\n\n[FATAL] 1 leak detected. Build halted." },
+    { command: "semgrep --config p/owasp-top-ten .", output: "┌───────────────────────────────────────────────┐\n│ 0 Findings                                    │\n└───────────────────────────────────────────────┘\nScan completed in 1.42s" }
+  ],
+  "HashiCorp Vault Dynamic Secrets & Microservice Identity": [
+    { command: "vault read database/creds/moonsav-app", output: "Key                Value\n---                -----\nlease_id           database/creds/moonsav-app/c3f8e1a-4d2b-9104\nlease_duration     1h\nlease_renewable    true\npassword           A1-x9_kL83pQz!\nusername           v-token-moonsav-app-4d2b9104-1723631940" },
+    { command: "vault lease revoke database/creds/moonsav-app/c3f8e1a-4d2b-9104", output: "All revocation operations completed successfully." }
+  ],
+  "Kubernetes NetworkPolicies & Zero-Trust Microsegmentation": [
+    { command: "kubectl exec -it frontend-pod -- nc -zvw 2 postgres 5432", output: "postgres.moonsav.svc.cluster.local [10.96.4.12] 5432 (postgresql) : Connection timed out\n[FAIL] NetworkPolicy default-deny-all blocked unauthorized egress from DMZ frontend pod." },
+    { command: "kubectl exec -it device-service-pod -- nc -zvw 2 postgres 5432", output: "Connection to postgres.moonsav.svc.cluster.local (10.96.4.12) 5432 port [tcp/postgresql] succeeded!" }
+  ],
+  "Prometheus Metric Instrumentation & Grafana SLO Dashboard": [
+    { command: "curl -s http://localhost:9090/metrics | grep moonsav_motor | head -6", output: "# HELP moonsav_motor_commands_total Total number of pump motor commands processed\n# TYPE moonsav_motor_commands_total counter\nmoonsav_motor_commands_total{action=\"start\",status=\"success\"} 48210\nmoonsav_motor_commands_total{action=\"stop\",status=\"success\"} 48190\nmoonsav_motor_commands_total{action=\"start\",status=\"failure\"} 12\n# HELP moonsav_motor_command_duration_seconds Latency of motor state transitions" },
+    { command: "promtool query instant http://localhost:9090 'sum(rate(moonsav_motor_commands_total{status=\"success\"}[5m])) / sum(rate(moonsav_motor_commands_total[5m])) * 100'", output: "{} => 99.9751028194% @[1723632000]" }
+  ],
+  "Distributed Tracing with OpenTelemetry & Jaeger": [
+    { command: "curl -s 'http://localhost:16686/api/traces?service=order-service&limit=1' | jq '.data[0].spans[] | {operationName, duration, tags}' | head -15", output: "{\n  \"operationName\": \"POST /api/v1/orders/checkout\",\n  \"duration\": 920410,\n  \"tags\": [{\"key\": \"http.status_code\", \"value\": 200}]\n}\n{\n  \"operationName\": \"db_query: select_inventory_lock\",\n  \"duration\": 850120,\n  \"tags\": [{\"key\": \"db.statement\", \"value\": \"SELECT * FROM inventory WHERE item_id = $1 FOR UPDATE\"}]\n}" }
+  ],
+  "Chaos Engineering: Network Partition & Dry-Run Motor Cutoff": [
+    { command: "sudo tc qdisc add dev eth0 root netem delay 500ms 100ms loss 40%", output: "" },
+    { command: "moonsav device simulate --id PUMP-01 --tank-level 4", output: "[SIMULATOR] Tank level critical (4.0%). Publishing low-water sensor alert..." },
+    { command: "moonsav device status --id PUMP-01", output: "DEVICE ID:       PUMP-01\nMOTOR STATE:     EMERGENCY_DRY_RUN_SHUTDOWN\nTRIPPED AT:      2026-08-14T10:24:12Z\nREASON:          Local edge sensor detected < 10% tank water without cloud heartbeat delay." }
   ]
 };

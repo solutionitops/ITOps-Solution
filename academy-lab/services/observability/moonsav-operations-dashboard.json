@@ -1,0 +1,211 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": true,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "title": "MOONSAV Smart Water Control — Service Level Objectives (SLOs)",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 98 },
+              { "color": "green", "value": 99.9 }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "id": 2,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "values": false }
+      },
+      "title": "Motor Command Availability (SLO: 99.9%)",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(rate(moonsav_motor_commands_total{status=\"success\"}[5m])) / sum(rate(moonsav_motor_commands_total[5m])) * 100",
+          "legendFormat": "Availability"
+        }
+      ]
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 200 },
+              { "color": "red", "value": 300 }
+            ]
+          },
+          "unit": "ms"
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+      "id": 3,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "values": false }
+      },
+      "title": "API P95 Latency (SLO: <300ms)",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(moonsav_motor_command_duration_seconds_bucket[5m])) by (le)) * 1000",
+          "legendFormat": "P95 Latency"
+        }
+      ]
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+      "id": 4,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "values": false }
+      },
+      "title": "MQTT Broker Connectivity",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "moonsav_mqtt_connection_errors_total == 0",
+          "legendFormat": "Connected (1=Yes, 0=No)"
+        }
+      ]
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 20 },
+              { "color": "green", "value": 50 }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+      "id": 5,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "values": false }
+      },
+      "title": "SLO Error Budget Remaining",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "moonsav_slo_error_budget_percent",
+          "legendFormat": "Remaining Budget"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 6,
+      "title": "Hardware & Sensor Telemetry Flow",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 6 },
+      "id": 7,
+      "title": "Water Tank Level & Flow Rate (LPM)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "moonsav_tank_level_percent",
+          "legendFormat": "Tank Level (%)"
+        },
+        {
+          "expr": "moonsav_flow_rate_lpm",
+          "legendFormat": "Flow Rate (LPM)"
+        }
+      ]
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 6 },
+      "id": 8,
+      "title": "Motor RPM & Temperature (°C)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "moonsav_motor_temperature_celsius",
+          "legendFormat": "Motor Temp (°C)"
+        },
+        {
+          "expr": "moonsav_motor_rpm / 100",
+          "legendFormat": "RPM / 100"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 13 },
+      "id": 9,
+      "title": "Centralized Container Logs (Loki) & Distributed Traces (Jaeger)",
+      "type": "row"
+    },
+    {
+      "datasource": "Loki",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 14 },
+      "id": 10,
+      "title": "Live Container Logs Stream ({job=\"moonsav-containers\"})",
+      "type": "logs",
+      "targets": [
+        {
+          "expr": "{job=\"moonsav-containers\"} |= \"\"",
+          "legendFormat": "{{service}}"
+        }
+      ]
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["moonsav", "iot", "sre", "observability"],
+  "time": { "from": "now-15m", "to": "now" },
+  "timepicker": { "refresh_intervals": ["5s", "10s", "30s", "1m"] },
+  "timezone": "browser",
+  "title": "MOONSAV Operations & SRE Dashboard",
+  "uid": "moonsav-ops-sre-01",
+  "version": 1
+}

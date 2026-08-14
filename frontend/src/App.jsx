@@ -35,6 +35,7 @@ const Team = lazy(() => import("./pages/Team"));
 const Users = lazy(() => import("./pages/Users"));
 const AcademyAdmin = lazy(() => import("./pages/AcademyAdmin"));
 const CyberSachetTraining = lazy(() => import("./pages/CyberSachetTraining"));
+const ITOpsAcademyTraining = lazy(() => import("./pages/ITOpsAcademyTraining"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Platform = lazy(() => import("./pages/Platform"));
 const Solutions = lazy(() => import("./pages/Solutions"));
@@ -225,7 +226,8 @@ export default function App() {
           </ProtectedRoute>}>
         <Route path="/dashboard" element={<DashboardGate />} />
         <Route path="/training" element={<CyberSachetTraining key="security" defaultTrack="security" />} />
-        <Route path="/training/academy" element={<CyberSachetTraining key="academy" defaultTrack="academy" />} />
+        <Route path="/training/academy" element={<ITOpsAcademyTraining />} />
+        <Route path="/training/itops" element={<ITOpsAcademyTraining />} />
         <Route path="/profile" element={<Profile />} />
         {/* Operator-only routes — an Employee Portal member (no operational
             view access anywhere) is redirected back to /dashboard even on a
