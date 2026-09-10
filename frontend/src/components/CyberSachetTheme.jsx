@@ -3,25 +3,6 @@ import { motion, useInView } from "motion/react";
 import { useTheme } from "../context/ThemeContext";
 import { useSound } from "../context/SoundContext";
 
-/* CyberSachet gets its own visual identity within the dashboard shell —
- * rose/violet in dark mode instead of the app's default cyan/emerald
- * monitoring palette, so training reads as a distinct "learning" surface,
- * not another monitoring table. Light mode is its own sky-blue-and-white
- * treatment (not a lightened version of the dark rose/violet) — a
- * deliberately airier, "classroom daylight" feel for the one surface in
- * the product meant to feel like learning rather than operations. */
-
-const PARTICLES = [
-  { x: 8, y: 22, size: 3, dur: 13, delay: 0 },
-  { x: 26, y: 62, size: 2, dur: 17, delay: 2 },
-  { x: 48, y: 18, size: 2.5, dur: 15, delay: 4 },
-  { x: 68, y: 55, size: 2, dur: 19, delay: 1 },
-  { x: 86, y: 30, size: 3, dur: 14, delay: 5 },
-  { x: 92, y: 72, size: 2, dur: 21, delay: 3 }
-];
-
-// One glyph per course topic — purely decorative, but makes the catalog
-// scannable at a glance instead of five identically-shaped cards.
 const COURSE_ICONS = {
   "phishing-awareness": "M4 6h16v12H4zM4 6l8 7 8-7",
   "password-security-mfa": "M12 3l7 3v5c0 4.6-3 8.6-7 10-4-1.4-7-5.4-7-10V6l7-3zm-2 9h4m-2-2v4",
@@ -31,98 +12,130 @@ const COURSE_ICONS = {
   "mobile-device-security": "M8 2h8a2 2 0 012 2v16a2 2 0 01-2 2H8a2 2 0 01-2-2V4a2 2 0 012-2zM8 5h8M11 19h2",
   "physical-security-workplace-awareness": "M4 21v-9l8-6 8 6v9h-5v-6H9v6z"
 };
-export function CourseIcon({ slug, size = 34 }) {
+
+export function CourseIcon({ slug, size = 36 }) {
   const path = COURSE_ICONS[slug] ?? COURSE_ICONS["data-handling-privacy"];
-  return <span aria-hidden className="grid shrink-0 place-items-center rounded-xl bg-gradient-to-br from-rose-500 to-violet-600 shadow-[0_8px_20px_-8px_rgba(244,63,94,0.5)]" style={{ width: size, height: size }}>
+  return (
+    <span
+      aria-hidden
+      className="grid shrink-0 place-items-center rounded-xl bg-gradient-to-br from-rose-500 via-pink-500 to-indigo-600 shadow-md shadow-rose-500/25 border border-white/20"
+      style={{ width: size, height: size }}
+    >
       <svg viewBox="0 0 24 24" style={{ width: size * 0.55, height: size * 0.55 }} fill="none">
-        <path d={path} stroke="#fff" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        <path d={path} stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
-    </span>;
+    </span>
+  );
 }
 
-// Real, deterministic function of the same XP already computed live from
-// progress (courses completed, hours trained, quiz average, streak) — a
-// label and "toward next level" fraction, never a separately stored value
-// that could drift from the XP it's derived from.
 const XP_LEVELS = [
-  { label: "Beginner", min: 0, max: 500 },
-  { label: "Intermediate", min: 500, max: 1500 },
-  { label: "Advanced", min: 1500, max: 3500 },
-  { label: "Expert", min: 3500, max: Infinity }
+  { label: "Beginner", min: 0, max: 500, color: "from-blue-500 to-cyan-500" },
+  { label: "Intermediate", min: 500, max: 1500, color: "from-emerald-500 to-teal-500" },
+  { label: "Advanced", min: 1500, max: 3500, color: "from-amber-500 to-orange-500" },
+  { label: "Expert", min: 3500, max: Infinity, color: "from-violet-500 to-purple-600" }
 ];
+
 export function xpLevel(xp) {
   const level = XP_LEVELS.find(l => xp < l.max) ?? XP_LEVELS[XP_LEVELS.length - 1];
   const span = level.max - level.min;
   const pct = span === Infinity || !isFinite(span) ? 100 : Math.min(100, Math.round(((xp - level.min) / span) * 100));
-  return { label: level.label, min: level.min, max: level.max, pct };
+  return { label: level.label, min: level.min, max: level.max, pct, color: level.color };
 }
 
-export function TrainingHero({ title, subtitle, stats, academy = false, progressPct = null }) {
+export function TrainingHero({ title, subtitle, stats, academy = false, progressPct = null, resumeCourse = null, onResume = null }) {
   const { theme } = useTheme();
   const isLight = theme === "light";
 
   return (
     <div
-      className={`relative isolate overflow-hidden rounded-3xl border p-6 md:p-8 transition-all ${
+      className={`relative isolate overflow-hidden rounded-2xl border p-6 transition-all duration-300 ${
         isLight
-          ? "border-slate-200/90 bg-gradient-to-r from-slate-50 via-white to-sky-50/60 shadow-sm text-slate-900"
-          : "border-slate-800 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white shadow-md"
+          ? "border-slate-200/90 bg-white shadow-sm text-slate-900"
+          : "border-slate-800 bg-slate-900 text-white shadow-sm"
       }`}
     >
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className={`absolute -left-16 -top-16 h-64 w-64 rounded-full blur-3xl opacity-30 ${academy ? "bg-amber-400" : "bg-sky-400"}`} />
-        <div className={`absolute -right-10 bottom-0 h-56 w-56 rounded-full blur-3xl opacity-20 ${academy ? "bg-indigo-400" : "bg-violet-400"}`} />
-      </div>
-
-      <div className="relative z-10 flex flex-wrap items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <motion.div
-            initial={{ scale: 0.6, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className={`grid h-14 w-14 shrink-0 place-items-center rounded-2xl ${
+      <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div className="flex items-start md:items-center gap-4">
+          <div
+            className={`grid h-14 w-14 shrink-0 place-items-center rounded-xl shadow-sm text-white ${
               academy
-                ? "bg-gradient-to-br from-amber-500 to-indigo-600 shadow-md text-white"
-                : "bg-gradient-to-br from-rose-500 to-purple-600 shadow-md text-white"
+                ? "bg-amber-600 dark:bg-amber-500"
+                : "bg-indigo-600 dark:bg-indigo-500"
             }`}
           >
             {academy ? (
               <svg className="h-7 w-7 text-white" viewBox="0 0 24 24" fill="none" aria-hidden>
-                <path d="M12 3l9 4.5-9 4.5-9-4.5L12 3z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-                <path d="M7 10.5v4c0 1.7 2.2 3 5 3s5-1.3 5-3v-4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-                <path d="M21 7.5v6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+                <path d="M12 3l9 4.5-9 4.5-9-4.5L12 3z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+                <path d="M7 10.5v4c0 1.7 2.2 3 5 3s5-1.3 5-3v-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                <path d="M21 7.5v6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
               </svg>
             ) : (
               <svg className="h-7 w-7 text-white" viewBox="0 0 24 24" fill="none" aria-hidden>
-                <path d="M12 3l7 3v5c0 4.6-3 8.6-7 10-4-1.4-7-5.4-7-10V6l7-3z" stroke="currentColor" strokeWidth="1.7" />
-                <path d="M9 12l2 2 4-4.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M12 3l7 3v5c0 4.6-3 8.6-7 10-4-1.4-7-5.4-7-10V6l7-3z" stroke="currentColor" strokeWidth="1.8" />
+                <path d="M9 12l2 2 4-4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             )}
-          </motion.div>
+          </div>
           <div>
-            <h1 className={`text-2xl font-bold tracking-tight ${isLight ? "text-slate-900" : "text-white"}`}>{title}</h1>
-            <p className={`mt-1 max-w-md text-sm font-medium ${isLight ? "text-slate-600" : "text-slate-300"}`}>{subtitle}</p>
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                academy
+                  ? "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/20"
+                  : "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/20"
+              }`}>
+                {academy ? "ITOps Academy Track" : "Enterprise Security Hub"}
+              </span>
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                Self-Paced · Verifiable Certifications
+              </span>
+            </div>
+            <h1 className={`text-xl md:text-2xl font-bold tracking-tight ${isLight ? "text-slate-900" : "text-white"}`}>
+              {title}
+            </h1>
+            <p className={`mt-1 max-w-xl text-xs leading-relaxed ${isLight ? "text-slate-600" : "text-slate-400"}`}>
+              {subtitle}
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-5">
+        {/* Action / Progress cluster */}
+        <div className="flex flex-wrap items-center gap-4">
+          {resumeCourse && (
+            <button
+              onClick={() => onResume?.(resumeCourse)}
+              type="button"
+              className="flex items-center gap-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 transition-all text-left shadow-sm"
+            >
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/20 text-white font-bold text-xs">
+                ▶
+              </div>
+              <div className="min-w-0 max-w-[160px]">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-200">Resume learning</p>
+                <p className="truncate text-xs font-bold text-white">{resumeCourse.title}</p>
+              </div>
+            </button>
+          )}
+
           {progressPct != null && (
-            <div className={`flex items-center gap-3.5 rounded-2xl border px-4 py-2.5 backdrop-blur-md shadow-sm ${
-              isLight ? "border-slate-200/90 bg-white/80" : "border-white/20 bg-white/10"
-            }`}>
-              <ProgressRing pct={progressPct} size={48} tone={academy ? "amber" : "rose"} />
+            <div className="flex items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 px-3.5 py-2">
+              <ProgressRing pct={progressPct} size={42} tone={academy ? "amber" : "rose"} />
               <div>
-                <p className={`text-[11px] font-semibold uppercase tracking-wider ${isLight ? "text-slate-600" : "text-white/80"}`}>Overall progress</p>
-                <p className={`text-xs font-medium ${isLight ? "text-slate-500" : "text-white/60"}`}>Across unlocked courses</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Overall Progress
+                </p>
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                  {progressPct}% Completed
+                </p>
               </div>
             </div>
           )}
+
           {stats && (
-            <div className={`flex items-center gap-5 border-l pl-5 ${isLight ? "border-slate-200" : "border-white/15"}`}>
+            <div className="flex items-center gap-4 border-l border-slate-200 dark:border-slate-800 pl-4">
               {stats.map(s => (
                 <div key={s.label} className="text-center">
-                  <p className={`text-2xl font-bold tabular-nums ${isLight ? "text-slate-900" : "text-white"}`}>{s.value}</p>
-                  <p className={`text-[11px] font-medium ${isLight ? "text-slate-500" : "text-white/70"}`}>{s.label}</p>
+                  <p className={`text-lg md:text-xl font-bold tabular-nums ${isLight ? "text-slate-900" : "text-white"}`}>{s.value}</p>
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">{s.label}</p>
                 </div>
               ))}
             </div>
@@ -133,47 +146,126 @@ export function TrainingHero({ title, subtitle, stats, academy = false, progress
   );
 }
 
-export function ProgressRing({ pct, size = 44, tone = "rose" }) {
+export function ProgressRing({ pct, size = 48, tone = "rose" }) {
   const rootRef = useRef(null);
   const inView = useInView(rootRef, { once: true });
-  const r = (size - 6) / 2;
+  const strokeWidth = 4.5;
+  const r = (size - strokeWidth * 2) / 2;
   const circumference = 2 * Math.PI * r;
-  const hex = tone === "emerald" ? "#34d399" : tone === "amber" ? "#fbbf24" : "#fb7185";
-  return <div ref={rootRef} className="relative shrink-0" style={{ width: size, height: size }}>
+  const hex = tone === "emerald" ? "#10b981" : tone === "amber" ? "#f59e0b" : "#f43f5e";
+
+  return (
+    <div ref={rootRef} className="relative shrink-0 grid place-items-center" style={{ width: size, height: size }}>
       <svg viewBox={`0 0 ${size} ${size}`} className="-rotate-90" style={{ width: size, height: size }}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
-        <motion.circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={hex} strokeWidth="4" strokeLinecap="round" strokeDasharray={circumference} initial={{ strokeDashoffset: circumference }} animate={{ strokeDashoffset: inView ? circumference - (pct / 100) * circumference : circumference }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }} />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="currentColor"
+          className="text-slate-200 dark:text-white/10"
+          strokeWidth={strokeWidth}
+        />
+        <motion.circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke={hex}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          initial={{ strokeDashoffset: circumference }}
+          animate={{ strokeDashoffset: inView ? circumference - (pct / 100) * circumference : circumference }}
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+        />
       </svg>
-      <span className="absolute inset-0 grid place-items-center text-[10px] font-semibold text-white light:text-slate-900">{pct}%</span>
-    </div>;
+      <span className="absolute inset-0 grid place-items-center text-[11px] font-bold tabular-nums text-slate-900 dark:text-white">
+        {pct}%
+      </span>
+    </div>
+  );
 }
 
 export function CompletionCelebration({ score }) {
   const passed = score >= 70;
-  const confetti = passed ? Array.from({ length: 20 }, (_, i) => i) : [];
+  const confetti = passed ? Array.from({ length: 24 }, (_, i) => i) : [];
   const { play } = useSound();
-  // Plays once per real result (score changing means a new quiz attempt),
-  // not on every re-render this component happens to go through.
-  useEffect(() => { play(passed ? "success" : "error"); }, [score]); // eslint-disable-line react-hooks/exhaustive-deps
-  return <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }} className="relative overflow-hidden">
-      {passed && <motion.div className="pointer-events-none absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full" style={{ background: "radial-gradient(circle, rgba(16,185,129,0.35), transparent 70%)" }} initial={{ opacity: 0, scale: 0.4 }} animate={{ opacity: [0, 0.9, 0], scale: 1.4 }} transition={{ duration: 0.9, ease: "easeOut" }} aria-hidden />}
-      {confetti.map(i => <motion.span key={i} className="absolute top-1/2 left-1/2 h-1.5 w-1.5 rounded-full" style={{ background: ["#fb7185", "#a78bfa", "#10b981", "#fbbf24", "#00f0ff"][i % 5] }} initial={{ x: 0, y: 0, opacity: 1 }} animate={{ x: (Math.cos((i / 20) * Math.PI * 2) * 100), y: (Math.sin((i / 20) * Math.PI * 2) * 100) - 24, opacity: 0 }} transition={{ duration: 1.2, ease: "easeOut", delay: 0.1 }} />)}
-      <div className="relative z-10 text-center">
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ duration: 0.5, delay: 0.15, ease: [0.34, 1.56, 0.64, 1] }} className={`mx-auto grid h-16 w-16 place-items-center rounded-full ${passed ? "bg-emerald-400/15 text-emerald-300 shadow-[0_0_0_1px_rgba(16,185,129,0.3),0_0_30px_-4px_rgba(16,185,129,0.6)]" : "bg-amber-400/15 text-amber-300"}`}>
-          {passed ? <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg> : <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none"><path d="M12 8v5m0 3h.01M10.3 3.3l-8 14A1 1 0 003 19h18a1 1 0 00.9-1.5l-8-14a1 1 0 00-1.6 0z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+
+  useEffect(() => {
+    play(passed ? "success" : "error");
+  }, [score]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.92 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      className="relative overflow-hidden py-4"
+    >
+      {passed && (
+        <motion.div
+          className="pointer-events-none absolute left-1/2 top-1/2 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(16,185,129,0.35), transparent 70%)" }}
+          initial={{ opacity: 0, scale: 0.4 }}
+          animate={{ opacity: [0, 0.9, 0], scale: 1.5 }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+          aria-hidden
+        />
+      )}
+      {confetti.map(i => (
+        <motion.span
+          key={i}
+          className="absolute top-1/2 left-1/2 h-2 w-2 rounded-full shadow-sm"
+          style={{ background: ["#fb7185", "#a78bfa", "#10b981", "#fbbf24", "#06b6d4"][i % 5] }}
+          initial={{ x: 0, y: 0, opacity: 1 }}
+          animate={{
+            x: Math.cos((i / 24) * Math.PI * 2) * 120,
+            y: Math.sin((i / 24) * Math.PI * 2) * 120 - 30,
+            opacity: 0,
+            scale: [1, 1.4, 0]
+          }}
+          transition={{ duration: 1.4, ease: "easeOut", delay: 0.05 }}
+        />
+      ))}
+      <div className="relative z-10 text-center space-y-3">
+        <motion.div
+          initial={{ scale: 0, rotate: -15 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ duration: 0.5, delay: 0.15, ease: [0.34, 1.56, 0.64, 1] }}
+          className={`mx-auto grid h-20 w-20 place-items-center rounded-3xl shadow-xl ${passed
+              ? "bg-gradient-to-br from-emerald-400 to-teal-600 text-white shadow-emerald-500/30"
+              : "bg-gradient-to-br from-amber-400 to-orange-600 text-white shadow-amber-500/30"
+            }`}
+        >
+          {passed ? (
+            <svg className="h-10 w-10 text-white" viewBox="0 0 24 24" fill="none">
+              <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          ) : (
+            <svg className="h-10 w-10 text-white" viewBox="0 0 24 24" fill="none">
+              <path d="M12 8v5m0 3h.01M10.3 3.3l-8 14A1 1 0 003 19h18a1 1 0 00.9-1.5l-8-14a1 1 0 00-1.6 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
         </motion.div>
-        <p className={`mt-3 text-3xl font-semibold ${passed ? "text-emerald-300" : "text-amber-300"}`}>{score}%</p>
-        <p className="mt-1 text-sm text-white/60 light:text-slate-600">
-          {passed ? "Passed — nice work." : "Below the 70% passing mark — review the lessons and try again."}
-        </p>
+        <div>
+          <p className={`text-4xl font-black tracking-tight ${passed ? "text-emerald-500 dark:text-emerald-400" : "text-amber-500 dark:text-amber-400"}`}>
+            {score}%
+          </p>
+          <p className="mt-1 text-base font-bold text-slate-900 dark:text-white">
+            {passed ? "Assessment Passed Successfully! 🎉" : "Passing Threshold Not Reached (70%)"}
+          </p>
+          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+            {passed
+              ? "Congratulations! You have demonstrated mastery in this subject and unlocked your official certificate."
+              : "Review the module lessons, check key takeaways, and retake the assessment when you're ready."}
+          </p>
+        </div>
       </div>
-    </motion.div>;
+    </motion.div>
+  );
 }
 
-// Only categories with at least one real published course get an icon here
-// — the library filter (in CyberSachetTraining.jsx) only ever renders a
-// chip for a category it found real courses in, so there's no dead entry
-// pointing at an empty shelf.
 const CATEGORY_ICONS = {
   "email-security": "M3 6h18v12H3zM3 6l9 7 9-7",
   "identity": "M12 12a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 0114 0",
@@ -186,56 +278,116 @@ const CATEGORY_ICONS = {
   "cloud": "M7.5 18a4.2 4.2 0 01-1-8.27A5.3 5.3 0 0117 8.2 4 4 0 0116.5 18h-9z",
   "devops": "M5 12a7 7 0 0112.5-4.3M19 4v4.5h-4.5M19 12a7 7 0 01-12.5 4.3M5 20v-4.5h4.5"
 };
+
 export function CategoryIcon({ category, size = 16 }) {
   const path = CATEGORY_ICONS[category] ?? CATEGORY_ICONS["cybersecurity"];
-  return <svg viewBox="0 0 24 24" style={{ width: size, height: size }} fill="none" aria-hidden>
-      <path d={path} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>;
+  return (
+    <svg viewBox="0 0 24 24" style={{ width: size, height: size }} fill="none" aria-hidden>
+      <path d={path} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
 }
 
 export const BADGE_META = {
-  first_course: { label: "First Course", hint: "Completed your first course" },
-  perfect_score: { label: "Perfect Score", hint: "Scored 100% on a quiz" },
-  completionist: { label: "Completionist", hint: "Completed every published course" },
-  certified: { label: "Certified", hint: "Holds a current CSSA certificate" },
-  streak_3: { label: "3-Day Streak", hint: "Trained 3 days in a row" },
-  streak_7: { label: "7-Day Streak", hint: "Trained 7 days in a row" }
+  first_course: { label: "First Course", icon: "🌱", hint: "Completed your first course" },
+  perfect_score: { label: "Perfect Score", icon: "⭐", hint: "Scored 100% on a quiz" },
+  completionist: { label: "Completionist", icon: "🏆", hint: "Completed every published course" },
+  certified: { label: "Certified", icon: "🎓", hint: "Holds a current CSSA certificate" },
+  streak_3: { label: "3-Day Streak", icon: "🔥", hint: "Trained 3 days in a row" },
+  streak_7: { label: "7-Day Streak", icon: "⚡", hint: "Trained 7 days in a row" }
 };
+
 export function BadgeChip({ code }) {
   const meta = BADGE_META[code];
   if (!meta) return null;
-  return <span title={meta.hint} className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 dark:border-amber-500/30 bg-indigo-50 dark:bg-amber-400/10 px-2.5 py-1 text-[11px] font-semibold text-indigo-800 dark:text-amber-200">
+  return (
+    <span
+      title={meta.hint}
+      className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/15 px-2.5 py-1 text-[11px] font-bold text-indigo-800 dark:text-indigo-300 shadow-sm"
+    >
+      <span>{meta.icon}</span>
       {meta.label}
-    </span>;
+    </span>
+  );
 }
 
 export function StreakFlame({ days }) {
   const active = days > 0;
-  return <span className={`inline-flex items-center gap-1 text-sm font-semibold tabular-nums ${active ? "text-amber-300 light:text-amber-600" : "text-white/30 light:text-slate-300"}`}>
-      <span aria-hidden>{active ? "🔥" : "○"}</span>{days}
-    </span>;
+  return (
+    <span className={`inline-flex items-center gap-1 text-sm font-bold tabular-nums ${active ? "text-amber-500 dark:text-amber-400" : "text-slate-400 dark:text-slate-600"
+      }`}>
+      <span aria-hidden>{active ? "🔥" : "○"}</span>
+      {days}
+    </span>
+  );
 }
 
 export function ModuleProgressBar({ pct, tone = "rose" }) {
-  const bar = tone === "emerald" ? "bg-emerald-400" : "bg-rose-400 light:bg-sky-500";
-  return <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10 light:bg-slate-900/8">
-      <motion.div className={`h-full rounded-full ${bar}`} initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} />
-    </div>;
+  const bar = tone === "emerald"
+    ? "bg-emerald-500"
+    : tone === "amber"
+      ? "bg-amber-500"
+      : "bg-gradient-to-r from-rose-500 to-indigo-600";
+  return (
+    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200/80 dark:bg-white/10">
+      <motion.div
+        className={`h-full rounded-full ${bar}`}
+        initial={{ width: 0 }}
+        animate={{ width: `${pct}%` }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      />
+    </div>
+  );
 }
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 export function Leaderboard({ rows, currentUserId }) {
   if (!rows || rows.length === 0) {
-    return <p className="text-sm text-white/40 light:text-slate-400">No completed courses yet — the leaderboard fills in as your team finishes training.</p>;
+    return (
+      <div className="rounded-2xl border border-dashed border-slate-200 dark:border-white/10 p-6 text-center text-xs text-slate-500 dark:text-slate-400">
+        No completed courses yet — the leaderboard fills in as your team finishes training.
+      </div>
+    );
   }
-  return <div className="space-y-1.5">
-      {rows.map((r, i) => <div key={r.userId} className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm ${r.userId === currentUserId ? "bg-rose-400/[0.08] light:bg-sky-100" : ""}`}>
-          <span className="w-6 shrink-0 text-center text-xs text-white/40 light:text-slate-400">{MEDALS[i] ?? r.rank}</span>
-          <span className="flex-1 truncate text-white/80 light:text-slate-700">{r.userEmail}{r.userId === currentUserId ? " (you)" : ""}</span>
-          <span className="shrink-0 text-xs text-white/45 light:text-slate-400">{r.completedCount} done</span>
-          <span className="w-10 shrink-0 text-right text-xs font-medium text-white/70 light:text-slate-600">{r.avgScore != null ? `${r.avgScore}%` : "—"}</span>
-        </div>)}
-    </div>;
+  return (
+    <div className="space-y-2">
+      {rows.map((r, i) => {
+        const isCurrent = r.userId === currentUserId;
+        const isTop3 = i < 3;
+        return (
+          <div
+            key={r.userId}
+            className={`flex items-center gap-3.5 rounded-2xl border p-3.5 text-xs transition-all ${isCurrent
+                ? "border-rose-400/40 bg-rose-500/10 dark:border-rose-500/40 dark:bg-rose-500/15 font-bold shadow-sm"
+                : isTop3
+                  ? "border-slate-200/90 bg-slate-50/70 dark:border-white/10 dark:bg-white/[0.03]"
+                  : "border-transparent hover:bg-slate-100/60 dark:hover:bg-white/[0.02]"
+              }`}
+          >
+            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-xl bg-white dark:bg-white/10 text-sm font-bold shadow-sm border border-slate-200/80 dark:border-white/10">
+              {MEDALS[i] ?? r.rank}
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="truncate font-semibold text-slate-900 dark:text-white">
+                {r.userEmail}
+                {isCurrent && (
+                  <span className="ml-1.5 rounded-full bg-rose-500 text-white px-2 py-0.2 text-[9px] font-bold uppercase">
+                    You
+                  </span>
+                )}
+              </p>
+            </div>
+            <span className="rounded-full bg-slate-200/80 dark:bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+              {r.completedCount} finished
+            </span>
+            <span className="min-w-[48px] text-right font-bold text-slate-900 dark:text-white tabular-nums">
+              {r.avgScore != null ? `${r.avgScore}%` : "—"}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 export function LocalPreviewBanner() {
@@ -244,17 +396,34 @@ export function LocalPreviewBanner() {
     setDismissed(sessionStorage.getItem("cs-local-banner-dismissed") === "1");
   }, []);
   if (dismissed) return null;
-  return <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-start gap-3 rounded-2xl border border-amber-400/25 light:border-amber-500/30 bg-amber-400/[0.06] light:bg-amber-50 px-4 py-3">
-      <span className="mt-0.5 shrink-0 text-amber-300 light:text-amber-600" aria-hidden>◐</span>
-      <div className="flex-1 text-sm">
-        <p className="font-medium text-amber-200 light:text-amber-800">Local preview curriculum</p>
-        <p className="mt-0.5 text-amber-200/70 light:text-amber-700/80">
-          This is real course content, running entirely in your browser (progress saved to this device only) until CyberSachet is
-          licensed and connected to your organization's database. Nothing here is sent anywhere.
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex items-start gap-3 rounded-2xl border border-amber-300/60 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10 p-4 shadow-sm"
+    >
+      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-xl bg-amber-500 text-white font-bold text-xs shadow-sm">
+        💡
+      </span>
+      <div className="flex-1 text-xs">
+        <p className="font-bold text-amber-900 dark:text-amber-300">
+          Local Preview Curriculum & Interactive Sandbox
+        </p>
+        <p className="mt-0.5 text-amber-800/80 dark:text-amber-200/80 leading-relaxed">
+          You are exploring full, real course materials in local sandbox mode. Your progress, notes, and quiz results are saved safely to your local browser. Once your organization enables a CyberSachet license, team synchronization and verifiable certificates become fully activated.
         </p>
       </div>
-      <button onClick={() => { sessionStorage.setItem("cs-local-banner-dismissed", "1"); setDismissed(true); }} className="shrink-0 text-amber-200/60 light:text-amber-700/60 hover:text-amber-100 light:hover:text-amber-900" aria-label="Dismiss">
+      <button
+        onClick={() => {
+          sessionStorage.setItem("cs-local-banner-dismissed", "1");
+          setDismissed(true);
+        }}
+        className="rounded-lg p-1 text-amber-700 dark:text-amber-400 hover:bg-amber-200/50 dark:hover:bg-amber-500/20 transition-colors"
+        aria-label="Dismiss banner"
+      >
         ✕
       </button>
-    </motion.div>;
+    </motion.div>
+  );
 }
+

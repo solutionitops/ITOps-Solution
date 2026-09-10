@@ -214,6 +214,9 @@ export default function App() {
       <Route path="/verify" element={<VerifyCertificate />} />
       <Route path="/_dev-cert-preview" element={<_DevCertPreview />} />
       <Route path="/_dev-infra-preview" element={<_DevInfraPreview />} />
+      <Route path="/_dev-cybersachet-preview" element={<CyberSachetTraining key="security" defaultTrack="security" />} />
+      <Route path="/_dev-academy-preview" element={<CyberSachetTraining key="academy" defaultTrack="academy" />} />
+      <Route path="/_dev-itops-preview" element={<ITOpsAcademyTraining />} />
       <Route path="/verify/:certificateNo" element={<VerifyCertificate />} />
 
       {/* Team invite acceptance — reachable logged out (to sign up) or logged
@@ -226,7 +229,7 @@ export default function App() {
           </ProtectedRoute>}>
         <Route path="/dashboard" element={<DashboardGate />} />
         <Route path="/training" element={<CyberSachetTraining key="security" defaultTrack="security" />} />
-        <Route path="/training/academy" element={<ITOpsAcademyTraining />} />
+        <Route path="/training/academy" element={<CyberSachetTraining key="academy" defaultTrack="academy" />} />
         <Route path="/training/itops" element={<ITOpsAcademyTraining />} />
         <Route path="/profile" element={<Profile />} />
         {/* Operator-only routes — an Employee Portal member (no operational

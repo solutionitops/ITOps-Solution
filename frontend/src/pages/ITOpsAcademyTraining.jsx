@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Link } from "react-router-dom";
 import {
@@ -31,6 +31,7 @@ import {
 } from "../components/AcademyITOpsTheme";
 import { LabTerminal } from "../components/LabTerminal";
 import { useToast } from "../components/Toast";
+import { TrainingTrackToggle } from "../components/TrainingTrackToggle";
 
 const TRACK_TABS = [
   { id: "foundation", label: "Foundation", icon: "🐧", count: 25, desc: "Linux internals, processes, DNS, TCP/IP, bash" },
@@ -46,7 +47,7 @@ const TRACK_TABS = [
 
 export default function ITOpsAcademyTraining() {
   const [state, setState] = useState(() => getITOpsStoredState());
-  const [activeTab, setActiveTab] = useState("workspace");
+  const [activeTab, setActiveTab] = useState("foundation");
   const [selectedLabId, setSelectedLabId] = useState("lab-fnd-001");
   const [activeLabMode, setActiveLabMode] = useState("guided");
   const [selectedIncidentId, setSelectedIncidentId] = useState("inc-moon-001");
@@ -55,6 +56,12 @@ export default function ITOpsAcademyTraining() {
   const [envStatus, setEnvStatus] = useState("RUNNING");
   const [showPortfolioModal, setShowPortfolioModal] = useState(false);
   const { showToast } = useToast();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    const mainEl = document.querySelector("main");
+    if (mainEl) mainEl.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, []);
 
   const activeProject = state.activeProjectId || "moonsav";
   const envId = state.currentEnvId || "LAB-1042-023";
@@ -90,6 +97,16 @@ export default function ITOpsAcademyTraining() {
     setState(updated);
     saveITOpsStoredState(updated);
     showToast(`Switched active lab environment to: ${ITOPS_PROJECTS[projId]?.name}`, "info");
+  };
+
+  const handleSelectLab = (labId) => {
+    setSelectedLabId(labId);
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      const el = document.getElementById("active-lab-workstation");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
   };
 
   const handleCompleteLab = () => {
@@ -143,8 +160,12 @@ export default function ITOpsAcademyTraining() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white antialiased font-sans pb-24">
-      <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8 space-y-8">
+    <div className="space-y-6 text-slate-900 dark:text-white antialiased font-sans pb-20">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <TrainingTrackToggle active="academy" />
+      </div>
+
+      <div className="space-y-8">
         {/* Top Hero Banner */}
         <ITOpsHero
           activeProject={activeProject}
@@ -162,7 +183,7 @@ export default function ITOpsAcademyTraining() {
         {/* Project Switcher & Portfolio Action Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex-1">
-            <p className="text-xs font-semibold uppercase tracking-wider text-white/50 mb-3 flex items-center gap-2">
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
               <span>🔀</span> Select Flagship Practical Lab Environment
             </p>
             <ProjectSwitcher
@@ -173,7 +194,7 @@ export default function ITOpsAcademyTraining() {
         </div>
 
         {/* Navigation Tabs & Portfolio Export Button */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200/90 dark:border-white/10 pb-4">
           <div className="flex flex-wrap items-center gap-2">
             {TRACK_TABS.map((tab) => {
               const isActive = activeTab === tab.id;
@@ -184,14 +205,14 @@ export default function ITOpsAcademyTraining() {
                   type="button"
                   className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all ${
                     isActive
-                      ? "bg-cyan-500 text-white shadow-lg shadow-cyan-500/25 ring-1 ring-cyan-400"
-                      : "bg-white/5 text-white/70 hover:bg-white/10 hover:text-white border border-white/10"
+                      ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/25 ring-1 ring-indigo-500"
+                      : "bg-slate-100 hover:bg-slate-200/80 dark:bg-white/5 text-slate-700 dark:text-white/70 hover:text-slate-900 dark:hover:text-white border border-slate-200/80 dark:border-white/10"
                   }`}
                 >
                   <span>{tab.icon}</span>
                   <span>{tab.label}</span>
-                  <span className={`rounded-full px-1.5 py-0.2 text-[10px] ${
-                    isActive ? "bg-black/30 text-white" : "bg-white/10 text-white/60"
+                  <span className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
+                    isActive ? "bg-white/25 text-white" : "bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-white/60"
                   }`}>
                     {tab.count}
                   </span>
@@ -204,7 +225,7 @@ export default function ITOpsAcademyTraining() {
             <button
               type="button"
               onClick={() => setShowPortfolioModal(true)}
-              className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-2 text-xs font-bold text-black shadow-lg hover:brightness-110 transition-all flex items-center gap-1.5"
+              className="rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 px-4 py-2 text-xs font-bold shadow-sm hover:shadow-md transition-all flex items-center gap-1.5"
             >
               <span>🎓</span> Export Portfolio (.md)
             </button>
@@ -216,10 +237,10 @@ export default function ITOpsAcademyTraining() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search labs & skills..."
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 pl-9 text-xs text-white placeholder-white/40 focus:border-cyan-400 focus:outline-none"
+                className="w-full rounded-xl border border-slate-200/90 dark:border-white/10 bg-white dark:bg-slate-900 px-3.5 py-2 pl-9 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-white/40 focus:border-indigo-500 focus:outline-none shadow-sm"
               />
               <svg
-                className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-white/40"
+                className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -284,87 +305,140 @@ export default function ITOpsAcademyTraining() {
               onVerifyLab={handleVerifyLab}
             />
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              {/* Left Column: Lab Selector List (4 Cols) */}
-              <div className="lg:col-span-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-white/50">
-                    Curriculum Labs ({trackLabs.length})
-                  </p>
-                  <span className="text-[10px] text-cyan-400 font-mono">
-                    {state.completedLabIds?.length || 0} Completed
-                  </span>
-                </div>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              {/* Left Column: Sticky Curriculum Labs Sidebar (4 Cols) */}
+              <aside
+                className="lg:col-span-4 sticky top-6 self-start z-20"
+                style={{ position: "sticky", top: "1.5rem", zIndex: 20, alignSelf: "start" }}
+              >
+                <div className="rounded-3xl border border-slate-200/90 dark:border-white/10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-4 sm:p-5 shadow-sm space-y-4 max-h-[calc(100vh-3rem)] flex flex-col">
+                  {/* Pinned Header */}
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/5 shrink-0">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                          Curriculum Labs
+                        </h3>
+                        <span className="rounded-full bg-slate-100 dark:bg-white/10 px-2 py-0.5 text-[10px] font-mono font-bold text-slate-600 dark:text-slate-400">
+                          {trackLabs.length}
+                        </span>
+                      </div>
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <div className="w-24 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                          <div
+                            className="h-full bg-indigo-600 dark:bg-indigo-500 rounded-full transition-all duration-500"
+                            style={{
+                              width: `${Math.round(
+                                ((trackLabs.filter((l) => state.completedLabIds?.includes(l.id)).length) /
+                                  (trackLabs.length || 1)) *
+                                  100
+                              )}%`
+                            }}
+                          />
+                        </div>
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          {Math.round(
+                            ((trackLabs.filter((l) => state.completedLabIds?.includes(l.id)).length) /
+                              (trackLabs.length || 1)) *
+                              100
+                          )}%
+                        </span>
+                      </div>
+                    </div>
 
-                <div className="space-y-2 max-h-[800px] overflow-y-auto pr-1">
-                  {trackLabs.map((lab) => {
-                    const isSelected = selectedLabId === lab.id;
-                    const isCompleted = state.completedLabIds?.includes(lab.id);
+                    <span className="text-[11px] font-bold text-indigo-600 dark:text-cyan-400 font-mono bg-indigo-50 dark:bg-cyan-500/10 px-2.5 py-1 rounded-full border border-indigo-200/80 dark:border-cyan-500/20">
+                      {trackLabs.filter((l) => state.completedLabIds?.includes(l.id)).length} Completed
+                    </span>
+                  </div>
 
-                    return (
-                      <button
-                        key={lab.id}
-                        onClick={() => setSelectedLabId(lab.id)}
-                        type="button"
-                        className={`w-full rounded-xl p-3.5 text-left transition-all border ${
-                          isSelected
-                            ? "border-cyan-400 bg-cyan-950/40 text-white shadow-md ring-1 ring-cyan-400/40"
-                            : "border-white/10 bg-white/[0.02] text-white/70 hover:bg-white/[0.05] hover:border-white/20"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-mono uppercase text-white/40">
-                            {lab.id}
-                          </span>
-                          <div className="flex items-center gap-1.5">
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                              lab.difficulty === 'Beginner' ? 'bg-emerald-500/20 text-emerald-300' :
-                              lab.difficulty === 'Intermediate' ? 'bg-amber-500/20 text-amber-300' :
-                              'bg-red-500/20 text-red-300'
-                            }`}>
-                              {lab.difficulty}
-                            </span>
-                            {isCompleted && (
-                              <span className="text-emerald-400 text-xs" title="Completed">✔</span>
-                            )}
+                  {/* Scrollable List with Sleek Scrollbar */}
+                  <div className="space-y-2.5 flex-1 overflow-y-auto overscroll-contain pr-1.5 custom-scrollbar min-h-0">
+                    {trackLabs.map((lab) => {
+                      const isSelected = selectedLabId === lab.id;
+                      const isCompleted = state.completedLabIds?.includes(lab.id);
+
+                      return (
+                        <button
+                          key={lab.id}
+                          onClick={() => handleSelectLab(lab.id)}
+                          type="button"
+                          className={`w-full rounded-2xl p-4 text-left transition-all border ${
+                            isSelected
+                              ? "border-indigo-500 bg-indigo-50/80 dark:border-indigo-400 dark:bg-indigo-950/40 text-slate-900 dark:text-white shadow-sm ring-1 ring-indigo-500/30 dark:ring-indigo-400/40"
+                              : "border-slate-200/90 dark:border-white/10 bg-white dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-white/20 hover:bg-slate-50 dark:hover:bg-white/[0.05] shadow-xs"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-mono font-bold uppercase text-slate-400 dark:text-white/40">
+                                {lab.id}
+                              </span>
+                              {isSelected && (
+                                <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase text-indigo-700 dark:text-indigo-300 bg-indigo-100/80 dark:bg-indigo-500/20 px-1.5 py-0.2 rounded-md">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400 animate-pulse" />
+                                  Active
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <span
+                                className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
+                                  lab.difficulty === "Beginner"
+                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30"
+                                    : lab.difficulty === "Intermediate"
+                                    ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30"
+                                    : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/20 dark:text-rose-300 dark:border-rose-500/30"
+                                }`}
+                              >
+                                {lab.difficulty}
+                              </span>
+                              {isCompleted && (
+                                <span className="text-emerald-600 dark:text-emerald-400 text-xs font-bold" title="Completed">
+                                  ✔
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        </div>
 
-                        <h4 className="mt-2 text-xs font-bold text-white line-clamp-1">
-                          {lab.title}
-                        </h4>
-                        <p className="mt-1 text-[11px] text-white/50 line-clamp-2">
-                          {lab.objective}
-                        </p>
+                          <h4 className="mt-2 text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
+                            {lab.title}
+                          </h4>
+                          <p className="mt-1 text-[11px] text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            {lab.objective}
+                          </p>
 
-                        <div className="mt-2.5 flex flex-wrap gap-1">
-                          {lab.skills.map((s) => (
-                            <span key={s} className="rounded bg-white/5 px-1.5 py-0.5 text-[9px] font-mono text-cyan-300 border border-white/5">
-                              #{s}
-                            </span>
-                          ))}
-                        </div>
-                      </button>
-                    );
-                  })}
+                          <div className="mt-2.5 flex flex-wrap gap-1">
+                            {lab.skills.map((s) => (
+                              <span
+                                key={s}
+                                className="rounded-md bg-slate-100 dark:bg-white/5 px-2 py-0.5 text-[9px] font-mono font-semibold text-indigo-700 dark:text-cyan-300 border border-slate-200/80 dark:border-white/10"
+                              >
+                                #{s}
+                              </span>
+                            ))}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              </aside>
 
               {/* Right Column: Active Lab Workstation (8 Cols) */}
-              <div className="lg:col-span-8 space-y-6">
+              <div id="active-lab-workstation" className="lg:col-span-8 space-y-6">
                 {currentLab ? (
-                  <div className="rounded-3xl border border-white/10 bg-slate-950/60 p-6 md:p-8 backdrop-blur-xl shadow-2xl space-y-6">
+                  <div className="rounded-3xl border border-slate-200/90 dark:border-white/10 bg-white dark:bg-slate-950/80 p-6 md:p-8 shadow-sm dark:shadow-2xl space-y-6">
                     {/* Lab Header */}
-                    <div className="flex flex-wrap items-start justify-between gap-4 border-b border-white/10 pb-5">
+                    <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 dark:border-white/10 pb-5">
                       <div>
-                        <div className="flex items-center gap-2">
-                          <span className="rounded-full bg-cyan-400/20 px-3 py-1 text-xs font-semibold text-cyan-300 border border-cyan-400/30">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="rounded-full bg-indigo-50 dark:bg-cyan-400/20 px-3 py-1 text-xs font-bold text-indigo-700 dark:text-cyan-300 border border-indigo-200/80 dark:border-cyan-400/30">
                             {currentLab.track.toUpperCase()} LAB
                           </span>
-                          <span className="text-xs text-white/40">• {currentLab.estimatedMinutes} Mins</span>
-                          <span className="text-xs text-white/40">• Environment: {currentLab.environment}</span>
+                          <span className="text-xs text-slate-500 dark:text-white/40 font-medium">• {currentLab.estimatedMinutes} Mins</span>
+                          <span className="text-xs text-slate-500 dark:text-white/40 font-medium">• Environment: {currentLab.environment}</span>
                         </div>
-                        <h2 className="mt-2 text-xl md:text-2xl font-bold text-white">
+                        <h2 className="mt-2 text-xl md:text-2xl font-bold text-slate-900 dark:text-white">
                           {currentLab.title}
                         </h2>
                       </div>
@@ -372,14 +446,14 @@ export default function ITOpsAcademyTraining() {
                       {/* Lab Status Badge */}
                       <div>
                         {state.completedLabIds?.includes(currentLab.id) ? (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 px-3.5 py-1.5 text-xs font-bold text-emerald-400">
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/30 px-3.5 py-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400">
                             ✔ Completed & Verified
                           </span>
                         ) : (
                           <button
                             onClick={handleCompleteLab}
                             type="button"
-                            className="rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-2 text-xs font-bold text-white shadow-lg hover:shadow-cyan-500/25 transition-all"
+                            className="rounded-xl bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400 px-5 py-2 text-xs font-bold text-white shadow-md shadow-indigo-500/20 transition-all"
                           >
                             Mark Lab Complete (+150 XP)
                           </button>
@@ -402,30 +476,30 @@ export default function ITOpsAcademyTraining() {
                         <OperationalTopologyMap projectId={activeProject} />
 
                         {/* Objective & Scenario */}
-                        <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 space-y-3">
-                          <h4 className="text-xs font-semibold uppercase tracking-wider text-white/50">
-                            🎯 Practical Objective
+                        <div className="rounded-2xl border border-slate-200/90 dark:border-white/10 bg-slate-50/70 dark:bg-white/[0.02] p-5 space-y-3">
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                            <span>🎯</span> Practical Objective
                           </h4>
-                          <p className="text-sm text-white/80 leading-relaxed">
+                          <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed">
                             {currentLab.objective}
                           </p>
 
-                          <div className="pt-2 border-t border-white/5 flex flex-wrap gap-4 text-xs text-white/60">
-                            <div><span className="font-semibold text-white/80">Tools:</span> {currentLab.tools?.join(", ")}</div>
-                            <div><span className="font-semibold text-white/80">Prerequisites:</span> {currentLab.prerequisites}</div>
+                          <div className="pt-2 border-t border-slate-200/80 dark:border-white/10 flex flex-wrap gap-4 text-xs text-slate-600 dark:text-slate-400">
+                            <div><span className="font-bold text-slate-800 dark:text-white">Tools:</span> {currentLab.tools?.join(", ")}</div>
+                            <div><span className="font-bold text-slate-800 dark:text-white">Prerequisites:</span> {currentLab.prerequisites}</div>
                           </div>
                         </div>
 
                         {/* Step by Step execution */}
                         {currentLab.guidedSteps && (
-                          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 space-y-4">
-                            <h4 className="text-xs font-semibold uppercase tracking-wider text-cyan-300 flex items-center gap-1.5">
+                          <div className="rounded-2xl border border-slate-200/90 dark:border-white/10 bg-slate-50/70 dark:bg-white/[0.02] p-5 space-y-4">
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-400 flex items-center gap-1.5">
                               <span>📋</span> Step-by-Step Execution Guide
                             </h4>
                             <div className="space-y-3">
                               {currentLab.guidedSteps.map((step, idx) => (
-                                <div key={idx} className="flex items-start gap-3 text-xs text-white/80 leading-relaxed bg-black/30 p-3 rounded-xl border border-white/5">
-                                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-cyan-500/20 text-cyan-300 font-mono font-bold text-xs">
+                                <div key={idx} className="flex items-start gap-3 text-xs text-slate-800 dark:text-slate-200 leading-relaxed bg-white dark:bg-black/30 p-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 shadow-xs">
+                                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 font-mono font-bold text-xs">
                                     {idx + 1}
                                   </span>
                                   <span className="font-mono pt-0.5">{step}</span>
@@ -437,7 +511,7 @@ export default function ITOpsAcademyTraining() {
 
                         {/* Interactive Stateful LabTerminal */}
                         <div className="space-y-2">
-                          <p className="text-xs font-semibold uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+                          <p className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-300 flex items-center gap-1.5">
                             <span>💻</span> Stateful Lab Terminal (Simulation & Real Lab Engine)
                           </p>
                           <LabTerminal
@@ -452,42 +526,42 @@ export default function ITOpsAcademyTraining() {
 
                         {/* Verification & Self-Validation */}
                         {currentLab.verify && (
-                          <div className="rounded-2xl border border-emerald-500/30 bg-emerald-950/20 p-5 space-y-3">
+                          <div className="rounded-2xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/60 dark:bg-emerald-950/20 p-5 space-y-3">
                             <div className="flex items-center justify-between">
-                              <p className="text-xs font-semibold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                              <p className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
                                 <span>✔</span> Automated Lab Verification
                               </p>
                               <button
                                 onClick={handleVerifyLab}
                                 type="button"
-                                className="rounded-lg bg-emerald-600 px-3 py-1 text-xs font-bold text-white hover:bg-emerald-500 transition-colors"
+                                className="rounded-xl bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white transition-colors shadow-sm"
                               >
                                 Run Validator Now
                               </button>
                             </div>
-                            <div className="flex items-center justify-between rounded-xl bg-black/60 p-3 border border-emerald-500/20 font-mono text-xs text-emerald-300">
+                            <div className="flex items-center justify-between rounded-xl bg-slate-900 dark:bg-black/60 p-3 border border-slate-800 dark:border-emerald-500/20 font-mono text-xs text-emerald-400">
                               <code>$ {currentLab.verify.command}</code>
-                              <span className="text-[10px] text-white/40">Expect: {currentLab.verify.pass}</span>
+                              <span className="text-[10px] text-slate-400">Expect: {currentLab.verify.pass}</span>
                             </div>
                           </div>
                         )}
 
                         {/* SRE Lesson & Interview Question */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-                            <p className="text-[10px] font-semibold uppercase tracking-wider text-indigo-300">
-                              💡 Production SRE Lesson
+                          <div className="rounded-2xl border border-indigo-200/80 dark:border-white/10 bg-indigo-50/60 dark:bg-white/[0.02] p-4.5">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5">
+                              <span>💡</span> Production SRE Lesson
                             </p>
-                            <p className="mt-2 text-xs text-white/70 leading-relaxed">
+                            <p className="mt-2 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
                               {currentLab.sreLesson}
                             </p>
                           </div>
 
-                          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-                            <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-300">
-                              🎤 Staff Engineer Interview Question
+                          <div className="rounded-2xl border border-amber-200/80 dark:border-white/10 bg-amber-50/60 dark:bg-white/[0.02] p-4.5">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                              <span>🎤</span> Staff Engineer Interview Question
                             </p>
-                            <p className="mt-2 text-xs text-white/70 leading-relaxed">
+                            <p className="mt-2 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
                               {currentLab.interviewQuestion}
                             </p>
                           </div>
@@ -497,11 +571,11 @@ export default function ITOpsAcademyTraining() {
 
                     {/* Mode 2: CHALLENGE MODE */}
                     {activeLabMode === "challenge" && (
-                      <div className="rounded-2xl border border-amber-500/30 bg-amber-950/20 p-6 space-y-4">
-                        <div className="flex items-center gap-2 text-amber-400 text-sm font-bold">
+                      <div className="rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/70 dark:bg-amber-950/20 p-6 space-y-4">
+                        <div className="flex items-center gap-2 text-amber-800 dark:text-amber-400 text-sm font-bold">
                           <span>🏆</span> Hands-Off Engineering Challenge
                         </div>
-                        <p className="text-sm text-white/80 leading-relaxed">
+                        <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed">
                           {currentLab.challengeSummary || currentLab.objective}
                         </p>
                         <LabTerminal
@@ -541,7 +615,7 @@ export default function ITOpsAcademyTraining() {
                     )}
                   </div>
                 ) : (
-                  <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-12 text-center text-white/50">
+                  <div className="rounded-3xl border border-slate-200/90 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] p-12 text-center text-slate-500 dark:text-white/50">
                     Select a lab from the list to begin operating.
                   </div>
                 )}
@@ -556,9 +630,9 @@ export default function ITOpsAcademyTraining() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Incident List */}
               <div className="space-y-3">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-red-400 flex items-center justify-between">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-red-400 flex items-center justify-between">
                   <span>🚨 Live Production Incidents ({projectIncidents.length})</span>
-                  <span className="text-[10px] text-white/40">Real Chaos Scenarios</span>
+                  <span className="text-[10px] text-slate-400 font-mono">Real Chaos Scenarios</span>
                 </h3>
 
                 <div className="space-y-2">
@@ -573,26 +647,26 @@ export default function ITOpsAcademyTraining() {
                         type="button"
                         className={`w-full rounded-2xl p-4 text-left border transition-all ${
                           isSelected
-                            ? "border-red-500 bg-red-950/40 text-white ring-1 ring-red-400"
-                            : "border-white/10 bg-white/[0.02] text-white/70 hover:bg-white/[0.05]"
+                            ? "border-rose-500 bg-rose-50 dark:bg-red-950/40 text-slate-900 dark:text-white ring-1 ring-rose-400 shadow-sm"
+                            : "border-slate-200/90 dark:border-white/10 bg-white dark:bg-white/[0.02] text-slate-700 dark:text-white/70 hover:bg-slate-50 dark:hover:bg-white/[0.05] shadow-xs"
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <span className="rounded bg-red-600/80 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                          <span className="rounded-md bg-rose-100 dark:bg-red-600/80 px-2 py-0.5 text-[10px] font-bold uppercase text-rose-700 dark:text-white">
                             {inc.severity}
                           </span>
-                          <span className="text-[10px] font-mono text-white/40">{inc.startedAt}</span>
+                          <span className="text-[10px] font-mono text-slate-400 dark:text-white/40">{inc.startedAt}</span>
                         </div>
 
-                        <h4 className="mt-2 text-xs font-bold text-white line-clamp-1">{inc.title}</h4>
-                        <p className="mt-1 text-[11px] text-white/50 line-clamp-2">{inc.symptoms}</p>
+                        <h4 className="mt-2 text-xs font-bold text-slate-900 dark:text-white line-clamp-1">{inc.title}</h4>
+                        <p className="mt-1 text-[11px] text-slate-500 dark:text-white/50 line-clamp-2">{inc.symptoms}</p>
 
-                        <div className="mt-3 flex items-center justify-between pt-2 border-t border-white/5 text-[10px]">
-                          <span className="text-white/40">{inc.affectedService}</span>
+                        <div className="mt-3 flex items-center justify-between pt-2 border-t border-slate-100 dark:border-white/5 text-[10px]">
+                          <span className="text-slate-400 dark:text-white/40">{inc.affectedService}</span>
                           {isResolved ? (
-                            <span className="text-emerald-400 font-bold">✔ Resolved</span>
+                            <span className="text-emerald-600 dark:text-emerald-400 font-bold">✔ Resolved</span>
                           ) : (
-                            <span className="text-red-400 font-bold animate-pulse">● Active Outage</span>
+                            <span className="text-rose-600 dark:text-red-400 font-bold animate-pulse">● Active Outage</span>
                           )}
                         </div>
                       </button>
@@ -627,8 +701,8 @@ export default function ITOpsAcademyTraining() {
         {activeTab === "certifications" && (
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-bold text-white">MOONSAV Industry Engineering Certifications</h3>
-              <p className="text-xs text-white/50">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">MOONSAV Industry Engineering Certifications</h3>
+              <p className="text-xs text-slate-500 dark:text-white/50">
                 Earned strictly by demonstrating verified hands-on lab completions, resolved production incidents, and blameless postmortems.
               </p>
             </div>

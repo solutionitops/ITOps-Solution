@@ -6,6 +6,7 @@ import { MarketingFooter } from "../components/MarketingFooter";
 import { ProductShell } from "../components/ProductLayout";
 import { Reveal, SpotlightCard } from "../components/Animated";
 import { ITOPS_PROJECTS, CERTIFICATION_PATHS } from "../data/itopsAcademyCourses";
+import { Icons } from "../components/AcademyITOpsTheme";
 
 const PHILOSOPHY_STEPS = [
   "LEARN", "BUILD", "DEPLOY", "OPERATE", "MONITOR", "BREAK",
@@ -47,25 +48,25 @@ const LAB_TIERS = [
 const TRACKS = [
   {
     title: "Track 1 — ITOps Foundation",
-    icon: "🐧",
+    icon: Icons.Terminal,
     desc: "Linux kernel, process trees, systemd services, TCP/IP sockets, DNS debugging, TLS 1.3, Git branching, and Bash automation.",
     topics: ["Linux Internals", "Networking & Sockets", "DNS & TLS", "Systemd Services", "Bash Scripting", "Process Triage"]
   },
   {
     title: "Track 2 — DevOps & Orchestration",
-    icon: "🚀",
+    icon: Icons.Rocket,
     desc: "Multi-stage Docker, Compose networking, Nginx reverse proxies, GitHub Actions CI/CD, Terraform IaC, and Kubernetes zero-downtime rollouts.",
     topics: ["Docker & Distroless", "Compose Stacks", "Nginx Gateways", "GitHub Actions", "Terraform Modules", "Kubernetes Rollouts"]
   },
   {
     title: "Track 3 — DevSecOps & Cloud Security",
-    icon: "🛡️",
+    icon: Icons.Shield,
     desc: "Shift-left SAST scanning, Gitleaks secret detection, Trivy container CVE scans, HashiCorp Vault dynamic secrets, and K8s NetworkPolicies.",
     topics: ["SAST & Semgrep", "Secret Scanning", "Container CVEs", "HashiCorp Vault", "K8s NetworkPolicy", "Zero Trust"]
   },
   {
     title: "Track 4 — SRE, Observability & Chaos",
-    icon: "📈",
+    icon: Icons.BarChart,
     desc: "Prometheus metrics, Grafana SLO dashboards, OpenTelemetry distributed tracing, Chaos engineering fault injection, and live incident postmortems.",
     topics: ["Prometheus & PromQL", "Grafana SLOs", "OpenTelemetry Traces", "Chaos Engineering", "Incident Triage", "Blameless Postmortems"]
   }
@@ -212,7 +213,9 @@ export default function Academy() {
                     <span className="rounded-full bg-cyan-400/20 border border-cyan-400/30 px-3 py-1 text-xs font-bold text-cyan-300">
                       FLAGSHIP A — IoT / INDUSTRIAL SRE
                     </span>
-                    <span className="text-2xl">💧</span>
+                    <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
+                      <Icons.Activity className="w-5 h-5 text-cyan-400" />
+                    </div>
                   </div>
 
                   <h3 className="text-2xl font-bold text-white">
@@ -250,7 +253,9 @@ export default function Academy() {
                     <span className="rounded-full bg-amber-400/20 border border-amber-400/30 px-3 py-1 text-xs font-bold text-amber-300">
                       FLAGSHIP B — ENTERPRISE MICROSERVICES
                     </span>
-                    <span className="text-2xl">🏢</span>
+                    <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                      <Icons.Server className="w-5 h-5 text-amber-400" />
+                    </div>
                   </div>
 
                   <h3 className="text-2xl font-bold text-white">
@@ -300,25 +305,30 @@ export default function Academy() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {TRACKS.map((track, i) => (
-                <SpotlightCard key={track.title} delay={i * 0.1} className="p-6 rounded-2xl border border-white/10 bg-white/[0.02]">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{track.icon}</span>
-                    <h3 className="text-lg font-bold text-white">{track.title}</h3>
-                  </div>
-                  <p className="mt-2 text-xs leading-relaxed text-white/60">
-                    {track.desc}
-                  </p>
+              {TRACKS.map((track, i) => {
+                const IconComp = track.icon;
+                return (
+                  <SpotlightCard key={track.title} delay={i * 0.1} className="p-6 rounded-2xl border border-white/10 bg-white/[0.02]">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
+                        <IconComp className="w-5 h-5 text-cyan-400" />
+                      </div>
+                      <h3 className="text-lg font-bold text-white">{track.title}</h3>
+                    </div>
+                    <p className="mt-2 text-xs leading-relaxed text-white/60">
+                      {track.desc}
+                    </p>
 
-                  <div className="mt-4 pt-3 border-t border-white/5 flex flex-wrap gap-1.5">
-                    {track.topics.map((t) => (
-                      <span key={t} className="rounded-md bg-white/5 px-2 py-0.5 text-[10px] font-mono text-cyan-300 border border-white/10">
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                </SpotlightCard>
-              ))}
+                    <div className="mt-4 pt-3 border-t border-white/5 flex flex-wrap gap-1.5">
+                      {track.topics.map((t) => (
+                        <span key={t} className="rounded-md bg-white/5 px-2 py-0.5 text-[10px] font-mono text-cyan-300 border border-white/10">
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  </SpotlightCard>
+                );
+              })}
             </div>
           </ProductShell>
         </section>

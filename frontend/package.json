@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:all": "vite",
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
@@ -22,7 +23,8 @@
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.11.0",
     "recharts": "^3.9.1",
-    "simple-icons": "^16.25.0"
+    "simple-icons": "^16.25.0",
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.2",

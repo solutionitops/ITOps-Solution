@@ -421,91 +421,18 @@ export default function Landing() {
       <TechMarquee />
     </section>
 
-    <section className="relative overflow-hidden border-b border-white/10 light:border-slate-900/8 bg-neutral-950 light:bg-white px-6 py-16 md:px-10">
-      <div className="enterprise-grid pointer-events-none absolute inset-0 opacity-40" />
-      <div className="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[80%] max-w-4xl -translate-x-1/2 rounded-full bg-blue-500/[0.06] blur-[130px]" />
-      {/* On ultra-wide viewports the centered max-w-5xl column leaves bare
-            gutters either side — fill them with module icons drawn from the
-            same real, live modules the section itself lists (not filler). */}
-      <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-[calc(50%-30rem)] 2xl:block">
-        <svg className="absolute inset-0 h-full w-full opacity-25" aria-hidden>
-          <motion.line x1="20%" y1="26%" x2="48%" y2="60%" stroke="#22d3ee" strokeWidth="1" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ duration: 1.2, ease: EASE }} />
-        </svg>
-        <motion.div className="absolute left-[18%] top-[22%]" animate={{ y: [0, -14, 0] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}>
-          <FeatureIcon title="Website & API Monitoring" size={44} />
-        </motion.div>
-        <motion.div className="absolute left-[46%] top-[58%]" animate={{ y: [0, 12, 0] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}>
-          <FeatureIcon title="Network & Device Monitoring" size={36} />
-        </motion.div>
-      </div>
-      <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[calc(50%-30rem)] 2xl:block">
-        <svg className="absolute inset-0 h-full w-full opacity-25" aria-hidden>
-          <motion.line x1="78%" y1="32%" x2="54%" y2="66%" stroke="#a78bfa" strokeWidth="1" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ duration: 1.2, delay: 0.15, ease: EASE }} />
-        </svg>
-        <motion.div className="absolute right-[20%] top-[28%]" animate={{ y: [0, 14, 0] }} transition={{ duration: 7.5, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}>
-          <FeatureIcon title="Security Monitoring" size={44} />
-        </motion.div>
-        <motion.div className="absolute right-[44%] top-[62%]" animate={{ y: [0, -12, 0] }} transition={{ duration: 6.5, repeat: Infinity, ease: "easeInOut", delay: 0.9 }}>
-          <FeatureIcon title="Kada Nigrani (Server Monitoring)" size={36} />
-        </motion.div>
-      </div>
-      <Reveal className="relative mx-auto max-w-5xl text-center">
-        <p className="text-xs font-medium uppercase tracking-[0.15em] text-white/45 light:text-slate-400">The Complete Platform</p>
-        <p className="mt-3 text-2xl font-medium tracking-tight md:text-3xl">One Platform, Growing Module by Module</p>
-        <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-white/55 light:text-slate-500">
-          ITOps Monitor is built to become a complete IT operations platform. Some modules are live and monitoring
-          real infrastructure today; others are publicly on the roadmap.
-        </p>
-        {platformPreview && platformPreview.length > 0 && <p className="mt-3 text-xs font-medium uppercase tracking-wide text-white/35 light:text-slate-400">
-          {platformPreview.filter(i => i.status === "live").length} modules live today ·{" "}
-          {platformPreview.filter(i => i.status !== "live").length} on the public roadmap
-        </p>}
-      </Reveal>
-      <div className="relative mx-auto mt-10">
+    {/* No `overflow-hidden` here: the platform orbit pins its stage with
+        `position: sticky`, which an overflowing ancestor would break. */}
+    <section id="platform" className="relative w-full pb-16 md:pb-24">
+      <div className="relative w-full">
         <InfrastructureTopology items={platformPreview} />
-      </div>
-      <div className="relative mx-auto mt-10 flex max-w-4xl flex-wrap justify-center gap-3">
-        {platformPreviewLoading ? (
-          Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-9 w-32 rounded-full" />)
-        ) : platformPreviewError ? (
-          <p className="text-sm text-red-300/80">Couldn't load platform modules.</p>
-        ) : (
-          platformPreview?.map((item, i) => {
-            const isLive = item.status === "live";
-            const pill = <motion.span initial={{
-              opacity: 0,
-              y: 10,
-              scale: 0.9
-            }} whileInView={{
-              opacity: 1,
-              y: 0,
-              scale: 1
-            }} viewport={{
-              once: true,
-              margin: "-40px"
-            }} transition={{
-              duration: 0.4,
-              delay: i * 0.05,
-              ease: EASE
-            }} whileHover={{
-              scale: 1.06,
-              y: -2
-            }} className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-colors ${isLive ? "border-emerald-400/30 bg-emerald-400/10 light:bg-emerald-100 text-emerald-300 light:text-emerald-700 hover:bg-emerald-400/20 light:hover:bg-emerald-200" : "border-white/10 light:border-slate-900/10 text-white/50 light:text-slate-500 hover:border-white/25 light:hover:border-slate-900/25 hover:text-white/70 light:hover:text-slate-600 light:hover:text-slate-700"}`}>
-              {isLive && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400 [animation:pulse-glow_1.6s_ease-in-out_infinite]" />}
-              {item.title} · {isLive ? "Live" : "Roadmap"}
-            </motion.span>;
-            return item.href ? <Link key={item.id} to={item.href} className="cursor-pointer">
-              {pill}
-            </Link> : <span key={item.id} className="cursor-default">
-              {pill}
-            </span>;
-          })
-        )}
-      </div>
-      <div className="mt-8 text-center">
-        <Link to="/platform" className="text-sm text-white/70 light:text-slate-600 underline-offset-4 hover:text-white light:hover:text-slate-900 hover:underline">
-          See the full platform →
-        </Link>
+
+        <div className="mt-8 text-center">
+          <Link to="/platform" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:underline transition-colors">
+            <span>See the full platform roadmap</span>
+            <span>→</span>
+          </Link>
+        </div>
       </div>
     </section>
 

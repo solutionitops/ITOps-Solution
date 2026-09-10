@@ -431,117 +431,21 @@ export const CERTIFICATION_PATHS = [
 // STATEFUL IN-BROWSER SIMULATION COMMAND DISPATCHER ENGINE
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function runSimulationCommand(rawCmd, labId = "", projectId = "moonsav") {
-  const trimmed = (rawCmd || "").trim();
-  const lower = trimmed.toLowerCase();
+import { ShellSession } from "../lib/terminalEngine";
+import { LAB_KNOWLEDGE_CHECKPOINTS, TRACK_FINAL_ASSESSMENTS } from "./itopsAcademyAssessments.js";
 
-  // Basic command dispatcher with realistic outputs
-  if (lower === "clear") {
-    return { output: "", clear: true, exitCode: 0 };
+let globalSimulationShell = null;
+
+export function getGlobalSimulationShell(projectId = "moonsav", labId = "lab-fnd-001") {
+  if (!globalSimulationShell || globalSimulationShell.projectId !== projectId) {
+    globalSimulationShell = new ShellSession({ projectId, labId });
   }
+  return globalSimulationShell;
+}
 
-  if (lower === "pwd") {
-    return { output: "/home/moonsav/workspace", exitCode: 0 };
-  }
-
-  if (lower === "whoami") {
-    return { output: "moonsav-engineer (uid=10001 gid=10001)", exitCode: 0 };
-  }
-
-  if (lower === "uptime") {
-    return { output: " 10:14:02 up 14 days,  2:41,  1 user,  load average: 0.42, 0.58, 0.61", exitCode: 0 };
-  }
-
-  if (lower === "docker ps" || lower.startsWith("docker ps")) {
-    if (projectId === "moonsav") {
-      return {
-        output: "CONTAINER ID   IMAGE                          STATUS                   PORTS                    NAMES\n8f2a1b9c3d4e   moonsav/device-simulator:v1    Up 42 minutes            0.0.0.0:48201->48201/tcp moonsav-device-sim\n3d8f1a2c9e0b   emqx/emqx:5.4-alpine           Up 42 minutes (healthy)  0.0.0.0:1883->1883/tcp   moonsav-mqtt-broker\n4e9c2a1b8f3d   moonsav/telemetry-svc:v2       Up 42 minutes (healthy)  0.0.0.0:8080->8080/tcp   moonsav-telemetry\n7c1a9e2d3b4f   postgres:16-timescale          Up 42 minutes (healthy)  0.0.0.0:5432->5432/tcp   moonsav-postgres\n1a2b3c4d5e6f   redis:7.2-alpine               Up 42 minutes (healthy)  0.0.0.0:6379->6379/tcp   moonsav-redis",
-        exitCode: 0
-      };
-    } else {
-      return {
-        output: "CONTAINER ID   IMAGE                          STATUS                   PORTS                    NAMES\na7c9e21f8b3d   nginx:1.26-alpine              Up 35 minutes            0.0.0.0:80->80/tcp       daig-api-gateway\nb1c4d8a9f2e3   daig/order-service:v2.1        Up 35 minutes (healthy)  0.0.0.0:3000->3000/tcp   daig-orders\nc3f8e1a4d2b9   rabbitmq:3.13-management       Up 35 minutes (healthy)  0.0.0.0:5672, 15672/tcp  daig-rabbitmq\nd4e9a1b2c3d4   daig/celery-worker:v2          Up 35 minutes (healthy)                           daig-worker-01\ne5f6a7b8c9d0   postgres:16-alpine             Up 35 minutes (healthy)  0.0.0.0:5432->5432/tcp   daig-postgres",
-        exitCode: 0
-      };
-    }
-  }
-
-  if (lower.startsWith("kubectl get pods")) {
-    return {
-      output: "NAME                                READY   STATUS    RESTARTS   AGE\nmoonsav-telemetry-7d9f8c6b4d-2xk9p  1/1     Running   0          4d2h\nmoonsav-telemetry-7d9f8c6b4d-9mzq2  1/1     Running   0          4d2h\nmoonsav-motor-5f8b9d6c7e-jv7lh      1/1     Running   0          4d2h\nmoonsav-mqtt-0                      1/1     Running   0          14d\nmoonsav-postgres-0                  1/1     Running   0          14d",
-      exitCode: 0
-    };
-  }
-
-  if (lower.startsWith("kubectl get nodes")) {
-    return {
-      output: "NAME             STATUS   ROLES           AGE   VERSION\nmoonsav-node-01  Ready    control-plane   28d   v1.29.2\nmoonsav-node-02  Ready    worker          28d   v1.29.2\nmoonsav-node-03  Ready    worker          28d   v1.29.2",
-      exitCode: 0
-    };
-  }
-
-  if (lower.startsWith("moonsav device status")) {
-    return {
-      output: "========================================\nMOONSAV SMART WATER CONTROLLER (PUMP-01)\n========================================\nSTATE:            PUMP_ONLINE_NORMAL\nRPM:              2,840\nWATER FLOW:       12.4 Liters/Minute\nTANK LEVEL:       72.4% (Overhead)\nTEMPERATURE:      48.2 °C (Safe < 70°C)\nCURRENT DRAW:     8.4 A (Nominal)\nMQTT HEARTBEAT:   CONNECTED (0.8s ago)\nDRY-RUN CUTOFF:   ARMED & ACTIVE\n========================================",
-      exitCode: 0
-    };
-  }
-
-  if (lower.startsWith("moonsav device simulate")) {
-    return {
-      output: "[SIMULATOR] Injecting synthetic sensor parameters...\n[SIMULATOR] Published updated telemetry to MQTT topic 'moonsav/PUMP-01/telemetry'\n[SIMULATOR] Status: Packet accepted by EMQX broker (QoS 1).",
-      exitCode: 0
-    };
-  }
-
-  if (lower.startsWith("systemctl status")) {
-    const svc = lower.split(" ")[2] || "moonsav-telemetry";
-    return {
-      output: `● ${svc}.service - MOONSAV Platform Component\n     Loaded: loaded (/etc/systemd/system/${svc}.service; enabled; vendor preset: enabled)\n     Active: active (running) since Mon 2026-08-14 08:14:02 UTC; 2h ago\n   Main PID: 1420 (${svc})\n      Tasks: 8 (limit: 4665)\n     Memory: 42.8M (limit: 256.0M)\n        CPU: 1.42s`,
-      exitCode: 0
-    };
-  }
-
-  if (lower.startsWith("curl") && lower.includes("health")) {
-    return {
-      output: '{"status":"UP","healthy":true,"database":"CONNECTED","redis":"CONNECTED","mqtt":"CONNECTED","uptimeSeconds":14205}',
-      exitCode: 0
-    };
-  }
-
-  if (lower.startsWith("curl") && lower.includes("metrics")) {
-    return {
-      output: "# HELP moonsav_motor_commands_total Total number of pump motor commands processed\n# TYPE moonsav_motor_commands_total counter\nmoonsav_motor_commands_total{action=\"start\",status=\"success\"} 48210\nmoonsav_motor_commands_total{action=\"stop\",status=\"success\"} 48190\nmoonsav_motor_commands_total{action=\"start\",status=\"failure\"} 12",
-      exitCode: 0
-    };
-  }
-
-  if (lower === "ls" || lower === "ls -la") {
-    return {
-      output: "total 48\ndrwxr-xr-x 6 moonsav moonsav 4096 Aug 14 10:12 .\ndrwxr-xr-x 3 root    root    4096 Aug 14 08:00 ..\n-rw-r--r-- 1 moonsav moonsav  842 Aug 14 09:12 Dockerfile\n-rw-r--r-- 1 moonsav moonsav 1420 Aug 14 09:15 docker-compose.yaml\n-rw-r--r-- 1 moonsav moonsav 2840 Aug 14 09:30 main.go\n-rw-r--r-- 1 moonsav moonsav  312 Aug 14 09:00 Makefile\ndrwxr-xr-x 2 moonsav moonsav 4096 Aug 14 09:20 config\ndrwxr-xr-x 4 moonsav moonsav 4096 Aug 14 09:40 k8s",
-      exitCode: 0
-    };
-  }
-
-  if (lower.startsWith("git status")) {
-    return {
-      output: "On branch main\nYour branch is up to date with 'origin/main'.\n\nChanges not staged for commit:\n  (use \"git add <file>...\" to update what will be committed)\n\tmodified:   config/safety.json\n\nno changes added to commit (use \"git add\")",
-      exitCode: 0
-    };
-  }
-
-  if (lower.startsWith("terraform plan")) {
-    return {
-      output: "Acquiring state lock. This may take a few moments...\nTerraform used the selected providers to generate the following execution plan:\n\nNo changes. Your infrastructure matches the configuration.\n\nTerraform has compared your real infrastructure against your configuration and found no differences.",
-      exitCode: 0
-    };
-  }
-
-  // Fallback default message
-  return {
-    output: `bash: ${trimmed}: command executed successfully (exit code 0)`,
-    exitCode: 0
-  };
+export function runSimulationCommand(rawCmd, labId = "lab-fnd-001", projectId = "moonsav") {
+  const shell = getGlobalSimulationShell(projectId, labId);
+  return shell.execute(rawCmd);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -552,6 +456,7 @@ const ITOPS_STORAGE_KEY = "moonsav_itops_academy_progress_v2";
 
 export function getITOpsStoredState() {
   try {
+    if (typeof localStorage === "undefined") return getDefaultITOpsState();
     const raw = localStorage.getItem(ITOPS_STORAGE_KEY);
     if (!raw) return getDefaultITOpsState();
     return JSON.parse(raw);
@@ -562,7 +467,9 @@ export function getITOpsStoredState() {
 
 export function saveITOpsStoredState(state) {
   try {
-    localStorage.setItem(ITOPS_STORAGE_KEY, JSON.stringify(state));
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(ITOPS_STORAGE_KEY, JSON.stringify(state));
+    }
   } catch (err) {
     console.error("Failed to save ITOps state to localStorage:", err);
   }
@@ -601,7 +508,9 @@ function getDefaultITOpsState() {
     },
     certificates: ["cert-itops-foundation"],
     labEvidence: {},
-    postmortems: {}
+    postmortems: {},
+    trackScores: {},
+    completedCertTracks: []
   };
 }
 
@@ -642,6 +551,60 @@ export function localResolveIncident(incidentId, postmortemText = "") {
   return state;
 }
 
+export { TRACK_FINAL_ASSESSMENTS, LAB_KNOWLEDGE_CHECKPOINTS };
+
+export function getTrackAssessment(trackId) {
+  return TRACK_FINAL_ASSESSMENTS[trackId] || TRACK_FINAL_ASSESSMENTS.foundation;
+}
+
+export function submitTrackAssessment(trackId, answers) {
+  const questions = getTrackAssessment(trackId);
+  let correctCount = 0;
+  questions.forEach(q => {
+    if (q.questionType === "single") {
+      if (answers[q.id] === q.correctIndex) correctCount++;
+    } else if (q.questionType === "multiple") {
+      const a = [...(answers[q.id] || [])].sort((x, y) => x - y);
+      const b = [...(q.correctIndexes || [])].sort((x, y) => x - y);
+      if (a.length === b.length && a.every((v, i) => v === b[i])) correctCount++;
+    } else if (q.questionType === "ordering") {
+      const a = answers[q.id] || [];
+      const b = q.correctOrder || [];
+      if (a.length === b.length && a.every((v, i) => v === b[i])) correctCount++;
+    }
+  });
+
+  const scorePct = Math.round((correctCount / questions.length) * 100);
+  const passed = scorePct >= 80;
+
+  const state = getITOpsStoredState();
+  if (!state.trackScores) state.trackScores = {};
+  state.trackScores[trackId] = {
+    score: scorePct,
+    passed,
+    completedAt: new Date().toISOString(),
+    correctCount,
+    totalQuestions: questions.length
+  };
+  if (passed) {
+    state.xp = (state.xp || 0) + 500;
+    if (!state.completedCertTracks) state.completedCertTracks = [];
+    if (!state.completedCertTracks.includes(trackId)) {
+      state.completedCertTracks.push(trackId);
+    }
+  }
+  saveITOpsStoredState(state);
+
+  return {
+    trackId,
+    scorePct,
+    passed,
+    correctCount,
+    totalQuestions: questions.length,
+    state
+  };
+}
+
 export const ITOPS_LABS = [
   // ── TRACK 1: ITOPS FOUNDATION (25 Labs) ──────────────────────────────────
   {
@@ -650,6 +613,8 @@ export const ITOPS_LABS = [
     project: "moonsav",
     title: "Linux Process Triage & Zombie Hunt",
     slug: "linux-process-triage",
+    videoId: "sWbUDq4S6Y8",
+    videoTitle: "Linux Process Management, Process Trees & Zombie Reaping",
     difficulty: "Beginner",
     estimatedMinutes: 25,
     skills: ["linux"],
@@ -687,6 +652,8 @@ export const ITOPS_LABS = [
     project: "moonsav",
     title: "Linux Network Interface & Socket Diagnostics",
     slug: "linux-network-socket-diagnostics",
+    videoId: "qiQR5rTSshw",
+    videoTitle: "Linux Socket Diagnostics, Port Bindings & tcpdump (ss, ip, netstat)",
     difficulty: "Beginner",
     estimatedMinutes: 30,
     skills: ["networking", "linux"],
@@ -724,6 +691,8 @@ export const ITOPS_LABS = [
     project: "daig_distributed",
     title: "DNS Resolution Cascade & Resolv.conf Tuning",
     slug: "dns-resolution-tuning",
+    videoId: "qiQR5rTSshw",
+    videoTitle: "DNS Resolution Waterfall, Resolv.conf Tuning & Latency Debugging",
     difficulty: "Intermediate",
     estimatedMinutes: 30,
     skills: ["networking", "linux"],
@@ -761,6 +730,8 @@ export const ITOPS_LABS = [
     project: "moonsav",
     title: "Multi-Stage Dockerfile Optimization & Rootless Containers",
     slug: "docker-multistage-rootless",
+    videoId: "3c-iBn73dDE",
+    videoTitle: "Multi-Stage Dockerfile Optimization, Distroless & Rootless Containers",
     difficulty: "Intermediate",
     estimatedMinutes: 35,
     skills: ["docker"],
@@ -798,6 +769,8 @@ export const ITOPS_LABS = [
     project: "moonsav",
     title: "Prometheus Metric Instrumentation & Grafana SLO Dashboard",
     slug: "prometheus-instrumentation-grafana-slo",
+    videoId: "h4Sl21AKiDg",
+    videoTitle: "Prometheus Metrics Instrumentation, PromQL & Grafana SLO Dashboards",
     difficulty: "Intermediate",
     estimatedMinutes: 40,
     skills: ["prometheus"],
@@ -835,6 +808,8 @@ export const ITOPS_LABS = [
     project: "moonsav",
     title: "Chaos Engineering: Network Partition & Dry-Run Motor Cutoff",
     slug: "chaos-network-partition-dryrun",
+    videoId: "scEDHsr3APg",
+    videoTitle: "Chaos Engineering: Network Partition, Packet Corruption & Safety Interlocks",
     difficulty: "Advanced",
     estimatedMinutes: 45,
     skills: ["chaos_incident"],
@@ -868,12 +843,21 @@ export const ITOPS_LABS = [
   }
 ];
 
+// Attach interactive knowledge checkpoints to flagship labs
+ITOPS_LABS.forEach(lab => {
+  if (LAB_KNOWLEDGE_CHECKPOINTS[lab.id]) {
+    lab.checkpoints = LAB_KNOWLEDGE_CHECKPOINTS[lab.id];
+  }
+});
+
 export const ITOPS_INCIDENTS = [
   {
     id: "inc-moon-001",
     level: "Level 1 (Beginner)",
     project: "moonsav",
     title: "Level 1: MQTT Message Broker Daemon Down",
+    videoId: "qiQR5rTSshw",
+    videoTitle: "Message Broker Socket Failures & Mosquitto Service Recovery",
     severity: "SEV-1",
     status: "active",
     startedAt: "8 minutes ago",
@@ -909,6 +893,8 @@ export const ITOPS_INCIDENTS = [
     level: "Level 2 (Intermediate)",
     project: "moonsav",
     title: "Level 2: Redis Memory Pressure & Key Eviction Storm",
+    videoId: "8ZtInClXe1Q",
+    videoTitle: "Redis Memory Pressure, TTL Evictions & Cache Storms",
     severity: "SEV-2",
     status: "active",
     startedAt: "14 minutes ago",
@@ -943,6 +929,8 @@ export const ITOPS_INCIDENTS = [
     level: "Level 3 (Advanced)",
     project: "moonsav",
     title: "Level 3: PostgreSQL Lock Contention & Slow Query Latency",
+    videoId: "sWbUDq4S6Y8",
+    videoTitle: "PostgreSQL Lock Contention, pg_stat_activity & Query Tuning",
     severity: "SEV-1",
     status: "active",
     startedAt: "19 minutes ago",
@@ -977,6 +965,8 @@ export const ITOPS_INCIDENTS = [
     level: "Level 4 (Expert)",
     project: "moonsav",
     title: "Level 4: API Degradation Caused by Database Pool Exhaustion",
+    videoId: "scEDHsr3APg",
+    videoTitle: "Database Connection Pool Starvation & Async Resource Leaks",
     severity: "SEV-1",
     status: "active",
     startedAt: "22 minutes ago",
@@ -1011,6 +1001,8 @@ export const ITOPS_INCIDENTS = [
     level: "Level 5 (Staff SRE / Cascading Failure)",
     project: "moonsav",
     title: "Level 5: Cascading Telemetry Pipeline & Safety Cutoff Failure",
+    videoId: "scEDHsr3APg",
+    videoTitle: "Thundering Herd, Reconnect Storms & Cascading Outage Mitigation",
     severity: "SEV-1",
     status: "active",
     startedAt: "28 minutes ago",
@@ -1046,6 +1038,8 @@ export const ITOPS_INCIDENTS = [
     level: "Distributed Systems (Level 3)",
     project: "daig_distributed",
     title: "RabbitMQ Dead-Letter Queue Backlog & Worker OOM-Kill",
+    videoId: "scEDHsr3APg",
+    videoTitle: "RabbitMQ Poison Pill Queues, DLX & Celery Worker Crash Triage",
     severity: "SEV-1",
     status: "active",
     startedAt: "15 minutes ago",

@@ -47,10 +47,10 @@
   --color-red-950: #470505;
 }
 
-/* Site defaults to dark (unchanged from before this existed). Adding
-   `.light` to <html> (via ThemeContext) flips into light mode — this
-   `light:` variant matches Tailwind's own `dark:` mechanics, just inverted,
-   since dark was always the unmarked default in every existing class. */
+/* In Tailwind v4, declare custom variants for both dark and light classes so that
+   `dark:` and `light:` modifiers are 100% driven by the active class on <html>,
+   regardless of the OS-level color scheme preference. */
+@custom-variant dark (&:where(.dark, .dark *));
 @custom-variant light (&:where(.light, .light *));
 
 :root {
@@ -84,6 +84,17 @@
   --shadow-glow-cyan: 0 10px 40px -12px rgba(0, 240, 255, 0.45);
 }
 
+html.dark {
+  color-scheme: dark;
+  --bg-base: #0b0f19;
+  --bg-elev-1: #131826;
+  --bg-elev-2: #1c2233;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --text-base: #ffffff;
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 20px 50px -24px rgba(0, 0, 0, 0.9);
+}
+
 html.light {
   color-scheme: light;
   --bg-base: #f6f7fb;
@@ -113,6 +124,7 @@ body {
 
 /* Respect users who prefer less motion */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -132,6 +144,7 @@ body {
   border: 1px solid var(--border-subtle);
   color: #fff;
 }
+
 html.light .glass {
   background: linear-gradient(180deg, rgba(15, 23, 42, 0.035), rgba(15, 23, 42, 0.015));
   color: #0b0f19;
@@ -165,6 +178,7 @@ html.light .glass {
 .gradient-border {
   position: relative;
 }
+
 .gradient-border::before {
   content: "";
   position: absolute;
@@ -178,6 +192,7 @@ html.light .glass {
   opacity: 0.5;
   transition: opacity 0.3s ease;
 }
+
 .gradient-border:hover::before {
   opacity: 1;
 }
@@ -190,6 +205,7 @@ html.light .glass {
   background-size: 44px 44px;
   mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, #000 40%, transparent 100%);
 }
+
 html.light .enterprise-grid {
   background-image:
     linear-gradient(rgba(15, 23, 42, 0.05) 1px, transparent 1px),
@@ -198,47 +214,168 @@ html.light .enterprise-grid {
 
 /* Keyframes */
 @keyframes float-y {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-@keyframes pulse-glow {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
-}
-@keyframes marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
-@keyframes shimmer {
-  from { background-position: -200% 0; }
-  to { background-position: 200% 0; }
-}
-@keyframes sheen {
-  0% { transform: translateX(-120%) skewX(-15deg); }
-  60%, 100% { transform: translateX(220%) skewX(-15deg); }
-}
-@keyframes ticker-up {
-  0% { opacity: 0; transform: translateY(8px); }
-  12%, 88% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-8px); }
-}
-/* Radar "contact" ping — an expanding, fading ring behind a status dot. */
-@keyframes sonar-ping {
-  0% { transform: scale(1); opacity: 0.55; }
-  100% { transform: scale(2.8); opacity: 0; }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
-.animate-float { animation: float-y 6s ease-in-out infinite; }
-.animate-marquee { animation: marquee 32s linear infinite; }
-.animate-shimmer { animation: shimmer 1.6s ease-in-out infinite; }
-.animate-sonar { animation: sonar-ping 1.8s cubic-bezier(0.16, 1, 0.3, 1) infinite; }
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: -200% 0;
+  }
+
+  to {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes sheen {
+  0% {
+    transform: translateX(-120%) skewX(-15deg);
+  }
+
+  60%,
+  100% {
+    transform: translateX(220%) skewX(-15deg);
+  }
+}
+
+@keyframes ticker-up {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  12%,
+  88% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+/* Radar "contact" ping — an expanding, fading ring behind a status dot. */
+@keyframes sonar-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+/* Telemetry travelling down the platform conduits (InfrastructureTopology).
+   The dash pattern is 10/30, so one 40px step loops seamlessly. */
+@keyframes conduit-dash {
+  to {
+    stroke-dashoffset: -40;
+  }
+}
+
+/* Slow spin of the hub crystal about its own (floor-local Z) axis. */
+@keyframes hub-spin {
+  from {
+    transform: rotateZ(0deg);
+  }
+
+  to {
+    transform: rotateZ(360deg);
+  }
+}
+
+.animate-float {
+  animation: float-y 6s ease-in-out infinite;
+}
+
+.animate-marquee {
+  animation: marquee 32s linear infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+.animate-sonar {
+  animation: sonar-ping 1.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
 
 /* Thin premium scrollbar */
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
-*::-webkit-scrollbar { width: 8px; height: 8px; }
-*::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 8px; }
-html.light * { scrollbar-color: rgba(15, 23, 42, 0.18) transparent; }
-html.light *::-webkit-scrollbar-thumb { background: rgba(15, 23, 42, 0.18); }
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+}
+
+html.light * {
+  scrollbar-color: rgba(15, 23, 42, 0.18) transparent;
+}
+
+html.light *::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.18);
+}
+
+/* Custom sleek scrollbar for sidebar navigation */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.6);
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.6);
+}

@@ -24,6 +24,10 @@
 //   ordering -> correctOrder (int[], the right sequence of choice indexes —
 //               order matters completely)
 
+import { COURSE_QUIZZES } from "./cybersachetCourseQuizzes.js";
+import { getLessonCheckpoints, verifyLessonCheckpointAnswer } from "./cybersachetLessonCheckpoints.js";
+import { getLessonVideo } from "./cybersachetLessonVideos.js";
+
 const COURSES = [
   {
     id: "local-phishing-awareness",
@@ -31,12 +35,14 @@ const COURSES = [
     title: "Phishing Awareness",
     description: "Recognize the emails, texts, and calls attackers use to steal credentials — and what to do the moment you suspect one.",
     level: "beginner",
-    estimatedMinutes: 15,
+    estimatedMinutes: 35,
     category: "email-security",
     freeTier: true,
     modules: [
       { id: "m1", title: "Recognizing Phishing" },
-      { id: "m2", title: "Responding & Preventing" }
+      { id: "m2", title: "Responding & Preventing" },
+      { id: "m3", title: "Advanced & Targeted Phishing Vectors" },
+      { id: "m4", title: "Enterprise Triage & Emerging Threats" }
     ],
     lessons: [
       {
@@ -70,6 +76,46 @@ const COURSES = [
         body: "Before acting on an unexpected request — a password reset, a wire transfer, a link to \"review a document\" — verify through a second channel you already trust: call the person back on a known number, check the vendor portal directly instead of clicking the email link, or ask a coworker in person or on Slack. This single habit defeats the vast majority of phishing, because attackers are counting on you to act in the moment, not to pause and check.",
         keyTakeaway: "Verify any unexpected request through a channel you already trust, never through the message itself.",
         check: { question: "What is the \"verify-first\" habit described in this lesson?", choices: ["Verifying your own identity to IT before logging in", "Confirming unexpected requests through a separate, already-trusted channel", "Verifying an email's spelling before reading it", "Checking your spam folder daily"], correctIndex: 1 }
+      },
+      {
+        id: "l5",
+        moduleId: "m3",
+        title: "Spear phishing and whaling attacks",
+        body: "Unlike bulk spam sent to thousands of random addresses, spear phishing is tailored specifically to you or your company. Attackers spend days scouring LinkedIn, company blogs, conference rosters, and public code repositories to learn your team structure, vendor names, and ongoing projects. A spear phishing message might come from a spoofed domain that mimics your primary legal partner or HR platform, citing a real colleague's name. Whaling takes this to the highest corporate tier, targeting C-level executives and board members with bogus subpoenas, high-stakes acquisition filings, or urgent board resolutions. Because these attacks contain authentic context and zero generic typos, vigilance and out-of-band verification are critical.",
+        keyTakeaway: "Spear phishing and whaling succeed through reconnaissance and authentic context — always verify sensitive requests out-of-band regardless of who appears to send them.",
+        check: { question: "What distinguishes spear phishing from generic bulk phishing?", choices: ["It only contains malicious attachments", "It is personalized using reconnaissance about the specific target and organization", "It only targets personal webmail accounts", "It requires no interaction from the recipient"], correctIndex: 1 }
+      },
+      {
+        id: "l6",
+        moduleId: "m3",
+        title: "Quishing: QR code phishing vectors",
+        body: "Quishing (QR code phishing) bypasses traditional email security gateways by hiding malicious URLs inside image-based QR codes instead of plaintext hyperlinks. Secure email gateways inspect text and embedded URLs, but an image of a QR code appears as benign media unless specialized computer vision analysis is enabled. Attackers send emails claiming your multi-factor authentication needs an urgent update, an invoice requires scanning, or a parking validation is due, directing you to scan the code with your personal smartphone camera. Once scanned on mobile, the link opens in a personal mobile browser outside corporate endpoint protections, prompting for corporate login credentials.",
+        keyTakeaway: "Never scan a QR code in an email or unexpected document to log into corporate accounts — QR codes bypass mail scanners and shift attacks to unmanaged mobile browsers.",
+        check: { question: "Why do attackers increasingly use QR codes in phishing emails (Quishing)?", choices: ["QR codes automatically install rootkits on Windows PCs", "They evade plaintext URL inspection by corporate email security gateways", "QR codes cannot be tracked by law enforcement", "They only work on high-security networks"], correctIndex: 1 }
+      },
+      {
+        id: "l7",
+        moduleId: "m4",
+        title: "Business Email Compromise (BEC)",
+        body: "Business Email Compromise (BEC) accounts for billions of dollars in annual enterprise losses without delivering a single byte of malware. In a classic BEC scenario, attackers compromise or spoof the email account of a CEO, CFO, or trusted external vendor. They monitor active email threads to identify pending invoice payments, wire transfers, or acquisitions. At the exact right moment, they insert themselves into the conversation with a subtle spoofed address or mailbox rule, requesting an urgent change of bank account routing details for an upcoming payment. Because the request appears to continue an authentic conversation, finance teams often process the transfer unless strict dual-authorization verbal verification policies are enforced.",
+        keyTakeaway: "Never update vendor banking or wire transfer instructions based on email alone — always mandate verbal, secondary channel confirmation using verified numbers.",
+        check: { question: "What is the core mechanism behind Business Email Compromise (BEC)?", choices: ["Encrypting company file shares with ransomware", "Impersonating executives or vendors to manipulate financial transactions without malware", "DDoS attacks overwhelming payment gateways", "Physical theft of office workstations"], correctIndex: 1 }
+      },
+      {
+        id: "l8",
+        moduleId: "m4",
+        title: "AI deepfakes and synthetic media phishing",
+        body: "Generative AI has elevated social engineering beyond text. Attackers now generate highly convincing synthetic audio clones of executives, department heads, or trusted clients using just a few seconds of public audio from webinars, podcasts, or earnings calls. Known as deepfake voice phishing (or vishing 2.0), an employee might receive an urgent WhatsApp voice memo or phone call that sounds indistinguishable from their CFO requesting an immediate wire transfer or password reset. Combining deepfake audio with spoofed caller IDs creates extreme psychological compliance. Defending against synthetic voice attacks requires strict corporate safe words, verified callback protocols, and rigid adherence to established accounting controls.",
+        keyTakeaway: "Voice alone is no longer proof of identity — treat unexpected urgent requests received via phone or voice memo with secondary verification procedures.",
+        check: { question: "How should an employee respond to an urgent phone call or voice memo from a senior executive requesting emergency funds?", choices: ["Execute the transfer immediately because the executive's voice sounded authentic", "Hang up and verify the request through an established internal protocol or direct known callback number", "Forward the voice memo to coworkers on social media", "Ignore it and delete the voice memo"], correctIndex: 1 }
+      },
+      {
+        id: "l9",
+        moduleId: "m4",
+        title: "Email header inspection and reporting workflows",
+        body: "When you suspect an email is malicious, inspecting its technical headers provides definitive proof. Legitimate enterprise email relies on three core authentication protocols: SPF (Sender Policy Framework, which checks authorized sending IP addresses), DKIM (DomainKeys Identified Mail, which validates cryptographic signatures), and DMARC (Domain-based Message Authentication, Reporting, and Conformance, which dictates policy when SPF or DKIM fail). In the email client, clicking \"View Original\" or \"Show Headers\" exposes the `Authentication-Results` and `Return-Path` fields. If the `From:` line says your bank but the `Return-Path:` points to an unrelated random server with `spf=fail`, it is an undeniable forgery. Always submit suspicious emails to your IT security quarantine button rather than forwarding them directly, preserving raw headers for SOC investigation.",
+        keyTakeaway: "Use the dedicated \"Report Phishing\" button or headers to inspect SPF/DKIM/DMARC verdicts — never just forward suspicious emails as attachments can be stripped.",
+        check: { question: "Which email authentication protocol allows domain owners to specify policy actions when SPF or DKIM verification fails?", choices: ["HTTPS", "DMARC", "DHCP", "IMAP"], correctIndex: 1 }
       }
     ],
     quiz: [
@@ -87,12 +133,14 @@ const COURSES = [
     title: "Password Security & MFA",
     description: "Why passwords keep failing organizations, and the two habits — passphrases and multi-factor authentication — that actually stop account takeovers.",
     level: "beginner",
-    estimatedMinutes: 12,
+    estimatedMinutes: 30,
     category: "identity",
     freeTier: true,
     modules: [
       { id: "m1", title: "Why Passwords Fail" },
-      { id: "m2", title: "Modern Defenses" }
+      { id: "m2", title: "Modern Defenses" },
+      { id: "m3", title: "Advanced Authentication Attacks" },
+      { id: "m4", title: "Next-Gen Identity Defenses" }
     ],
     lessons: [
       {
@@ -126,6 +174,38 @@ const COURSES = [
         body: "MFA means proving who you are with something beyond a password — a code from an app, a hardware key, a push notification. Even if an attacker steals your password, they're stopped cold without the second factor. An authenticator app or hardware key is meaningfully stronger than SMS codes, which can be intercepted through SIM-swapping — but any MFA is dramatically better than none. Turn it on everywhere it's offered, starting with email, since email is usually the master key to resetting everything else.",
         keyTakeaway: "Any MFA beats none, but an authenticator app or hardware key resists SIM-swapping in a way SMS codes can't.",
         check: { question: "Why is an authenticator app stronger than SMS codes for MFA?", choices: ["SMS codes cost money to receive", "SMS codes can be intercepted through SIM-swapping", "Authenticator apps work without a phone", "SMS codes never expire"], correctIndex: 1 }
+      },
+      {
+        id: "l5",
+        moduleId: "m3",
+        title: "MFA fatigue and push notification bombing",
+        body: "As organizations rolled out push-based multi-factor authentication (like Duo or Microsoft Authenticator), attackers adapted by developing \"MFA fatigue\" attacks (also known as push bombing). After stealing a user's password via phishing or a dark web breach dump, the attacker triggers dozens of push notifications in rapid succession, often in the middle of the night. The goal is psychological wear-down: flooding the victim's phone until they mistakenly hit \"Approve\" just to silence the alerts, or calling them pretending to be IT support telling them to accept the prompt to stop a security glitch. Modern identity providers counter this with \"number matching,\" forcing the user to type digits shown on the login screen into their authenticator app.",
+        keyTakeaway: "Never approve an unexpected MFA prompt regardless of how many times it buzzes — an unprompted 2FA notification proves your password has already been compromised.",
+        check: { question: "What should you do if your phone receives unexpected MFA push notifications while you are not logging in?", choices: ["Approve them to clear your notification tray", "Deny the request, report it to IT security immediately, and change your password", "Turn off your phone's Wi-Fi for 24 hours", "Delete the authenticator application"], correctIndex: 1 }
+      },
+      {
+        id: "l6",
+        moduleId: "m3",
+        title: "Credential stuffing and dark web breach dumps",
+        body: "Credential stuffing is an automated cyberattack where criminal groups use botnets to test billions of stolen username and password combinations across hundreds of major web portals simultaneously. When an obscure fitness tracker forum or gaming service gets breached, that unencrypted password dump is uploaded to hacker forums within hours. Attackers know over 60% of people reuse the exact same password on their work email, payroll portal, and banking logins. Because credential stuffing uses authentic credentials rather than brute-force guessing, it slips past basic rate limits unless behavior analytics, CAPTCHA challenges, and breach-monitoring alerts are in place.",
+        keyTakeaway: "A breach at an unrelated, trivial third-party website directly jeopardizes your enterprise accounts if you ever reuse credentials.",
+        check: { question: "Why is credential stuffing so effective for cyber criminals?", choices: ["It cracks RSA encryption keys in seconds", "Widespread human password reuse allows one leaked password to unlock multiple other systems", "It bypasses all network firewalls automatically", "It permanently disables multi-factor authentication"], correctIndex: 1 }
+      },
+      {
+        id: "l7",
+        moduleId: "m4",
+        title: "FIDO2, WebAuthn, and passkeys",
+        body: "Traditional passwords and SMS-based OTPs are vulnerable to adversary-in-the-middle (AiTM) phishing proxies like Evilginx, which intercept one-time codes in real time. The ultimate answer is FIDO2 and WebAuthn — the cryptographic foundation for modern \"Passkeys\" and hardware security keys (such as YubiKeys). Instead of transmitting a secret to the server, authentication relies on asymmetric public-key cryptography. The private key never leaves the secure enclave of your device or hardware key. Crucially, the browser cryptographically binds the authentication ceremony to the exact domain name in the address bar. Even if you are tricked onto a pixel-perfect fake login page (`paypa1.com`), the security key refuses to sign the challenge, making passkeys immune to remote credential phishing.",
+        keyTakeaway: "FIDO2 passkeys and hardware keys are phishing-resistant because authentication is cryptographically bound to the browser's verified domain origin.",
+        check: { question: "What makes FIDO2/WebAuthn passkeys resistant to adversary-in-the-middle phishing?", choices: ["They require four separate passwords", "Authentication is cryptographically bound to the specific domain origin, so fake sites cannot solicit signatures", "They only operate over wired Ethernet connections", "They expire every five minutes"], correctIndex: 1 }
+      },
+      {
+        id: "l8",
+        moduleId: "m4",
+        title: "Enterprise SSO and session token hijacking",
+        body: "Enterprise Single Sign-On (SSO) centralizes authentication across dozens of SaaS applications under one identity provider (like Okta or Microsoft Entra ID). While SSO simplifies lifecycle offboarding and enforces uniform MFA, it centralizes risk: compromising that master session compromises everything. Furthermore, modern attackers frequently bypass MFA altogether through \"session hijacking\" (or cookie theft). Information-stealing malware (infostealers like RedLine or Lumma) grabs active session cookies stored in your browser's local memory. With the session token in hand, attackers import it into their own browser and access company systems without entering a password or triggering an MFA challenge. Defense requires conditional access, short session timeouts, device health verification, and rapid session revocation upon suspicious travel velocity.",
+        keyTakeaway: "Protecting identity requires securing session tokens: log out of sensitive applications on shared machines and report infostealer alerts immediately.",
+        check: { question: "How can an attacker access an SSO-protected account without knowing the user's password or solving an MFA prompt?", choices: ["By turning off the server's power", "By stealing active session cookies directly from the infected browser memory", "By sending an email with no text", "By changing the user's desktop wallpaper"], correctIndex: 1 }
       }
     ],
     quiz: [
@@ -141,12 +221,14 @@ const COURSES = [
     title: "Social Engineering",
     description: "Phishing's cousins — impersonation calls, tailgating, and pretexting — and the habits that catch a manipulation attempt before it works.",
     level: "intermediate",
-    estimatedMinutes: 15,
+    estimatedMinutes: 35,
     category: "cybersecurity",
     freeTier: false,
     modules: [
       { id: "m1", title: "Manipulation Tactics" },
-      { id: "m2", title: "Physical & Everyday Defense" }
+      { id: "m2", title: "Physical & Everyday Defense" },
+      { id: "m3", title: "Psychological Exploitation & OSINT" },
+      { id: "m4", title: "Targeted Infiltration & Baiting" }
     ],
     lessons: [
       {
@@ -180,6 +262,38 @@ const COURSES = [
         body: "The common thread across every social engineering tactic is manufactured urgency plus a request to skip a normal step. The single strongest defense across email, phone, and in-person: when something feels rushed or exceptions-required, pause and verify through an independent, known channel before acting — and know that reporting a suspicious attempt, even if you're not sure, is always the right call.",
         keyTakeaway: "Manufactured urgency plus a request to skip a normal step is the pattern behind nearly every social-engineering attempt.",
         check: { question: "What's the common thread across social engineering tactics, per this lesson?", choices: ["They always involve email", "Manufactured urgency plus a request to skip a normal step", "They only target new employees", "They require advanced hacking tools"], correctIndex: 1 }
+      },
+      {
+        id: "l5",
+        moduleId: "m3",
+        title: "Cialdini's influence principles in cyber attacks",
+        body: "Social engineers do not hack computers; they hack human psychology. Most social engineering attacks weaponize the core principles of influence identified by Dr. Robert Cialdini: Authority (impersonating police, regulators, or senior leadership to command compliance), Scarcity/Urgency (\"Only 10 minutes left before your account is deleted\"), Reciprocity (\"I just helped fix your printer, could you approve this quick network change?\"), and Social Proof (\"Everyone else in marketing already signed this form\"). Recognizing these psychological pressure points is your best defense: whenever a conversation triggers an emotional reaction of fear, duty, or haste, consciously step back and disengage.",
+        keyTakeaway: "Social engineers exploit psychological reflexes like authority and urgency — recognizing the emotional trigger allows you to pause and verify.",
+        check: { question: "Which psychological trigger is being exploited when an attacker claims \"Your CEO demanded this wire transfer within 15 minutes before the acquisition fails\"?", choices: ["Reciprocity and patience", "Authority and extreme urgency/scarcity", "Liking and flattery", "Consistency and routine"], correctIndex: 1 }
+      },
+      {
+        id: "l6",
+        moduleId: "m3",
+        title: "OSINT: how attackers profile you online",
+        body: "Open Source Intelligence (OSINT) is the intelligence gathering phase that precedes every targeted social engineering attempt. Attackers comb through LinkedIn to map your reporting hierarchy, corporate technologies (e.g. \"looking for an AWS engineer with Terraform experience\"), and coworker names. They examine your public Instagram and Facebook to learn your pet's name (frequent password clue), your travel itinerary (so they can impersonate you while you are on a flight), and conference attendances. Even out-of-office auto-responders (\"I am out until Thursday, contact my manager John Doe at ext. 402\") supply attackers with golden ammunition. Minimizing your public professional footprint and disabling over-informative auto-replies directly starves attackers of OSINT context.",
+        keyTakeaway: "Attackers weaponize social media and out-of-office replies for reconnaissance — guard internal project names and travel schedules.",
+        check: { question: "What is Open Source Intelligence (OSINT) in social engineering?", choices: ["Open-source software used to build websites", "Information gathered from publicly available sources used to craft convincing attacks", "A government-mandated security audit", "Open hardware architecture"], correctIndex: 1 }
+      },
+      {
+        id: "l7",
+        moduleId: "m4",
+        title: "Watering hole attacks and evil twin Wi-Fi",
+        body: "Instead of attacking your organization directly, social engineers compromise places you and your colleagues routinely visit. A \"watering hole\" attack targets niche third-party websites commonly frequented by employees in a specific industry (such as a local lunch ordering portal, an industry news blog, or an association forum). Attackers compromise that site and inject malicious exploit kits targeting visitors from your company's IP block. Similarly, \"evil twin\" attacks occur when an attacker deploys a rogue Wi-Fi access point broadcasting the exact SSID of your office or a hotel (\"Corporate_Guest\" or \"Airport_Free_WiFi\"). When laptops auto-connect, the attacker intercepts unencrypted traffic or prompts a fake captive portal requiring your Microsoft 365 credentials to browse.",
+        keyTakeaway: "Never trust unfamiliar networks with identical names, and treat external industry websites with caution even if they are well known.",
+        check: { question: "What is an \"evil twin\" Wi-Fi attack?", choices: ["A router with two identical antennas", "A rogue wireless access point impersonating a legitimate network to intercept user traffic", "A malicious Bluetooth speaker", "Connecting two computers with an Ethernet cable"], correctIndex: 1 }
+      },
+      {
+        id: "l8",
+        moduleId: "m4",
+        title: "Baiting and physical drop attacks",
+        body: "Baiting plays on human curiosity and greed. A classic baiting attack involves leaving attractive physical media — such as brand-new USB thumb drives labeled \"Executive Salaries Q4\", \"Confidential Layoff Plan\", or bearing a corporate logo — in company parking lots, elevator lobbies, or cafeteria tables. In testing, up to 50% of employees pick up these drives and plug them into their workstations out of curiosity. Within milliseconds of insertion, malicious hardware (or auto-executing scripts) beacons out to command-and-control servers or drops keystroke-logging implants. Modern workplace policy is strict: any found physical media must be brought directly to the IT security desk without ever being inserted into any device.",
+        keyTakeaway: "Never plug in a found or unverified USB drive — curiosity is the primary trigger baiting attacks rely on.",
+        check: { question: "You discover a high-capacity USB flash drive in the office parking lot marked \"Executive Bonuses 2026\". What should you do?", choices: ["Plug it in on a private laptop to see whose it is", "Hand it directly to IT Security or Facility Security without connecting it to any device", "Throw it in the office trash", "Wipe the drive and use it for personal files"], correctIndex: 1 }
       }
     ],
     quiz: [
@@ -195,12 +309,14 @@ const COURSES = [
     title: "Malware & Ransomware",
     description: "How viruses, trojans, and ransomware actually get in, what makes ransomware uniquely dangerous, and the habits that stop an infection from spreading.",
     level: "intermediate",
-    estimatedMinutes: 14,
+    estimatedMinutes: 35,
     category: "endpoint-security",
     freeTier: false,
     modules: [
       { id: "m1", title: "How Malware Operates" },
-      { id: "m2", title: "Ransomware & Response" }
+      { id: "m2", title: "Ransomware & Response" },
+      { id: "m3", title: "Modern Attack Vectors & Extortion" },
+      { id: "m4", title: "Detection, Containment & Resilient Recovery" }
     ],
     lessons: [
       {
@@ -234,6 +350,38 @@ const COURSES = [
         body: "Disconnect the device from the network immediately — unplug the cable or turn off Wi-Fi — to stop it from spreading to shared drives or other machines before you do anything else. Don't restart the computer; some malware activates further damage on reboot, and a live memory dump can help investigators understand what happened. Report it to IT/security right away, even if you're not certain — the earlier containment starts, the smaller the damage. As with phishing, speed and honesty beat trying to quietly fix it yourself.",
         keyTakeaway: "Disconnect first, don't reboot, and report it immediately — a live memory dump can matter more than a quick fix.",
         check: { question: "What should you NOT do if you suspect a ransomware infection?", choices: ["Disconnect from the network", "Report it to IT/security", "Restart the computer right away", "Act quickly"], correctIndex: 2 }
+      },
+      {
+        id: "l5",
+        moduleId: "m3",
+        title: "Fileless malware and Living-off-the-Land (LotL)",
+        body: "Modern malware frequently avoids dropping traditional executable `.exe` files onto your hard drive. Fileless malware executes purely in volatile RAM, utilizing native, trusted administrative utilities already installed on your operating system — a technique known as Living-off-the-Land (LotL). Attackers execute obfuscated PowerShell scripts, Windows Management Instrumentation (WMI) commands, or Linux `bash`/`curl` one-liners. Because the binaries executing the malicious actions are signed Microsoft or Linux system tools (like `powershell.exe`, `certutil.exe`, or `rundll32.exe`), legacy signature-based antivirus scanners see legitimate system processes and fail to detect the intrusion until anomalous behavior is flagged.",
+        keyTakeaway: "Fileless malware runs in volatile memory using native system tools (Living-off-the-Land), bypassing traditional file-scanning antivirus.",
+        check: { question: "What does \"Living-off-the-Land\" (LotL) mean in cybersecurity?", choices: ["Working remotely from rural areas", "Using legitimate, built-in operating system administrative tools to conduct malicious activities without saving malware files to disk", "Running servers on solar power", "Exclusively targeting agricultural companies"], correctIndex: 1 }
+      },
+      {
+        id: "l6",
+        moduleId: "m3",
+        title: "Double and triple extortion ransomware",
+        body: "Ransomware has evolved beyond simply encrypting your company files and demanding a ransom key. In \"double extortion,\" attackers exfiltrate gigabytes of confidential customer data, intellectual property, and financial records before encrypting the local systems. If the organization refuses to pay because they have backups, the ransomware syndicate threatens to auction the stolen data on dark web leak sites or notify regulators of a breach. \"Triple extortion\" takes this a step further by contacting the company's customers, business partners, or patients directly, demanding individual ransoms or threatening to release their sensitive records unless they pressure the primary victim into paying.",
+        keyTakeaway: "Double and triple extortion turn ransomware into data theft and public blackmail — backups alone do not resolve the threat of public data leakage.",
+        check: { question: "How does double extortion ransomware differ from classic ransomware?", choices: ["It encrypts the hard drive twice with two different keys", "Attackers exfiltrate sensitive data before encrypting it, threatening public leakage if the ransom is not paid", "It only attacks mobile devices", "It demands payment in two separate cryptocurrencies"], correctIndex: 1 }
+      },
+      {
+        id: "l7",
+        moduleId: "m4",
+        title: "Endpoint Detection and Response (EDR)",
+        body: "Traditional antivirus relied on known file signatures: if a file matched a catalog of known viruses, it was quarantined. But because cybercriminals generate millions of unique, polymorphic malware variants daily, signatures are obsolete. Endpoint Detection and Response (EDR) platforms (like CrowdStrike, Microsoft Defender for Endpoint, or SentinelOne) monitor real-time system behaviors, process trees, network sockets, and memory injections. If a Word document unexpectedly spawns a PowerShell process that connects to an external Russian IP and queries domain credentials, the EDR agent instantly detects the anomalous behavioral chain, terminates the parent process, and isolates the host from the network automatically.",
+        keyTakeaway: "EDR monitors process behaviors and relationships in real time, catching zero-day threats that have never been seen before.",
+        check: { question: "Why is behavioral Endpoint Detection and Response (EDR) superior to traditional signature-based antivirus?", choices: ["It makes computers run twice as fast", "It detects novel, unknown attacks by analyzing live behavior rather than relying on outdated lists of known file signatures", "It eliminates the need for software updates", "It requires no CPU or memory resources"], correctIndex: 1 }
+      },
+      {
+        id: "l8",
+        moduleId: "m4",
+        title: "Air-gapped and immutable backup architectures",
+        body: "When ransomware strikes, attackers spend days quietly enumerating network shares to locate and delete backup repositories before detonating encryption. If your backups are accessible over the same active directory credentials as your production servers, they will be deleted. Resilient enterprise recovery demands \"immutable backups\" and air-gapped storage. Immutable backups use WORM (Write Once, Read Many) object locking, mathematically preventing any user, admin, or attacker from deleting or modifying backup snapshots for a designated retention period (e.g. 30 days). Maintaining offline, physically air-gapped or logically separated secondary copies guarantees that a recovery path exists regardless of how thoroughly production was compromised.",
+        keyTakeaway: "Immutable WORM backups cannot be deleted or encrypted even with administrative credentials, guaranteeing a reliable recovery baseline.",
+        check: { question: "What is an immutable backup?", choices: ["A backup stored on a USB flash drive", "A backup snapshot that cannot be altered, overwritten, or deleted by anyone during a locked retention period", "A backup that only saves text files", "A backup created manually once per year"], correctIndex: 1 }
       }
     ],
     quiz: [
@@ -249,12 +397,14 @@ const COURSES = [
     title: "Data Handling & Privacy",
     description: "How to classify, share, and store sensitive data safely — and what to do the moment you suspect something's gone wrong.",
     level: "intermediate",
-    estimatedMinutes: 12,
+    estimatedMinutes: 35,
     category: "data-protection",
     freeTier: false,
     modules: [
       { id: "m1", title: "Handling Data Safely" },
-      { id: "m2", title: "Staying Safe & Reporting" }
+      { id: "m2", title: "Staying Safe & Reporting" },
+      { id: "m3", title: "Classification & Privacy Regulations" },
+      { id: "m4", title: "Data Loss Prevention & Shadow IT" }
     ],
     lessons: [
       {
@@ -288,6 +438,46 @@ const COURSES = [
         body: "If you send sensitive data to the wrong person, lose a device, or notice data somewhere it shouldn't be, report it immediately — even if you're not fully sure it's a real problem. Every hour matters for containment, and organizations plan for mistakes; what they can't plan for is not knowing. Nobody gets in trouble for reporting a real mistake quickly. The trouble comes from staying quiet and hoping no one notices.",
         keyTakeaway: "Report a real mistake immediately, even without full certainty — the trouble comes from staying quiet, not from reporting.",
         check: { question: "What does this lesson say about reporting a mistake, like emailing sensitive data to the wrong person?", choices: ["Wait to see if anyone notices", "Report it immediately, even without full certainty of impact", "Only report if it contained passwords", "Try to quietly recall the email and say nothing else"], correctIndex: 1 }
+      },
+      {
+        id: "l5",
+        moduleId: "m3",
+        title: "Data classification tiers in the enterprise",
+        body: "Enterprise data governance begins by organizing information into four standardized tiers: Public (marketing assets, press releases with no confidentiality requirements), Internal (company policies, internal intranets meant for staff only), Confidential (business contracts, customer lists, financial forecasts that would harm the business if leaked), and Restricted/PII (passwords, social security numbers, banking details, health records). Labeling files and emails according to these tiers dictates technical handling: Restricted data must be encrypted at rest and in transit, requires role-based access approval, and must never be stored on unmanaged endpoints.",
+        keyTakeaway: "Apply the four data tiers — Public, Internal, Confidential, Restricted — and enforce stricter encryption and access controls as sensitivity rises.",
+        check: { question: "Which classification tier applies to employee Social Security numbers and customer banking details?", choices: ["Public", "Internal Only", "Restricted / Highly Confidential", "Unclassified"], correctIndex: 2 }
+      },
+      {
+        id: "l6",
+        moduleId: "m3",
+        title: "Privacy regulations: GDPR, CCPA, and compliance",
+        body: "Modern organizations operate under strict data protection legislation such as Europe's GDPR, California's CCPA/CPRA, and healthcare HIPAA frameworks. These laws grant individuals fundamental rights over their personal data: the right to know what is collected, the right to access it, and the \"right to be forgotten\" (erasure). Compliance is not just a legal abstraction; failing to safeguard personal data exposes companies to penalties reaching up to 4% of global annual turnover under GDPR. Regulations also mandate reporting significant data breaches to supervisory authorities within 72 hours of discovery, making internal prompt reporting by employees legally mandatory.",
+        keyTakeaway: "Privacy regulations grant users legal rights over their data and impose severe financial penalties for uncontained or unreported breaches.",
+        check: { question: "Under GDPR, within how many hours of becoming aware of a significant personal data breach must an organization notify data protection authorities?", choices: ["24 hours", "72 hours", "30 days", "6 months"], correctIndex: 1 }
+      },
+      {
+        id: "l7",
+        moduleId: "m4",
+        title: "Data Loss Prevention (DLP) in practice",
+        body: "Data Loss Prevention (DLP) systems scan outgoing emails, cloud file shares, and endpoint copy actions to block unauthorized data exfiltration. DLP engines inspect content in real time using regular expressions and machine learning to recognize credit card numbers, national identity IDs, API keys, and healthcare records. If an employee attempts to upload a spreadsheet containing 5,000 customer emails to a personal cloud drive or paste it into an external web form, the DLP agent intercepts the action, notifies the user of the policy violation, and alerts the SOC team. Understanding DLP helps employees realize why certain file transfers are blocked and ensures business workflows remain compliant.",
+        keyTakeaway: "DLP engines inspect network and endpoint egress in real time to prevent sensitive regex patterns (credit cards, PII) from leaving corporate boundaries.",
+        check: { question: "What is the primary function of an enterprise Data Loss Prevention (DLP) system?", choices: ["Backing up deleted files", "Monitoring and blocking unauthorized transmission of sensitive data outside company boundaries", "Speeding up internet download speeds", "Generating marketing emails"], correctIndex: 1 }
+      },
+      {
+        id: "l8",
+        moduleId: "m4",
+        title: "Shadow IT and unsanctioned generative AI",
+        body: "\"Shadow IT\" refers to any software, cloud service, or mobile app used for business purposes without explicit IT security vetting and approval. In recent years, unsanctioned generative AI tools (like public ChatGPT, Claude, or third-party meeting transcribers) have become a massive data leakage conduit. When employees paste confidential source code, proprietary algorithms, or customer meeting transcripts into consumer AI chatbots, that data is transmitted to third-party servers and may be used to train future public models. Enterprise security requires using only corporate-licensed AI instances backed by enterprise zero-retention data processing agreements (DPAs).",
+        keyTakeaway: "Never input proprietary code, internal strategies, or customer PII into consumer generative AI tools or unapproved cloud services.",
+        check: { question: "Why is using consumer generative AI chatbots for company tasks considered a severe security risk?", choices: ["It slows down employee typing speed", "Confidential data and customer PII pasted into consumer tools may be stored, logged, or used to train public models outside corporate control", "Consumer AI tools always crash corporate firewalls", "It requires too much bandwidth"], correctIndex: 1 }
+      },
+      {
+        id: "l9",
+        moduleId: "m4",
+        title: "Cryptographic shredding and data sanitization",
+        body: "When digital storage reaches the end of its lifecycle, simply deleting files or reformatting a partition leaves raw magnetic or flash data intact and easily recoverable using forensic tools. Permanent data sanitization follows standards like NIST SP 800-88: \"Clear\" (overwriting with zeroes/random patterns), \"Purge\" (degaussing magnetic platters or ATA Secure Erase on SSDs), and \"Destroy\" (physical shredding of the drive into 2mm fragments). In multi-tenant cloud environments where physical drive destruction is impossible, \"cryptographic shredding\" is used: encrypting data with a unique master key and securely destroying the encryption key, rendering the underlying ciphertext mathematically impossible to decrypt.",
+        keyTakeaway: "NIST 800-88 sanitization and cryptographic shredding ensure discarded drives and decommissioned cloud storage cannot yield recoverable data.",
+        check: { question: "What is cryptographic shredding in cloud data sanitization?", choices: ["Running a paper shredder in the server room", "Destroying the unique cryptographic keys used to encrypt data, rendering stored ciphertext permanently unreadable", "Compressing files into a ZIP archive", "Deleting shortcuts from the desktop"], correctIndex: 1 }
       }
     ],
     quiz: [
@@ -303,12 +493,14 @@ const COURSES = [
     title: "Mobile & Device Security",
     description: "Lock screens, app permissions, and public charging risks — the everyday habits that keep a phone or laptop safe when it's lost, stolen, or just out in public.",
     level: "beginner",
-    estimatedMinutes: 13,
+    estimatedMinutes: 30,
     category: "endpoint-security",
     freeTier: false,
     modules: [
       { id: "m1", title: "Everyday Device Habits" },
-      { id: "m2", title: "Staying Safe On the Go" }
+      { id: "m2", title: "Staying Safe On the Go" },
+      { id: "m3", title: "Enterprise Mobility & MDM" },
+      { id: "m4", title: "Mobile Attack Vectors & Secure Comms" }
     ],
     lessons: [
       {
@@ -342,6 +534,38 @@ const COURSES = [
         body: "Act immediately, not after a day of hoping it turns up. Use Find My Device (or your company's mobile device management) to remotely locate, lock, or wipe it. Change the password for any account you were logged into on that device, starting with email, since it can reset everything else. Report a lost or stolen work device to IT/security right away — the faster it's reported, the sooner access to company systems can be revoked from that device specifically.",
         keyTakeaway: "Remotely lock or wipe the device first, then change passwords for anything you were logged into, and report it to IT immediately.",
         check: { question: "What should you do first if a work phone is lost or stolen?", choices: ["Wait 24 hours in case it's found", "Remotely lock or wipe it, then report it to IT/security immediately", "Only worry about it if it had banking apps installed", "Buy a replacement before reporting it"], correctIndex: 1 }
+      },
+      {
+        id: "l5",
+        moduleId: "m3",
+        title: "Mobile Device Management (MDM) and BYOD",
+        body: "When employees use personal smartphones or tablets to access work emails and Slack (Bring Your Own Device, or BYOD), organizations deploy Mobile Device Management (MDM) platforms (such as Microsoft Intune or Jamf). MDM enforces critical baseline security policies: requiring minimum 6-digit PINs, biometrics, full-disk encryption, and OS updates. Modern MDM uses \"containerization\" to separate corporate data from personal data. This allows IT administrators to perform an \"enterprise wipe\" (deleting work emails, proprietary documents, and corporate certificates) if an employee leaves the company or loses their device, without wiping the employee's personal photos, contacts, or messages.",
+        keyTakeaway: "MDM containerization protects corporate data while preserving employee privacy, enabling selective remote wipes of work assets.",
+        check: { question: "What is the advantage of an \"enterprise wipe\" over a \"factory reset\" on a BYOD employee smartphone?", choices: ["It resets the device's battery calibration", "It deletes only corporate emails, apps, and credentials while leaving the employee's personal photos and data untouched", "It makes the phone run on 5G only", "It automatically backs up all personal photos to company servers"], correctIndex: 1 }
+      },
+      {
+        id: "l6",
+        moduleId: "m3",
+        title: "Jailbreaking, rooting, and sideloading hazards",
+        body: "Jailbreaking an iPhone or rooting an Android device intentionally removes the operating system's built-in sandbox security boundaries to allow unauthorized tweaks or app installations. However, this also completely dismantles the operating system's defense-in-depth architecture. Normal mobile apps run in isolated sandboxes; on a rooted device, any malicious app can read credentials, keystrokes, and session cookies from banking and enterprise apps. Furthermore, \"sideloading\" apps from third-party APK repositories bypasses the automated malware scanning conducted by official app stores, making sideloaded applications the number one vector for Android infostealers and SMS spyware.",
+        keyTakeaway: "Never jailbreak or root devices used for enterprise access — doing so disables operating system sandboxing and invites spyware.",
+        check: { question: "Why do enterprise security policies strictly prohibit rooted or jailbroken mobile devices?", choices: ["Rooting disables the screen display", "Rooting strips the operating system's application sandbox, allowing malware to read data across all other installed apps", "Rooted devices cannot connect to Wi-Fi", "It makes phone calls sound muffled"], correctIndex: 1 }
+      },
+      {
+        id: "l7",
+        moduleId: "m4",
+        title: "WireGuard, enterprise VPNs, and split tunneling",
+        body: "When traveling or working from hotels, public Wi-Fi networks present risks from rogue DHCP servers, DNS spoofing, and side-channel sniffing. An enterprise Virtual Private Network (VPN) creates an encrypted tunnel between your mobile endpoint and corporate gateways, ensuring all network packets are encrypted regardless of the underlying untrusted transport. Modern protocols like WireGuard offer near-instant handshake reconnection when switching between Wi-Fi and 5G cellular. IT teams configure \"split tunneling\" policies carefully: routing sensitive corporate subnet traffic through the encrypted tunnel while allowing high-bandwidth consumer video streaming over local internet.",
+        keyTakeaway: "Use always-on VPN or WireGuard on untrusted wireless networks to protect internal communications from local network eavesdropping and DNS spoofing.",
+        check: { question: "What does an enterprise VPN do when you connect to public hotel Wi-Fi?", choices: ["Increases the hotel's Wi-Fi speed", "Creates an encrypted tunnel for your network traffic, shielding data and DNS queries from local network eavesdroppers", "Physically locks your keyboard", "Prevents your device from running out of battery"], correctIndex: 1 }
+      },
+      {
+        id: "l8",
+        moduleId: "m4",
+        title: "Bluetooth, AirDrop, and wireless eavesdropping",
+        body: "Wireless peripherals and sharing protocols introduce silent physical attack vectors. Bluetooth vulnerabilities (such as BlueBorne or BLE impersonation) allow nearby attackers to execute code or steal contact data without pairing. Attackers also exploit Apple AirDrop or Android Quick Share configured to \"Everyone,\" delivering unsolicited malware payloads, offensive imagery, or harvesting device hashes in crowded subway stations and airports. Best practices dictate setting AirDrop and Quick Share to \"Contacts Only\" or \"Receiving Off,\" unpairing unused Bluetooth peripherals, and disabling Bluetooth entirely when navigating high-density public hubs.",
+        keyTakeaway: "Keep AirDrop and file sharing set to \"Contacts Only\" and turn off Bluetooth in crowded transit areas to prevent wireless payload delivery.",
+        check: { question: "What is the recommended setting for mobile file sharing (like AirDrop or Quick Share) in public transit or airports?", choices: ["Everyone (open to all)", "Contacts Only or Receiving Off", "Bluetooth pairing mode active", "Always discoverable"], correctIndex: 1 }
       }
     ],
     quiz: [
@@ -357,12 +581,14 @@ const COURSES = [
     title: "Physical Security & Workplace Awareness",
     description: "Clean desks, badge discipline, shoulder surfing, and secure disposal — the physical-world habits that protect information no firewall ever touches.",
     level: "beginner",
-    estimatedMinutes: 11,
+    estimatedMinutes: 30,
     category: "physical-security",
     freeTier: false,
     modules: [
       { id: "m1", title: "Workspace Habits" },
-      { id: "m2", title: "Awareness & Disposal" }
+      { id: "m2", title: "Awareness & Disposal" },
+      { id: "m3", title: "Facility Controls & Perimeter Defense" },
+      { id: "m4", title: "Hardware Protection & Rogue Peripherals" }
     ],
     lessons: [
       {
@@ -396,6 +622,38 @@ const COURSES = [
         body: "\"Delete\" is not the same as \"destroyed.\" Shred physical documents containing sensitive information rather than putting them in regular trash or recycling — a shredder bin, not a wastebasket. For old computers, phones, or drives, use your organization's secure disposal or data-wiping process rather than simply throwing hardware away; deleted files on a drive that's discarded intact can often still be recovered by anyone who finds it.",
         keyTakeaway: "Shred sensitive paper documents and use your organization's secure wipe/disposal process for old hardware — deleting files isn't the same as destroying them.",
         check: { question: "Why isn't throwing an old laptop in the trash a safe way to dispose of it?", choices: ["It's bad for the environment only", "Deleted files can often still be recovered from an intact drive", "It voids the warranty", "It's only a risk for company-owned devices"], correctIndex: 1 }
+      },
+      {
+        id: "l5",
+        moduleId: "m3",
+        title: "Server rooms and data closet access controls",
+        body: "On-premises IT infrastructure — switches, patch panels, hypervisors, and local storage arrays — require fortified physical defense. Server rooms and wiring closets must be locked 24/7 with dual-custody access (such as biometric palm/fingerprint readers paired with RFID badges). Every physical entry must generate an unalterable audit log tied to CCTV cameras. Temperature, humidity, and fire-suppression alerts (clean agent systems like FM-200 rather than water sprinklers) must report directly to facilities and SOC monitors. Unescorted vendor or contractor access to data closets is strictly forbidden, as physical proximity to patch cables allows rogue hardware taps to intercept unencrypted fiber and ethernet frames.",
+        keyTakeaway: "Enforce strict badge/biometric logging and escorted vendor protocols for all server rooms and network wiring closets.",
+        check: { question: "What is required before an external HVAC or cabling contractor enters an enterprise server room?", choices: ["They can be given a master key and work alone overnight", "They must sign the visitor log and be continuously escorted by an authorized IT staff member", "No escort is required if they wear a high-visibility vest", "Server room doors should be propped open for ventilation"], correctIndex: 1 }
+      },
+      {
+        id: "l6",
+        moduleId: "m3",
+        title: "Dumpster diving and document destruction chain of custody",
+        body: "Physical information security does not end at the office exit door. Attackers frequently engage in \"dumpster diving\" — sifting through corporate waste containers and recycling dumpsters outside corporate offices under cover of night. Discarded whiteboard photos, handwritten system architecture notes, printed flight itineraries, and obsolete client invoices provide attackers with critical intelligence. All sensitive paper documents must be placed into locked, heavy-duty consoles designated for certified cross-cut shredding. Furthermore, organizations must retain signed \"Certificates of Destruction\" from licensed disposal vendors proving chain of custody until the paper is converted into unrecoverable pulp.",
+        keyTakeaway: "Dispose of all paper notes and drafts in locked shredding consoles — never standard wastebaskets — to eliminate dumpster diving.",
+        check: { question: "Why should draft printouts containing internal meeting notes never be discarded in standard office wastebaskets?", choices: ["It creates too much office clutter", "Attackers and competitors can recover confidential information through dumpster diving outside company premises", "Wastebaskets are only for organic waste", "Paper wastebaskets are a fire hazard"], correctIndex: 1 }
+      },
+      {
+        id: "l7",
+        moduleId: "m4",
+        title: "Rogue peripherals: Rubber Ducky and keystroke injection",
+        body: "Not all hardware threats look like USB storage drives. Attackers deploy malicious Human Interface Devices (HIDs), such as the infamous USB Rubber Ducky, Bash Bunny, or malicious charging cables (like the O.MG cable). When plugged into an unlocked computer, these devices do not register as flash drives (bypassing USB storage block policies); instead, they announce themselves to the operating system as standard USB keyboards. Because operating systems inherently trust keyboards, the malicious microcontroller injects pre-programmed keystrokes at 1,000 words per minute, popping open PowerShell or terminal prompts, disabling firewalls, and downloading backdoor implants within 3 seconds of connection.",
+        keyTakeaway: "Keystroke-injection devices impersonate keyboards to bypass storage restrictions and execute shell payloads in seconds.",
+        check: { question: "How does a keystroke injection tool (like a USB Rubber Ducky) bypass USB storage block policies?", choices: ["It disables the computer's motherboard", "It identifies itself to the operating system as a standard USB keyboard, injecting automated commands at hyper speed", "It operates via ultrasonic sound waves", "It only functions when the computer is turned off"], correctIndex: 1 }
+      },
+      {
+        id: "l8",
+        moduleId: "m4",
+        title: "Emergency evacuations and physical tailgating risks",
+        body: "Building security is particularly vulnerable during disruptions, drills, and emergency evacuations. In real-world red-team penetrations, attackers frequently take advantage of fire drills, building alarms, or lunch rush hour when dozens of employees stream through emergency exits and turnstiles simultaneously. Security turnstiles are often unlocked or set to fail-safe open during alarms, allowing an attacker dressed in contractor or courier attire to slip inside unbadged while employees gather outside. Protocol mandates that during and after an evacuation, employees re-enter only through designated, monitored checkpoints where every individual re-swipes their personal badge.",
+        keyTakeaway: "Do not allow unfamiliar individuals to enter through propped emergency doors or during evacuation re-entry — mandate individual badge verification.",
+        check: { question: "Why is building security particularly vulnerable during a fire alarm or emergency evacuation drill?", choices: ["Security cameras are automatically turned off", "Emergency doors unlock for life safety and crowd flow makes unbadged entry easier to conceal", "Fire alarms disable computer passwords", "Elevators move faster than usual"], correctIndex: 1 }
       }
     ],
     quiz: [
@@ -411,12 +669,14 @@ const COURSES = [
     title: "SOC Fundamentals: Detecting & Responding to Threats",
     description: "How a Security Operations Center actually works — the analyst tiers, triaging alerts under real time pressure, and the incident response lifecycle every SOC follows.",
     level: "intermediate",
-    estimatedMinutes: 20,
+    estimatedMinutes: 40,
     category: "soc",
     freeTier: false,
     modules: [
       { id: "m1", title: "How a SOC Operates" },
-      { id: "m2", title: "Triage & Response" }
+      { id: "m2", title: "Triage & Response" },
+      { id: "m3", title: "SOC Tooling & Threat Frameworks" },
+      { id: "m4", title: "Detection Engineering & Post-Incident Review" }
     ],
     lessons: [
       {
@@ -450,6 +710,38 @@ const COURSES = [
         body: "Once an alert is confirmed as a real incident, response follows a repeatable sequence rather than improvisation: identify what's actually happening and how far it's spread, contain it to stop it from getting worse (isolating a device from the network is often the fastest first move), eradicate the actual cause (a malicious process, a compromised account, a vulnerable service), recover affected systems back to normal operation, and finally document what happened in a post-incident review. That last step is not paperwork for its own sake — it's how a SOC gets better after every real incident, feeding back into what the SIEM watches for next time.",
         keyTakeaway: "Identify, contain, eradicate, recover, then review — skipping the review step means the SOC never gets better at catching the next one.",
         check: { question: "What is the purpose of the post-incident review at the end of the response lifecycle?", choices: ["It's a formality required for compliance only", "It feeds back into what the SOC watches for and improves the response next time", "It replaces the need for containment", "It's only done if the incident became public"], correctIndex: 1 }
+      },
+      {
+        id: "l5",
+        moduleId: "m3",
+        title: "SIEM architecture, log ingestion, and parsers",
+        body: "The backbone of any Security Operations Center is the Security Information and Event Management (SIEM) architecture (e.g. Splunk, Microsoft Sentinel, Elastic, or Google Chronicle). Telemetry arrives from thousands of distributed endpoints, domain controllers, cloud audit trails (AWS CloudTrail, Azure Activity Logs), and network firewalls via Syslog, agents, and API forwarders. Because raw logs arrive in wildly divergent formats, SIEM ingestion pipelines rely on \"parsers\" and \"normalizers\" to map fields into common schemas like the Open Cybersecurity Schema Framework (OCSF) or Elastic Common Schema (ECS). Once parsed into searchable key-value pairs (e.g. `source_ip`, `user_id`, `action`), automated correlation queries run continuously to detect multi-stage attack patterns.",
+        keyTakeaway: "SIEM architectures ingest and normalize disparate raw logs into structured schemas to enable real-time threat correlation across systems.",
+        check: { question: "What is the role of log parsers and normalization in a SIEM ingestion pipeline?", choices: ["To permanently compress and archive logs into ZIP files", "To convert unstructured, diverse logs from different vendors into standardized schemas for correlation", "To automatically delete old firewall logs", "To block all incoming internet connections"], correctIndex: 1 }
+      },
+      {
+        id: "l6",
+        moduleId: "m3",
+        title: "MITRE ATT&CK framework mapping",
+        body: "The MITRE ATT&CK (Adversarial Tactics, Techniques, and Common Knowledge) framework is the globally accepted standard matrix for classifying attacker behaviors. ATT&CK organizes attacks into 14 distinct tactical goals along the cyber kill chain: from Reconnaissance, Resource Development, and Initial Access, through Execution, Persistence, Privilege Escalation, Defense Evasion, Credential Access, Discovery, Lateral Movement, Collection, Command and Control, Exfiltration, to Impact. Instead of viewing an alert as an isolated incident, a SOC analyst maps observed activity to specific techniques (e.g. T1059.001 - PowerShell Execution, T1003 - OS Credential Dumping). This mapping reveals where the adversary is in their attack progression and what defensive countermeasures must be taken next.",
+        keyTakeaway: "MITRE ATT&CK provides a common language for adversary behaviors, allowing analysts to understand where an attacker is in the intrusion lifecycle.",
+        check: { question: "How does the MITRE ATT&CK framework benefit a SOC analyst during an investigation?", choices: ["It provides a phone directory of cyber criminals", "It categorizes attacker actions into tactics and techniques, showing where an adversary is in their intrusion lifecycle", "It writes automated legal reports for law enforcement", "It automatically installs patches on servers"], correctIndex: 1 }
+      },
+      {
+        id: "l7",
+        moduleId: "m4",
+        title: "Alert fatigue and detection engineering",
+        body: "The greatest threat to an analyst's focus is \"alert fatigue.\" When a poorly tuned SIEM triggers 10,000 alerts every shift — 99.8% of which are benign noise or false positives — human fatigue inevitably sets in, causing analysts to overlook the one genuine breach alert hidden in the flood. Detection engineers solve this by continuously maintaining detection rules (written in Sigma, YARA-L, or KQL). Effective detection engineering involves tuning out benign true positives (e.g. scheduled administrative maintenance scripts), implementing baseline behavior thresholds, and building automated SOAR (Security Orchestration, Automation, and Response) playbooks to triage routine alerts autonomously.",
+        keyTakeaway: "Detection engineering battles alert fatigue by tuning rules, filtering benign noise, and automating triage through SOAR playbooks.",
+        check: { question: "What is the primary danger of alert fatigue in a Security Operations Center?", choices: ["Analysts run out of coffee", "Overwhelming volumes of false positives cause analysts to miss or dismiss real intrusions buried in the noise", "Monitors overheat and shut down", "SIEM database storage fills up too fast"], correctIndex: 1 }
+      },
+      {
+        id: "l8",
+        moduleId: "m4",
+        title: "Root cause analysis & blameless postmortems",
+        body: "Once an active security incident is eradicated and affected systems are recovered, the incident lifecycle concludes with Root Cause Analysis (RCA) and a blameless postmortem. Instead of asking \"Who made this mistake?\", a mature engineering and security culture asks \"What systemic vulnerability, missing control, or architectural flaw allowed this mistake to cause harm?\" Applying methodologies like the \"5 Whys\" helps uncover whether an outdated golden image, missing egress filtering, or inadequate monitoring telemetry allowed the attacker to persist undetected. The final postmortem document produces concrete action items with assigned owners and deadlines, transforming every security failure into permanent organizational resilience.",
+        keyTakeaway: "Blameless postmortems focus on systemic and procedural fixes rather than individual blame, ensuring defenses continuously improve.",
+        check: { question: "What is the core philosophy of a blameless postmortem following a security incident?", choices: ["Fining the employee whose credentials were compromised", "Focusing on identifying systemic weaknesses and technical root causes to prevent future occurrences without assigning personal blame", "Refusing to document the incident to avoid legal exposure", "Blaming the cloud provider entirely"], correctIndex: 1 }
       }
     ],
     quiz: [
@@ -727,13 +1019,15 @@ const COURSES = [
     title: "Networking Fundamentals for IT Operations",
     description: "How data actually moves between machines — IP addresses and subnets, DNS, ports and protocols, and the command-line tools you reach for first when something can't connect.",
     level: "beginner",
-    estimatedMinutes: 20,
+    estimatedMinutes: 40,
     category: "infrastructure",
     track: "academy",
     freeTier: true,
     modules: [
       { id: "m1", title: "How Networks Actually Move Data" },
-      { id: "m2", title: "Ports, Protocols & Troubleshooting" }
+      { id: "m2", title: "Ports, Protocols & Troubleshooting" },
+      { id: "m3", title: "Routing, NAT & Subnet Calculations" },
+      { id: "m4", title: "Deep Traffic Inspection & Security" }
     ],
     lessons: [
       {
@@ -767,6 +1061,38 @@ const COURSES = [
         body: "When something can't connect, a fixed sequence of commands narrows down where the problem is. ping tests basic reachability — does a response come back at all, and how long does it take. traceroute (or tracert on Windows) shows every hop the traffic takes to get there, which pinpoints where along the path it's failing, not just that it is failing. netstat or the newer ss command lists active network connections and which ports are actively listening on the local machine — useful for confirming a service is actually running and bound to the port you expect. curl or telnet against a specific host and port tests whether that exact service is reachable, which is more precise than ping (which only tests the network layer, not whether a particular service is actually listening).",
         keyTakeaway: "Work top-down: ping for reachability, traceroute for where it breaks, then test the exact port with curl/telnet.",
         check: { question: "A ping succeeds but a specific service still won't connect. What's the next logical check?", choices: ["The problem must be DNS", "Test the exact host and port directly with curl or telnet", "Restart the entire network", "Ping is proof the service is fine, stop troubleshooting"], correctIndex: 1 }
+      },
+      {
+        id: "l5",
+        moduleId: "m3",
+        title: "Subnetting calculations and CIDR notation",
+        body: "Subnetting divides a larger network into isolated broadcast domains, improving performance and security. In CIDR notation, the prefix length indicates the number of static network bits: a /24 mask (`255.255.255.0`) leaves 8 host bits, yielding 256 total IP addresses, minus two reserved addresses (the network ID at `.0` and broadcast at `.255`), leaving 254 usable host addresses. A smaller subnet like a /28 mask (`255.255.255.240`) leaves 4 host bits (16 IPs), providing 14 usable hosts. Point-to-point router links commonly use a /30 subnet (4 IPs), accommodating exactly 2 usable interface addresses without wasting IP space.",
+        keyTakeaway: "Calculate usable hosts with 2^(32 - prefix) - 2 (subtracting network and broadcast addresses) to design efficient subnets.",
+        check: { question: "How many usable host IP addresses are available in a /28 IPv4 subnet?", choices: ["16", "14", "30", "6"], correctIndex: 1 }
+      },
+      {
+        id: "l6",
+        moduleId: "m3",
+        title: "NAT, PAT, and default gateways",
+        body: "Because IPv4 addresses are exhausted, internal networks rely on RFC 1918 private IP ranges (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16). Private IP packets cannot traverse the public internet directly. Network Address Translation (NAT) and Port Address Translation (PAT, or NAT overload) solve this by translating hundreds of internal private IP addresses to a single public IP at the edge router. The router maintains a stateful translation table mapping internal IP-and-port tuples to external port numbers. Devices know where to send non-local packets by consulting their routing table (ip route), which directs unmapped destinations to the Default Gateway (the router's internal interface).",
+        keyTakeaway: "PAT allows multiple internal hosts to share one public IP by mapping dynamic port numbers, directed via the default gateway.",
+        check: { question: "What is the purpose of a Default Gateway on a host's network configuration?", choices: ["To assign DNS names to servers", "To route packets destined for addresses outside the local subnet to the upstream router", "To provide wireless encryption keys", "To speed up local printer discovery"], correctIndex: 1 }
+      },
+      {
+        id: "l7",
+        moduleId: "m4",
+        title: "TCP three-way handshake and packet flow",
+        body: "Transmission Control Protocol (TCP) is a connection-oriented transport protocol that guarantees ordered, error-checked data delivery. Before any HTTP or SSH data flows, TCP establishes a virtual connection via the three-way handshake: the client sends a SYN (Synchronize) segment with an initial sequence number; the server replies with a SYN-ACK (Synchronize-Acknowledgment); and the client confirms with an ACK. Once established, sliding window flow control prevents fast senders from overwhelming slow receivers. When terminating, hosts exchange FIN and ACK packets. If a port is closed, the server immediately responds with a RST (Reset) packet; if dropped by a firewall, the client times out waiting for SYN-ACK.",
+        keyTakeaway: "The TCP SYN -> SYN-ACK -> ACK handshake establishes reliable state; receiving a RST means the port is closed, while a timeout indicates firewall packet drop.",
+        check: { question: "What three packets complete a standard TCP connection handshake?", choices: ["PING, PONG, ACK", "SYN, SYN-ACK, ACK", "HELLO, REQUEST, DATA", "FIN, FIN-ACK, RST"], correctIndex: 1 }
+      },
+      {
+        id: "l8",
+        moduleId: "m4",
+        title: "Packet inspection with tcpdump and Wireshark",
+        body: "When network connectivity is flaky or packets are mysteriously dropped, packet analyzers like tcpdump (CLI) and Wireshark (GUI) provide deep forensic inspection. Using Berkeley Packet Filter (BPF) syntax, tcpdump -i eth0 -nn 'tcp port 443 and host 10.0.0.5' -w capture.pcap captures encrypted TLS sessions without DNS overhead. Opening the .pcap in Wireshark lets engineers inspect TCP retransmission percentages, calculate round-trip time (RTT), diagnose zero-window exhaustion, and inspect TLS Server Name Indication (SNI) headers. Sniffing raw network interfaces is the ultimate truth engine: if a packet left the network card but never reached the destination, the fault lies in an intermediate transit hop.",
+        keyTakeaway: "Packet capture with tcpdump and Wireshark cuts through speculation by showing exactly which frames crossed the physical network interface.",
+        check: { question: "What does the command `tcpdump -i eth0 -w dump.pcap` do?", choices: ["Deletes old network logs from interface eth0", "Captures raw network packets on interface eth0 and saves them to a file for analysis in Wireshark", "Installs a new firewall rule", "Tests DNS resolution"], correctIndex: 1 }
       }
     ],
     quiz: [
@@ -784,13 +1110,15 @@ const COURSES = [
     title: "Cloud Computing Essentials",
     description: "What \"the cloud\" actually is, the service models (IaaS/PaaS/SaaS) and shared responsibility model, and the core building blocks — compute, storage, and networking — behind AWS, Azure, and every other provider.",
     level: "beginner",
-    estimatedMinutes: 18,
+    estimatedMinutes: 40,
     category: "cloud",
     track: "academy",
     freeTier: false,
     modules: [
       { id: "m1", title: "What Cloud Actually Means" },
-      { id: "m2", title: "The Building Blocks" }
+      { id: "m2", title: "The Building Blocks" },
+      { id: "m3", title: "Cloud Identity, IAM & Access Governance" },
+      { id: "m4", title: "Storage Lifecycles & FinOps Economics" }
     ],
     lessons: [
       {
@@ -824,6 +1152,38 @@ const COURSES = [
         body: "Cloud providers organize infrastructure into regions (geographic areas, like us-east-1 or eu-west-2), each containing multiple availability zones — physically separate data centers with independent power and networking, so a failure in one doesn't take down the others. A Virtual Private Cloud (VPC) is your own isolated network within a region, where you define subnets, routing, and firewall-like security groups that control what traffic can reach your resources. Placing resources across multiple availability zones is the standard way to build for high availability — if one zone has an outage, the others keep serving traffic.",
         keyTakeaway: "Spreading resources across multiple availability zones within a region is how cloud architectures stay available through a single data-center failure.",
         check: { question: "Why would you deploy an application across multiple availability zones instead of just one?", choices: ["It's required by every cloud provider", "So an outage in one zone doesn't take down the whole application", "It's the only way to get a public IP address", "Availability zones are just a billing concept, not physical separation"], correctIndex: 1 }
+      },
+      {
+        id: "l5",
+        moduleId: "m3",
+        title: "Cloud IAM: roles, policies, and least privilege",
+        body: "Identity and Access Management (IAM) is the central security perimeter in any cloud environment (AWS IAM, Azure RBAC, GCP Cloud IAM). IAM controls who (principals: users, groups, or services) has what permissions (actions on specific resource ARNs) under which conditions (IP CIDRs, MFA requirements). To eliminate long-lived hardcoded credentials, cloud workloads use \"IAM Roles\" and temporary Security Token Service (STS) credentials instead of permanent access keys. The golden rule is the Principle of Least Privilege (PoLP): granting only the absolute minimum API actions required for a service to operate, and strictly locking away root/global administrator accounts behind hardware MFA.",
+        keyTakeaway: "Use temporary IAM roles rather than static access keys, and restrict permissions strictly according to Least Privilege.",
+        check: { question: "What is the security best practice for granting an EC2 instance access to an S3 bucket?", choices: ["Hardcode root access keys into the application code", "Assign an IAM Role with a scoped S3 policy directly to the instance", "Make the S3 bucket publicly readable", "Disable IAM authentication"], correctIndex: 1 }
+      },
+      {
+        id: "l6",
+        moduleId: "m3",
+        title: "Zero trust architecture in cloud workloads",
+        body: "The legacy \"castle-and-moat\" network perimeter model assumes that once traffic is inside the corporate VPC, everything is trusted. Cloud security rejects this with \"Zero Trust Architecture\" (ZTA): assume the network is already hostile, and verify every request explicitly. Zero Trust implements mutual TLS (mTLS) between microservices so all internal transit is cryptographically authenticated and encrypted. It replaces static IP-based firewall allow-lists with cryptographic service identities (SPIFFE/SPIRE) and ephemeral access tokens. Even if an attacker compromises a frontend container, Zero Trust micro-segmentation prevents them from accessing backend databases without explicit policy authorization.",
+        keyTakeaway: "Zero Trust assumes an adversary is already inside the network, enforcing mutual authentication and micro-segmentation on every call.",
+        check: { question: "What is the core assumption behind Zero Trust Architecture?", choices: ["All traffic inside the VPC is inherently safe", "No user or service is trusted by default, even inside the internal network perimeter", "Firewalls are no longer needed", "Passwords should never be changed"], correctIndex: 1 }
+      },
+      {
+        id: "l7",
+        moduleId: "m4",
+        title: "Object storage tiers and lifecycle policies",
+        body: "Cloud object storage (such as AWS S3 or Azure Blob) is designed for massive scale and 99.999999999% (11 9s) of data durability. However, storing petabytes in Standard active tiers is expensive. Providers offer tiered storage: Standard (instant access for frequent data), Infrequent Access (cheaper storage, small retrieval fee), and Glacier/Archive (pennies per gigabyte, minutes to hours retrieval time for compliance archives). Automated \"Lifecycle Policies\" transition objects between tiers over time (e.g. moving logs to Infrequent Access after 30 days, Glacier after 90 days, and permanent expiration after 365 days), preventing runaway cloud storage costs.",
+        keyTakeaway: "Automate storage lifecycle rules to transition aging files from Standard to Glacier/Archive, optimizing cost without risking data loss.",
+        check: { question: "What is the primary benefit of configuring an object storage lifecycle policy?", choices: ["It increases network bandwidth", "It automatically transitions older data to cheaper storage tiers (like Glacier) and deletes expired objects to minimize costs", "It encrypts files twice", "It prevents objects from being downloaded"], correctIndex: 1 }
+      },
+      {
+        id: "l8",
+        moduleId: "m4",
+        title: "Cloud economics and FinOps fundamentals",
+        body: "Because cloud infrastructure can be spun up with an API call, uncontrolled provisioning creates massive financial waste — unattached EBS volumes, idle NAT gateways, and oversized VMs. FinOps (Cloud Financial Operations) bridges engineering, finance, and operations to enforce cost governance. Cost models balance On-Demand pricing (full flexibility, highest cost), Reserved Instances / Savings Plans (1-3 year commitments providing up to 72% discounts), and Spot Instances (surplus compute at up to 90% discount, subject to 2-minute termination notices). Mandatory resource tagging (e.g. `Environment=Prod`, `CostCenter=FinApp`) and automated budget alert thresholds ensure engineering teams remain accountable for their cloud spend.",
+        keyTakeaway: "Implement FinOps with mandatory cost tags, reserved compute commitments, and budget alerts to eliminate idle cloud waste.",
+        check: { question: "Which pricing model provides the deepest cloud compute discounts for fault-tolerant, stateless batch workloads?", choices: ["On-Demand instances", "Spot / Preemptible instances", "Multi-Region replication", "Dedicated physical hosts"], correctIndex: 1 }
       }
     ],
     quiz: [
@@ -841,13 +1201,15 @@ const COURSES = [
     title: "Introduction to DevOps & CI/CD",
     description: "Why DevOps exists, how a CI/CD pipeline actually works from commit to deploy, and the practices — version control, automated testing, infrastructure as code — that make frequent, reliable releases possible.",
     level: "intermediate",
-    estimatedMinutes: 22,
+    estimatedMinutes: 45,
     category: "devops",
     track: "academy",
     freeTier: false,
     modules: [
       { id: "m1", title: "Why DevOps Exists" },
-      { id: "m2", title: "How a Pipeline Actually Works" }
+      { id: "m2", title: "How a Pipeline Actually Works" },
+      { id: "m3", title: "Branching Models & Pipeline Gates" },
+      { id: "m4", title: "Artifact Management & Safe Deployments" }
     ],
     lessons: [
       {
@@ -881,6 +1243,38 @@ const COURSES = [
         body: "Continuous Delivery extends CI one step further: once code passes automated tests, it's automatically packaged and made ready to deploy — a human still clicks \"deploy,\" typically to production. Continuous Deployment goes all the way: passing changes deploy automatically, with no manual approval step, relying entirely on the automated tests to be the safety net. Infrastructure as code (tools like Terraform) applies the same version-controlled, automated approach to the servers and cloud resources themselves — instead of manually clicking through a cloud console, infrastructure is defined in files, reviewed like code, and applied automatically, so an environment can be recreated identically instead of drifting over time.",
         keyTakeaway: "Continuous Deployment removes the manual approval step entirely — passing automated tests is what ships the change to production.",
         check: { question: "What's the key difference between Continuous Delivery and Continuous Deployment?", choices: ["They are identical terms", "Continuous Delivery requires a manual approval to deploy; Continuous Deployment deploys automatically with no manual step", "Continuous Deployment is only for infrastructure, not application code", "Continuous Delivery skips automated testing"], correctIndex: 1 }
+      },
+      {
+        id: "l5",
+        moduleId: "m3",
+        title: "Trunk-based development vs GitFlow",
+        body: "How teams branch code directly dictates their deployment velocity. Traditional GitFlow utilizes long-lived feature branches, release branches, and develop branches that persist for weeks, inevitably culminating in painful \"merge hell\" and delayed integration feedback. High-performing DevOps teams favor \"Trunk-Based Development\": developers merge small, frequent commits directly into the main trunk branch (main/master) multiple times per day. Incomplete features are hidden behind \"feature flags\" (toggles) rather than quarantined in separate branches, ensuring the codebase is continuously releasable and eliminating divergence.",
+        keyTakeaway: "Trunk-based development merges small commits daily into main using feature flags, eliminating painful merge conflicts and release delays.",
+        check: { question: "What is a core characteristic of trunk-based development?", choices: ["Developers keep feature branches open for several months", "Developers merge small, frequent code updates into the main branch daily", "Code is only merged once per year", "Branches cannot be reviewed by teammates"], correctIndex: 1 }
+      },
+      {
+        id: "l6",
+        moduleId: "m3",
+        title: "Automated quality gates: linting, SAST, and tests",
+        body: "A reliable CI pipeline acts as an automated bouncer, enforcing quality gates before any pull request can merge. The pipeline runs in progressive speed stages: first, fast linters and formatters (like ESLint, Biome, or Oxlint) check syntax in seconds; second, Static Application Security Testing (SAST) tools scan for hardcoded credentials, SQL injection patterns, and vulnerable open-source dependencies (like Dependabot or Snyk); third, automated unit and integration tests execute. If test coverage drops below a defined threshold (e.g. 80%) or any high-severity security flaw is detected, the pipeline fails, blocking the merge and providing the author with immediate feedback.",
+        keyTakeaway: "Fast linters, SAST vulnerability scanners, and automated test thresholds form the quality gates that protect production codebases.",
+        check: { question: "What does Static Application Security Testing (SAST) do inside a CI pipeline?", choices: ["Tests website load times under heavy traffic", "Scans source code for security vulnerabilities, insecure coding patterns, and hardcoded secrets before deployment", "Monitors server fan speeds", "Checks employee attendance"], correctIndex: 1 }
+      },
+      {
+        id: "l7",
+        moduleId: "m4",
+        title: "Artifact registries and semantic versioning",
+        body: "In a production CI/CD workflow, code is built once into an immutable artifact (such as a Docker image, an npm package, or a Debian .deb) and promoted across environments (Dev -> Staging -> Prod) without rebuilding. Versioning follows Semantic Versioning (SemVer): MAJOR.MINOR.PATCH (e.g. 2.4.1 — where MAJOR introduces breaking API changes, MINOR adds backward-compatible features, and PATCH delivers bug fixes). Artifacts are stored in secure registries (like AWS ECR, GitHub Container Registry, or JFrog Artifactory) tagged with the exact git commit SHA and SemVer tag. Relying on mutable tags like :latest in production is strictly forbidden, as it introduces unpredictable deployments.",
+        keyTakeaway: "Build immutable artifacts once, tag them with git SHAs and SemVer versions, and promote the exact same binary across environments.",
+        check: { question: "Why is using the :latest tag discouraged for production container deployments?", choices: ["The word 'latest' is copyrighted", "`:latest` is mutable and changes over time, preventing reproducible deployments and rollbacks", "Docker engines refuse to pull the :latest tag", "It makes container images three times larger"], correctIndex: 1 }
+      },
+      {
+        id: "l8",
+        moduleId: "m4",
+        title: "Deployment strategies: blue-green and canary",
+        body: "Deploying updates without downtime requires modern routing patterns. In \"Blue-Green Deployment,\" two identical production environments exist: Blue runs the current live version, while Green hosts the new release. Once Green passes health checks, the load balancer switches 100% of traffic from Blue to Green instantly. If an issue occurs, switching traffic back to Blue takes seconds. In \"Canary Deployment,\" the new release is rolled out to a tiny subset of users first (e.g. 5% of traffic). Automated monitoring watches error rates, latency, and CPU metrics; if error rates stay flat, traffic incrementally increases (10% -> 50% -> 100%). If anomalies occur, the canary is aborted automatically, sparing 95% of users from disruption.",
+        keyTakeaway: "Blue-Green allows instantaneous rollback by switching load balancer targets, while Canary gradually exposes releases to minimize blast radius.",
+        check: { question: "What is the primary advantage of a Canary deployment strategy?", choices: ["It deploys code only on weekends", "It routes a small percentage of real user traffic to the new version first, limiting the blast radius of unexpected defects", "It eliminates the need for software testing", "It runs applications without using servers"], correctIndex: 1 }
       }
     ],
     quiz: [
@@ -1175,7 +1569,7 @@ const COURSES = [
       { id: "q1", questionType: "single", question: "What is the most fundamental difference between a container and a VM?", choices: ["Containers cost more to run", "A container shares the host kernel instead of virtualizing a full OS", "VMs start faster than containers", "Containers cannot run on Linux"], correctIndex: 1 },
       { id: "q2", questionType: "single", question: "What does a Dockerfile's CMD instruction define?", choices: ["What runs when a container starts from the built image", "The base image to build from", "Which files get copied into the image", "The image's tag name"], correctIndex: 0 },
       { id: "q3", questionType: "single", question: "A container is stopped and removed. What happens to data it wrote to a mounted volume?", choices: ["It is deleted along with the container", "It persists, since a volume lives outside the container's lifecycle", "It moves to a random other container", "Volumes only work for read-only data"], correctIndex: 1 },
-      { id: "q4", questionType: "single", question: "What problem does docker-compose solve?", choices: ["It replaces the need for a Dockerfile", "It describes and starts a whole multi-container application from one file instead of many manual commands", "It makes images smaller", "It is required for any container to run"], correctIndex: 1 },
+{ id: "q4", questionType: "single", question: "What problem does docker-compose solve?", choices: ["It replaces the need for a Dockerfile", "It describes and starts a whole multi-container application from one file instead of many manual commands", "It makes images smaller", "It is required for any container to run"], correctIndex: 1 },
       { id: "q5", questionType: "single", question: "What's the main risk of pulling an arbitrary, unverified image from a public registry into production?", choices: ["It will be slower to start", "You're running someone else's unaudited code with root-level access to your host's kernel", "It costs more to store", "It won't support volumes"], correctIndex: 1 },
       { id: "q6", questionType: "single", question: "A container exits with code 137. What does that most likely indicate?", choices: ["A clean, intentional exit", "It was OOM-killed (SIGKILL, often out of memory)", "A network timeout", "A missing Dockerfile instruction"], correctIndex: 1 },
       { id: "q7", questionType: "single", question: "What Linux kernel mechanism does --memory and --cpus rely on?", choices: ["Namespaces only", "cgroups", "The OCI runtime spec", "Docker's proprietary scheduler"], correctIndex: 1 },
@@ -1184,24 +1578,22 @@ const COURSES = [
       { id: "q10", questionType: "ordering", question: "Arrange the correct troubleshooting order for a crashing container:", choices: ["docker inspect for exit code and mounts", "docker ps -a for status", "docker exec for a live shell (if running)", "docker logs for the actual error"], correctOrder: [1, 3, 0, 2] }
     ]
   },
-  // Same real content as the seeded
-  // 'kubernetes-fundamentals-pods-and-cluster-triage' course in migration
-  // 0080 (also mirrored in data/terminalDemos.js for the kubectl practice
-  // terminal demos keyed by these same lesson titles).
   {
     id: "local-kubernetes-fundamentals",
     slug: "kubernetes-fundamentals-pods-and-cluster-triage",
     title: "Kubernetes Fundamentals: Pods & Cluster Triage",
     description: "What a Pod and a Deployment actually are, how Services give them stable networking, and the kubectl workflow for diagnosing a broken deployment — CrashLoopBackOff, ImagePullBackOff, and the other failures you'll actually hit running a cluster.",
     level: "intermediate",
-    estimatedMinutes: 24,
+    estimatedMinutes: 45,
     category: "devops",
     track: "academy",
     freeTier: false,
     minPlan: "BUSINESS",
     modules: [
       { id: "m1", title: "Kubernetes Core Concepts" },
-      { id: "m2", title: "Operating and Troubleshooting a Cluster" }
+      { id: "m2", title: "Operating and Troubleshooting a Cluster" },
+      { id: "m3", title: "Workload Configuration & Ingress" },
+      { id: "m4", title: "Health Probes & Production Diagnostics" }
     ],
     lessons: [
       {
@@ -1235,6 +1627,38 @@ const COURSES = [
         body: "A repeatable sequence handles most real Kubernetes incidents. First, `kubectl get pods` to see which Pods are unhealthy and their status code (CrashLoopBackOff vs. ImagePullBackOff point to very different problems). Second, `kubectl describe pod <name>` for the Events section — this catches scheduling failures (insufficient CPU/memory on any node), failed readiness/liveness probes, and image pull errors immediately. Third, `kubectl logs <name>` (with `--previous` if it already restarted) to see what the application itself said before it died — a stack trace, a missing environment variable, a database connection refused. Common real causes: a typo'd image tag, a ConfigMap or Secret the Pod expects that doesn't exist or was renamed, a liveness probe with too short a timeout killing a slow-starting app, or requesting more CPU/memory than any node has available. Once you've found and fixed the cause, `kubectl scale deployment <name> --replicas=N` adjusts capacity, and `kubectl rollout restart deployment <name>` forces fresh Pods to pick up a fixed ConfigMap/Secret without a new image.",
         keyTakeaway: "Work the same order every time: get pods for the symptom, describe pod for the Events section, logs (--previous if needed) for what the app itself said.",
         check: { question: "A pod shows ImagePullBackOff. What does that specifically point to?", choices: ["The application crashed after starting", "Kubernetes could not pull the container image — often a typo'd tag or a registry auth problem", "The cluster is out of memory", "A readiness probe is failing"], correctIndex: 1 }
+      },
+      {
+        id: "l5",
+        moduleId: "m3",
+        title: "ConfigMaps, Secrets, and Environment Injection",
+        body: "Decoupling runtime configuration from container images is a foundational 12-factor cloud-native principle. In Kubernetes, ConfigMaps store non-confidential configuration values (application settings, database endpoints, feature flags) as cleartext key-value pairs or complete mounted configuration files. Secrets store sensitive credentials (API tokens, private keys, database passwords) and are stored in etcd (base64 encoded by default, or encrypted at rest via provider KMS integration). Both can be injected into containers as environment variables using envFrom or valueFrom, or mounted directly as files inside volume directories. While mounted volume files update dynamically inside the container when a ConfigMap is modified, environment variables are only read at process launch, requiring a rolling deployment restart (`kubectl rollout restart deployment <name>`) to pick up changes.",
+        keyTakeaway: "Use ConfigMaps for cleartext settings and Secrets for credentials; volume-mounted configurations update dynamically, but environment variables require a pod restart.",
+        check: { question: "What command is required to make pods pick up updated ConfigMap values that were injected as environment variables?", choices: ["kubectl rollout restart deployment <name>", "kubectl refresh env <pod>", "kubectl scale deployment to 0 then manually re-create it", "No command is needed because environment variables update instantly in running processes"], correctIndex: 0 }
+      },
+      {
+        id: "l6",
+        moduleId: "m3",
+        title: "Ingress Controllers and HTTP Routing",
+        body: "While a LoadBalancer Service type provisions an external cloud load balancer for each service, this pattern becomes prohibitively costly and unmanageable across dozens of microservices. An Ingress resource provides a unified Layer 7 HTTP/HTTPS reverse proxy and routing layer. It defines declarative rules that route traffic from outside the cluster to internal ClusterIP services based on request hostnames (e.g., api.company.internal vs portal.company.internal) and URL paths (e.g., /auth vs /orders). Satisfying Ingress resources requires an Ingress Controller running inside the cluster (such as Ingress NGINX, Traefik, or AWS Load Balancer Controller). Ingress also centralizes TLS termination at the edge, allowing automated SSL certificate provisioning and renewal via cert-manager and Kubernetes TLS Secrets.",
+        keyTakeaway: "An Ingress Controller consolidates public access behind a single load balancer, routing Layer 7 traffic to internal services using host and path rules.",
+        check: { question: "What is the primary benefit of using an Ingress Controller compared to multiple LoadBalancer Services?", choices: ["Ingress replaces all internal ClusterIP services", "It consolidates multiple HTTP services behind a single external IP with path and host routing", "It eliminates the need for DNS records", "It executes without any pods running in the cluster"], correctIndex: 1 }
+      },
+      {
+        id: "l7",
+        moduleId: "m4",
+        title: "Liveness, Readiness, and Startup Probes",
+        body: "Kubernetes automates container lifecycle health using three distinct probe types executed via HTTP requests, TCP socket checks, or exec shell commands. Startup Probes execute during application boot to protect slow-initializing applications (such as large enterprise frameworks) from premature termination. Liveness Probes periodically verify that the application process is functioning and not deadlocked; if a liveness probe fails repeatedly, the kubelet kills the container and restarts it according to the restartPolicy. Readiness Probes evaluate whether the container is ready to accept incoming user traffic; if a readiness probe fails (due to database connection exhaustion or local cache warming), Kubernetes instantly removes the Pod IP from all active Service endpoints, preventing end-user 502/503 errors.",
+        keyTakeaway: "Readiness probes protect users by removing unhealthy pods from service traffic, while liveness probes restart deadlocked containers.",
+        check: { question: "What action does Kubernetes take when a container's Readiness Probe fails?", choices: ["It restarts the container immediately", "It stops routing Service network traffic to that Pod until it reports ready again", "It evicts the pod to another node", "It triggers a rollback to the previous deployment version"], correctIndex: 1 }
+      },
+      {
+        id: "l8",
+        moduleId: "m4",
+        title: "Resource Requests, Limits, and OOMKilled Triage",
+        body: "Every container definition should declare resource requests and limits for CPU (measured in millicores) and Memory (measured in bytes or mebibytes). The Kubernetes scheduler uses requests to determine which worker node has sufficient allocatable capacity to place the Pod. Limits define the hard upper boundary of resources a container can consume. CPU is a compressible resource: when a container reaches its CPU limit, the Linux kernel throttles its execution, causing latency spikes rather than crashes. Memory is non-compressible: when a container exceeds its memory limit, the Linux Out-Of-Memory (OOM) killer immediately terminates the process with exit code 137 and status OOMKilled. Triaging OOMKilled errors involves inspecting `kubectl describe pod` for exit code 137, monitoring memory trends in metrics/logs, and tuning memory limits or application heap parameters.",
+        keyTakeaway: "Exceeding CPU limits results in CPU throttling, whereas exceeding memory limits triggers immediate termination by the Linux OOM killer with exit code 137.",
+        check: { question: "What happens when a container consumes more memory than its configured memory limit?", choices: ["Execution is throttled to lower memory consumption", "The container is killed with an OOMKilled status and exit code 137", "The host worker node is forced into a reboot", "Unused memory is dynamically borrowed from other pods"], correctIndex: 1 }
       }
     ],
     quiz: [
@@ -1244,21 +1668,21 @@ const COURSES = [
       { id: "q4", questionType: "single", question: "What does `kubectl rollout restart deployment` accomplish that a fixed ConfigMap alone doesn't?", choices: ["It deletes the deployment", "It forces fresh Pods to start, which is what actually picks up the updated ConfigMap", "It changes the container image automatically", "It is identical to kubectl scale"], correctIndex: 1 }
     ]
   },
-  // Same real content as the seeded 'microsoft-azure-fundamentals' course
-  // in migration 0085.
   {
     id: "local-microsoft-azure-fundamentals",
     slug: "microsoft-azure-fundamentals",
     title: "Microsoft Azure Fundamentals",
     description: "How Azure actually organizes resources and identity — management groups, subscriptions, resource groups, and role-based access control — plus the core services (VMs, App Service, storage, virtual networks) every Azure workload is built from.",
     level: "intermediate",
-    estimatedMinutes: 20,
+    estimatedMinutes: 45,
     category: "cloud",
     track: "academy",
     freeTier: false,
     modules: [
       { id: "m1", title: "Azure Structure & Identity" },
-      { id: "m2", title: "Core Azure Services" }
+      { id: "m2", title: "Core Azure Services" },
+      { id: "m3", title: "Security, Secrets & Networking" },
+      { id: "m4", title: "Governance, Monitoring & Azure Policy" }
     ],
     lessons: [
       {
@@ -1292,6 +1716,38 @@ const COURSES = [
         body: "Azure Storage accounts hold multiple types side by side: Blob storage (unstructured files over HTTP/HTTPS, like AWS S3), Azure Files (a fully managed SMB/NFS file share you can mount like a network drive), and managed Disks (block storage attached to a single VM). A Virtual Network (VNet) is your own isolated network in Azure, split into subnets; a Network Security Group (NSG) is a set of allow/deny rules, by source/destination IP, port, and protocol, attached to a subnet or network interface, functioning as Azure's stateful firewall layer. Azure Monitor collects metrics and logs across all of this, and Cost Management (Cost Analysis plus budgets with alerts) is the tool for catching a runaway bill before the invoice arrives — a budget alert firing on an unexpected spike is usually the first sign a VM was left running, or a scale set's autoscale rule was misconfigured.",
         keyTakeaway: "An NSG's allow/deny rules by IP/port/protocol are Azure's core firewall layer — most \"can't connect\" issues on a VNet trace back to one.",
         check: { question: "What does a Network Security Group (NSG) control in Azure?", choices: ["Billing alerts", "Allow/deny traffic rules by IP, port, and protocol for a subnet or NIC", "Which OS a VM runs", "Storage account replication settings"], correctIndex: 1 }
+      },
+      {
+        id: "l5",
+        moduleId: "m3",
+        title: "Azure Key Vault and Managed Identities",
+        body: "Storing secrets, connection strings, or certificates in application code or configuration repositories poses severe security risks. Azure Key Vault provides a centralized, cloud-hosted security perimeter backed by Hardware Security Modules (HSM) for managing secrets, cryptographic keys, and SSL/TLS certificates. When paired with Managed Identities for Azure Resources, compute instances (such as Azure App Service, VMs, or AKS pods) authenticate to Entra ID without developers ever handling or storing client secrets or passwords. Azure automatically rotates and manages the underlying credentials, allowing application code to fetch secrets securely at runtime using zero-trust access tokens retrieved from the Azure instance metadata service.",
+        keyTakeaway: "Managed Identities eliminate hardcoded credentials by allowing Azure services to authenticate directly to Key Vault via Entra ID.",
+        check: { question: "What security advantage does combining Azure Key Vault with Managed Identities provide?", choices: ["It disables access logs to accelerate API calls", "Applications authenticate and fetch secrets without storing any credentials or keys in source code or config", "It makes Key Vault accessible to the public internet without authentication", "It replaces the need for SSL certificates"], correctIndex: 1 }
+      },
+      {
+        id: "l6",
+        moduleId: "m3",
+        title: "VNet Peering, Private Endpoints, and Azure Bastion",
+        body: "Production cloud architectures require strict network isolation to minimize the attack surface. Virtual Network (VNet) Peering connects separate Azure VNets over Microsoft's high-speed private backbone network without routing traffic through the public internet, ensuring low latency and encrypted inter-vnet traffic. Azure Private Endpoints assign a private IP address from your VNet directly to Azure PaaS services (such as Azure SQL Database, Storage Accounts, or Key Vault), eliminating the need for public IP exposure. For operational management, Azure Bastion delivers fully managed, browser-based RDP and SSH connectivity over TLS (port 443) directly through the Azure Portal, removing the need to attach public IPs to VMs or expose management ports to internet scanners.",
+        keyTakeaway: "VNet Peering and Private Endpoints keep traffic on private networks, while Azure Bastion provides secure VM remote access without public IP exposure.",
+        check: { question: "How does Azure Bastion protect virtual machines from internet-based attacks?", choices: ["It assigns each VM a public IP address behind a hardware firewall", "It provides browser-based SSH and RDP over port 443 without assigning public IPs to VMs", "It enforces multi-factor authentication on local Linux users only", "It moves VMs into an on-premises physical datacenter"], correctIndex: 1 }
+      },
+      {
+        id: "l7",
+        moduleId: "m4",
+        title: "Azure Policy, Blueprints, and Cloud Governance",
+        body: "Enterprise cloud governance enforces organizational guardrails, regulatory compliance, and cost accountability across cloud environments. Azure Policy continuously evaluates resources against declarative JSON rules to prevent drift and ensure compliance. Policies can audit configurations (such as unencrypted disks), enforce restrictions (such as restricting deployments to specific Azure regions or banning public storage blobs), or auto-remediate non-compliant settings. Collections of related policies are grouped into Initiatives to enforce standards such as CIS Microsoft Azure Benchmarks, ISO 27001, or HIPAA. Governance is reinforced with Resource Locks (preventing accidental deletion of mission-critical production assets) and mandatory Resource Tags to track department cost allocation.",
+        keyTakeaway: "Azure Policy and Initiatives enforce declarative guardrails across subscriptions, preventing unauthorized configurations and ensuring regulatory compliance.",
+        check: { question: "What is an Initiative in Azure Policy?", choices: ["A promotional credit tier for new cloud customers", "A group of related policy definitions packaged together to track compliance against an overall standard", "An automated script that shuts down idle virtual machines", "A custom RBAC role for billing administrators"], correctIndex: 1 }
+      },
+      {
+        id: "l8",
+        moduleId: "m4",
+        title: "Azure Monitor, Log Analytics, and KQL Triage",
+        body: "Azure Monitor serves as the unified observability solution for collecting and analyzing telemetry across Azure infrastructure, platforms, and application runtimes. Metrics provide lightweight, near-real-time numerical data for performance monitoring and threshold alerting. Application Insights and Azure diagnostic logs stream rich event records into a Log Analytics Workspace, where engineers query petabytes of telemetry using Kusto Query Language (KQL). KQL uses intuitive pipe operators (e.g., `requests | where success == false | summarize count() by resultCode`) to rapidly isolate error spikes, diagnose latency bottlenecks, and trigger automated Alert Rules that notify on-call teams or execute Azure Automation runbooks.",
+        keyTakeaway: "Azure Monitor aggregates metrics and logs into Log Analytics workspaces, where KQL queries drive rapid incident diagnostics and automated alerting.",
+        check: { question: "Which query language is used to analyze logs and build diagnostic queries within Azure Log Analytics?", choices: ["Kusto Query Language (KQL)", "Structured Query Language (SQL)", "Prometheus Query Language (PromQL)", "GraphQL"], correctIndex: 0 }
       }
     ],
     quiz: [
@@ -1301,9 +1757,6 @@ const COURSES = [
       { id: "q4", questionType: "single", question: "What is the primary purpose of Azure Cost Management budgets and alerts?", choices: ["To automatically delete unused resources", "To catch unexpected spending before the invoice arrives", "To enforce RBAC roles", "To configure NSG rules"], correctIndex: 1 }
     ]
   },
-  // Same real content as the seeded 'devops-cicd-intermediate' course in
-  // migration 0088 — the second level of the DevOps & CI/CD Engineer
-  // learning path, following the existing Introduction course above.
   {
     id: "local-devops-cicd-intermediate",
     slug: "devops-cicd-intermediate",
@@ -1552,6 +2005,14 @@ const COURSES = [
   }
 ];
 
+// Attach comprehensive 15-question final assessment quizzes to all courses
+COURSES.forEach(course => {
+  if (COURSE_QUIZZES[course.slug]) {
+    course.quiz = COURSE_QUIZZES[course.slug];
+    course.quizQuestionCount = COURSE_QUIZZES[course.slug].length;
+  }
+});
+
 // Categories that actually have at least one course — the library filter
 // only ever shows chips with real courses behind them, never an empty one.
 export const CATEGORY_LABELS = {
@@ -1634,16 +2095,23 @@ export function getLocalModules(courseId) {
 }
 export function getLocalLessons(courseId) {
   const course = COURSES.find(c => c.id === courseId);
-  return (course?.lessons ?? []).map((l, i) => ({
-    id: l.id,
-    moduleId: l.moduleId ?? null,
-    title: l.title,
-    body: l.body,
-    keyTakeaway: l.keyTakeaway ?? null,
-    sortOrder: i,
-    check: l.check ? { question: l.check.question, choices: l.check.choices } : null,
-    lab: l.lab ?? null
-  }));
+  return (course?.lessons ?? []).map((l, i) => {
+    const checks = getLessonCheckpoints(course.id, l.id, l.check);
+    const video = getLessonVideo(course.id, l.id, l.title, l.video);
+    return {
+      id: l.id,
+      moduleId: l.moduleId ?? null,
+      title: l.title,
+      body: l.body,
+      keyTakeaway: l.keyTakeaway ?? null,
+      sortOrder: i,
+      check: checks[0] || (l.check ? { question: l.check.question, choices: l.check.choices, explanation: l.check.explanation ?? null } : null),
+      checks: checks,
+      video: video,
+      videoId: video?.videoId ?? null,
+      lab: l.lab ?? null
+    };
+  });
 }
 // Strips every correct-answer field before handing questions to the UI,
 // same boundary the real list_course_quiz() RPC enforces server-side —
@@ -1651,7 +2119,14 @@ export function getLocalLessons(courseId) {
 // server-side for real accounts.
 export function getLocalQuiz(courseId) {
   const course = COURSES.find(c => c.id === courseId);
-  return (course?.quiz ?? []).map((q, i) => ({ id: q.id, question: q.question, choices: q.choices, questionType: q.questionType, sortOrder: i }));
+  return (course?.quiz ?? []).map((q, i) => ({
+    id: q.id,
+    question: q.question,
+    choices: q.choices,
+    questionType: q.questionType,
+    explanation: q.explanation ?? null,
+    sortOrder: i
+  }));
 }
 
 // Namespaced per user id, not one global key — local preview is a
@@ -1661,18 +2136,30 @@ export function getLocalQuiz(courseId) {
 // show one account's "progress" and badges under a completely different
 // account, which is exactly the kind of cross-account bleed a real,
 // per-user-scoped backend would never produce.
+const memStorage = new Map();
+
 function storageKey(userId) {
   return `cybersachet-local-progress:${userId ?? "anon"}`;
 }
 function readState(userId) {
   try {
-    return JSON.parse(localStorage.getItem(storageKey(userId))) ?? {};
+    if (typeof localStorage !== "undefined") {
+      return JSON.parse(localStorage.getItem(storageKey(userId))) ?? {};
+    }
+    return memStorage.get(storageKey(userId)) ?? {};
   } catch {
-    return {};
+    return memStorage.get(storageKey(userId)) ?? {};
   }
 }
 function writeState(userId, state) {
-  localStorage.setItem(storageKey(userId), JSON.stringify(state));
+  try {
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(storageKey(userId), JSON.stringify(state));
+    }
+    memStorage.set(storageKey(userId), state);
+  } catch {
+    memStorage.set(storageKey(userId), state);
+  }
 }
 function courseState(state, courseId) {
   return state[courseId] ?? { enrolledAt: null, completedLessonIds: [], completedAt: null, quizScore: null };
@@ -1716,18 +2203,27 @@ export async function localGetLessonProgress(courseId, userId) {
 // against the real correct index server-side (well — inside this module,
 // which plays the role the server would in the live version) and only
 // records progress if it's right.
-export async function localCheckLessonAnswer(courseId, lessonId, choiceIndex, userId) {
+export async function localCheckLessonAnswer(courseId, lessonId, choiceIndex, userId, checkpointIndex = 0, allPassed = false) {
   const course = COURSES.find(c => c.id === courseId);
   const lesson = course?.lessons.find(l => l.id === lessonId);
-  const correct = lesson?.check ? choiceIndex === lesson.check.correctIndex : true;
+  
+  // Verify using central resolver (supports both single checks and multi-checkpoints)
+  const result = verifyLessonCheckpointAnswer(courseId, lessonId, checkpointIndex, choiceIndex, lesson?.check);
+  const correct = result.correct;
+
   if (correct) {
-    const state = readState(userId);
-    const cs = courseState(state, courseId);
-    if (!cs.completedLessonIds.includes(lessonId)) cs.completedLessonIds.push(lessonId);
-    if (!cs.enrolledAt) cs.enrolledAt = new Date().toISOString();
-    state[courseId] = cs;
-    recordActivity(state);
-    writeState(userId, state);
+    const checks = getLessonCheckpoints(courseId, lessonId, lesson?.check);
+    // Mark completed if allPassed flag is sent, or if this is the final checkpoint / single question
+    const isCompleted = allPassed || checks.length <= 1 || checkpointIndex >= (checks.length - 1);
+    if (isCompleted) {
+      const state = readState(userId);
+      const cs = courseState(state, courseId);
+      if (!cs.completedLessonIds.includes(lessonId)) cs.completedLessonIds.push(lessonId);
+      if (!cs.enrolledAt) cs.enrolledAt = new Date().toISOString();
+      state[courseId] = cs;
+      recordActivity(state);
+      writeState(userId, state);
+    }
   }
   return correct;
 }
@@ -1896,3 +2392,5 @@ export const ENTERPRISE_METRICS = [
   { metric: "Incident Reports Submitted", description: "Volume of employee-reported suspicious activity (leading indicator of threat awareness)", value: "148 Reports", trend: "+18%" },
   { metric: "Risk Reduction Trend", description: "Change in click rate and incident severity over successive quarters", value: "High Impact", trend: "Sustained" }
 ];
+
+export { COURSES };

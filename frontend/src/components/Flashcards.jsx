@@ -1,45 +1,162 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
+import { useSound } from "../context/SoundContext";
+
 const EASE = [0.16, 1, 0.3, 1];
 
-// A real flashcard deck derived entirely from a course's own already-authored
-// content (lesson title as the prompt, its key takeaway as the answer) — no
-// separate content to author or fabricate, just a different, quizzable view
-// of what's already real.
 export function Flashcards({ cards, onClose }) {
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
-  if (!cards || cards.length === 0) return null;
-  const card = cards[index];
+  const { play } = useSound();
+
+  const card = cards?.[index];
+
+  function toggleFlip() {
+    setFlipped(f => !f);
+    play?.("tick");
+  }
 
   function go(delta) {
     setFlipped(false);
     setIndex(i => (i + delta + cards.length) % cards.length);
+    play?.("tick");
   }
 
-  return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
-      <div className="w-full max-w-lg" onClick={e => e.stopPropagation()}>
-        <div className="mb-3 flex items-center justify-between text-white light:text-slate-900">
-          <p className="text-sm font-medium">Flashcards · {index + 1}/{cards.length}</p>
-          <button onClick={onClose} aria-label="Close flashcards" className="text-white/50 light:text-slate-400 hover:text-white light:hover:text-slate-900">
-            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
+  // Keyboard navigation
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === "Escape") onClose?.();
+      else if (e.key === "ArrowLeft") go(-1);
+      else if (e.key === "ArrowRight") go(1);
+      else if (e.key === " " || e.key === "Enter") {
+        e.preventDefault();
+        toggleFlip();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [cards?.length, onClose]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!cards || cards.length === 0) return null;
+
+  const pct = Math.round(((index + 1) / cards.length) * 100);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-xl rounded-3xl border border-slate-200/90 dark:border-white/10 bg-white dark:bg-slate-900 p-6 md:p-8 shadow-2xl text-slate-900 dark:text-white space-y-5"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-4">
+          <div className="flex items-center gap-2.5">
+            <span className="grid h-8 w-8 place-items-center rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 font-bold text-sm">
+              🗂️
+            </span>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Interactive Flashcards</h3>
+              <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                Card {index + 1} of {cards.length}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close flashcards"
+            className="rounded-full p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-all"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
           </button>
         </div>
-        <button onClick={() => setFlipped(f => !f)} className="relative h-64 w-full [perspective:1000px]" aria-label="Flip card">
+
+        {/* Progress bar */}
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
+          <motion.div
+            className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-cyan-500"
+            initial={{ width: 0 }}
+            animate={{ width: `${pct}%` }}
+            transition={{ duration: 0.3 }}
+          />
+        </div>
+
+        {/* 3D Flip Card */}
+        <button
+          type="button"
+          onClick={toggleFlip}
+          className="relative h-64 md:h-72 w-full [perspective:1000px] cursor-pointer focus:outline-none group text-left"
+          aria-label="Flip flashcard"
+        >
           <AnimatePresence mode="wait">
-            <motion.div key={index + (flipped ? "-back" : "-front")} initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.97 }} transition={{ duration: 0.2, ease: EASE }} className={`absolute inset-0 flex items-center justify-center rounded-2xl border p-6 text-center shadow-[0_30px_80px_-30px_rgba(0,0,0,0.6)] ${flipped ? "border-emerald-400/30 bg-emerald-950/90 light:border-emerald-500/30 light:bg-emerald-50" : "border-cyan-400/30 bg-neutral-900 light:border-cyan-500/30 light:bg-white"}`}>
-              <div>
-                <p className={`mb-2 text-[10px] font-medium uppercase tracking-wide ${flipped ? "text-emerald-300 light:text-emerald-700" : "text-cyan-300 light:text-cyan-700"}`}>{flipped ? "Key takeaway" : "Concept"}</p>
-                <p className="text-lg font-medium leading-snug text-white light:text-slate-900">{flipped ? card.back : card.front}</p>
+            <motion.div
+              key={index + (flipped ? "-back" : "-front")}
+              initial={{ opacity: 0, rotateY: flipped ? -40 : 40, scale: 0.95 }}
+              animate={{ opacity: 1, rotateY: 0, scale: 1 }}
+              exit={{ opacity: 0, rotateY: flipped ? 40 : -40, scale: 0.95 }}
+              transition={{ duration: 0.28, ease: EASE }}
+              className={`absolute inset-0 flex flex-col justify-between rounded-2xl border p-6 md:p-8 text-center shadow-lg transition-all group-hover:border-indigo-500/50 ${flipped
+                  ? "border-emerald-500/40 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-slate-900/40 dark:bg-emerald-950/40"
+                  : "border-indigo-500/30 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-slate-900/40 dark:bg-slate-900"
+                }`}
+            >
+              <div className="flex items-center justify-between">
+                <span
+                  className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${flipped
+                      ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300"
+                      : "bg-indigo-500/20 text-indigo-700 dark:text-indigo-300"
+                    }`}
+                >
+                  {flipped ? "💡 Key Takeaway / Answer" : "❓ Concept / Question"}
+                </span>
+                <span className="text-[10px] font-semibold text-slate-400">Click or Space to flip ↺</span>
+              </div>
+
+              <div className="my-auto py-2">
+                <p className="text-base md:text-xl font-bold leading-snug text-slate-900 dark:text-white">
+                  {flipped ? card.back : card.front}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-center gap-1.5 text-[11px] font-medium text-slate-400">
+                <span>{flipped ? "Showing solution" : "Showing prompt"}</span>
               </div>
             </motion.div>
           </AnimatePresence>
         </button>
-        <p className="mt-2 text-center text-[11px] text-white/40 light:text-slate-400">Click the card to flip it</p>
-        <div className="mt-4 flex items-center justify-between">
-          <button onClick={() => go(-1)} className="rounded-full border border-white/15 light:border-slate-900/15 px-4 py-2 text-xs text-white/70 light:text-slate-600 hover:bg-white/5 light:hover:bg-slate-900/5">← Previous</button>
-          <button onClick={() => go(1)} className="rounded-full border border-white/15 light:border-slate-900/15 px-4 py-2 text-xs text-white/70 light:text-slate-600 hover:bg-white/5 light:hover:bg-slate-900/5">Next →</button>
+
+        {/* Footer controls */}
+        <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-white/10">
+          <button
+            type="button"
+            onClick={() => go(-1)}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-white/15 px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 transition-all shadow-sm"
+          >
+            ← Previous
+          </button>
+
+          <div className="hidden sm:flex items-center gap-2 text-[11px] text-slate-400 font-semibold">
+            <kbd className="rounded border px-1.5 py-0.5 text-[10px] bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10">←</kbd>
+            <kbd className="rounded border px-1.5 py-0.5 text-[10px] bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10">→</kbd>
+            <span>Navigate</span>
+            <span className="mx-1">·</span>
+            <kbd className="rounded border px-1.5 py-0.5 text-[10px] bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10">Space</kbd>
+            <span>Flip</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => go(1)}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 text-xs font-bold shadow-md transition-all"
+          >
+            Next →
+          </button>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 }
+

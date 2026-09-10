@@ -347,7 +347,7 @@ export function Layout() {
           deliberately dark-only effect (built for a dark canvas); a clean
           flat surface reads better in light mode than an inverted version
           of it would. */}
-      <main className="relative z-10 min-w-0 flex-1 overflow-y-auto overflow-x-hidden pt-14 lg:ml-64 lg:pt-0 light:bg-white">
+      <main className="relative z-10 min-w-0 flex-1 overflow-x-clip pt-14 lg:ml-64 lg:pt-0 light:bg-white">
         <div className="p-4 sm:p-6">
           <Outlet />
         </div>

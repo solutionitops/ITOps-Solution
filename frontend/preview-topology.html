@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>topology preview</title></head>
+  <body><div id="root"></div><script type="module" src="/src/preview-topology.jsx"></script>
+  <script>
+    const q = new URLSearchParams(location.search);
+    document.documentElement.className = q.get("theme") === "light" ? "light" : "dark";
+    if (q.get("shift")) {
+      // Headless screenshots always capture at scrollTop 0, so emulate a
+      // scrolled page by lifting the document instead.
+      document.body.style.marginTop = `-${Number(q.get("shift"))}px`;
+    }
+    if (q.get("scroll")) {
+      const y = Number(q.get("scroll"));
+      window.scrollTo(0, y);
+      setInterval(() => window.scrollTo(0, y), 60);
+    }
+    if (q.get("debug")) {
+      setTimeout(() => {
+        const st = document.querySelector('.sticky');
+        const cs = st ? getComputedStyle(st) : null;
+        const r = st ? st.getBoundingClientRect() : null;
+        document.title = 'H=' + document.body.scrollHeight + ' Y=' + window.scrollY +
+          ' pos=' + (cs && cs.position) + ' top=' + (r && Math.round(r.top)) +
+          ' err=' + (window.__err || 'none');
+      }, 1200);
+    }
+    window.addEventListener('error', (e) => { window.__err = e.message; });
+    if (q.get("force")) {
+      setTimeout(() => {
+        const st = document.createElement('style');
+        st.textContent = '.pop-card{opacity:1!important;transform:none!important}';
+        document.head.appendChild(st);
+      }, 1400);
+    }
+  </script>
+  </body>
+</html>
