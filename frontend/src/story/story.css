@@ -624,3 +624,8 @@ html.light .s-film video { mix-blend-mode: normal; -webkit-mask-image: none; mas
   .s-arch-wire::after { left: 0; top: calc(50% - 3px); }
   [data-live="1"] .s-arch-wire::after { animation-name: s-wire-x; }
 }
+
+/* Phones: content is shown straight away — nothing waits on a scroll reveal. */
+@media (max-width: 767px) {
+  .s-rise { opacity: 1; transform: none; transition: none; }
+}

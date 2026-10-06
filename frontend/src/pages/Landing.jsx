@@ -291,7 +291,7 @@ export default function Landing() {
             ))}
           </h1>
           <motion.div
-            className="absolute left-0 top-[36%]"
+            className="absolute left-0 top-[40%]"
             initial={{ y: 12, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.7, delay: 0.75, ease: EASE }}
@@ -445,7 +445,7 @@ export default function Landing() {
     </section>
 
     {/* Every layer the platform watches, led by the three flagship products. */}
-    <div className="content-auto">
+    <div>
       <DefenceLayers />
     </div>
 
@@ -455,15 +455,15 @@ export default function Landing() {
     <TeamsShowcase />
 
     {/* Who it's for, by industry */}
-    <div className="content-auto">
+    <div>
       <SectorShowcase />
     </div>
 
-    <div className="content-auto">
+    <div>
       <ClosingCTA />
     </div>
 
-    <div className="content-auto">
+    <div>
       <MarketingFooter />
     </div>
 

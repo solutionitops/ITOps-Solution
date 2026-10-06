@@ -80,9 +80,9 @@ export function MarketingNav() {
         </div>
       </div>
 
-      <div className="pointer-events-auto flex items-center gap-4">
-        <SearchButton className="bg-neutral-900/90 light:bg-white/70 light:shadow-[0_1px_0_rgba(255,255,255,0.8)_inset,0_8px_30px_-12px_rgba(15,23,42,0.18)]" />
-        <ThemeToggle className="bg-neutral-900/90 light:bg-white/70 backdrop-blur-md light:shadow-[0_1px_0_rgba(255,255,255,0.8)_inset,0_8px_30px_-12px_rgba(15,23,42,0.18)]" />
+      <div className="pointer-events-auto flex items-center gap-2 sm:gap-4">
+        <SearchButton className="hidden sm:flex bg-neutral-900/90 light:bg-white/70 light:shadow-[0_1px_0_rgba(255,255,255,0.8)_inset,0_8px_30px_-12px_rgba(15,23,42,0.18)]" />
+        <ThemeToggle className="hidden sm:grid bg-neutral-900/90 light:bg-white/70 backdrop-blur-md light:shadow-[0_1px_0_rgba(255,255,255,0.8)_inset,0_8px_30px_-12px_rgba(15,23,42,0.18)]" />
         <Link to="/login" onClick={(e) => handleNavClick(e, "/login")} className="hidden text-sm text-neutral-300 light:text-slate-500 transition-colors hover:text-white light:hover:text-slate-900 sm:inline">
           Log in
         </Link>
@@ -121,6 +121,13 @@ export function MarketingNav() {
               <span className="text-xs opacity-50">→</span>
             </NavLink>
           ))}
+          <div className="mt-2 flex items-center gap-2 border-t border-white/10 pt-3 light:border-slate-200 sm:hidden">
+            <button type="button" onClick={() => { setMobileOpen(false); openSearch(); }} className="flex flex-1 items-center gap-2.5 rounded-xl border border-white/10 px-4 py-2.5 text-sm text-neutral-300 light:border-slate-200 light:text-slate-600">
+              <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+              Search
+            </button>
+            <ThemeToggle />
+          </div>
           <div className="mt-2 pt-2 border-t border-white/10 light:border-slate-200 flex flex-col gap-2">
             <Link
               to="/login"

@@ -1,6 +1,7 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { motion } from "motion/react";
 import { useTheme } from "../context/ThemeContext";
+import { useSeen } from "../hooks/useSeen";
 const EASE = [0.16, 1, 0.3, 1];
 
 /** Fades + lifts its children into view the first time they scroll into frame. */
@@ -12,15 +13,18 @@ export function Reveal({
   as = "div"
 }) {
   const MotionTag = motion[as];
-  return <MotionTag className={className} initial={{
+  const ref = useRef(null);
+  const seen = useSeen(ref);
+  const [instant] = useState(seen); // already visible at first render (phones): no entrance animation
+  return <MotionTag ref={ref} className={className} initial={instant ? false : {
     opacity: 0,
     y
-  }} whileInView={{
+  }} animate={seen ? {
     opacity: 1,
     y: 0
-  }} viewport={{
-    once: true,
-    margin: "-70px"
+  } : {
+    opacity: 0,
+    y
   }} transition={{
     duration: 0.7,
     delay,
@@ -55,6 +59,8 @@ export function SpotlightCard({
   overflowVisible = false
 }) {
   const ref = useRef(null);
+  const seen = useSeen(ref);
+  const [instant] = useState(seen);
   const { theme } = useTheme();
   // The default "white" tint's glow/accent/scan effects rely on rgba(255,255,255,…)
   // reading as a bright highlight against a dark card — on a light-mode white card
@@ -68,15 +74,15 @@ export function SpotlightCard({
     el.style.setProperty("--mx", `${e.clientX - r.left}px`);
     el.style.setProperty("--my", `${e.clientY - r.top}px`);
   }
-  return <motion.div ref={ref} onMouseMove={handleMove} initial={{
+  return <motion.div ref={ref} onMouseMove={handleMove} initial={instant ? false : {
     opacity: 0,
     y: 24
-  }} whileInView={{
+  }} animate={seen ? {
     opacity: 1,
     y: 0
-  }} viewport={{
-    once: true,
-    margin: "-70px"
+  } : {
+    opacity: 0,
+    y: 24
   }} transition={{
     duration: 0.6,
     delay,

@@ -4,7 +4,6 @@ import { useMutation } from "@tanstack/react-query";
 import { submitWaitlistSignup } from "../api/endpoints";
 import { Button } from "./Button";
 import { BrandLogo } from "./BrandLogo";
-import { Reveal } from "./Animated";
 const COLUMNS = [{
   heading: "Platform",
   links: [{
@@ -101,27 +100,27 @@ function NewsletterForm() {
       <label htmlFor="footer-newsletter" className="sr-only">
         Email address
       </label>
-      <input id="footer-newsletter" type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" className="h-11 flex-1 rounded-full border border-white/12 light:border-slate-900/12 bg-black/40 light:bg-white px-4 text-sm text-white light:text-slate-900 placeholder:text-white/35 light:placeholder:text-slate-400 transition-all focus:border-cyan-400/50 focus:shadow-[0_0_0_4px_rgba(34,211,238,0.14)] focus:outline-none" />
+      <input id="footer-newsletter" type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" className="h-11 min-w-0 flex-1 rounded-full border border-white/12 light:border-slate-900/12 bg-black/40 light:bg-white px-4 text-sm text-white light:text-slate-900 placeholder:text-white/35 light:placeholder:text-slate-400 transition-all focus:border-cyan-400/50 focus:shadow-[0_0_0_4px_rgba(34,211,238,0.14)] focus:outline-none" />
       <Button type="submit" size="sm" loading={mutation.isPending} className="h-11 shrink-0">
         Subscribe
       </Button>
     </form>;
 }
 export function MarketingFooter() {
-  return <footer id="site-footer" className="relative overflow-hidden border-t border-white/10 light:border-slate-900/8 bg-[#04050a] light:bg-white px-6 pb-10 pt-16 md:px-10">
+  return <footer id="site-footer" className="relative overflow-hidden border-t border-white/10 light:border-slate-900/8 bg-[#04050a] light:bg-white px-6 pb-8 pt-12 sm:pb-10 sm:pt-16 md:px-10">
       {/* ambient background: grid texture + top/bottom glows */}
       <div className="enterprise-grid pointer-events-none absolute inset-0 opacity-[0.15] light:opacity-100" />
       <div className="pointer-events-none absolute inset-x-0 -top-24 mx-auto h-48 max-w-3xl rounded-full bg-blue-500/10 light:bg-blue-400/[0.08] blur-[100px]" />
       <div className="pointer-events-none absolute -bottom-32 -right-20 h-64 w-64 rounded-full bg-cyan-400/[0.06] light:bg-cyan-400/[0.08] blur-[110px]" />
 
       <div className="relative mx-auto max-w-6xl 2xl:max-w-[90rem]">
-        <div className="grid gap-12 lg:grid-cols-[1.2fr_2fr] 2xl:grid-cols-[1fr_2.3fr] 2xl:gap-20">
+        <div className="grid gap-10 sm:gap-12 lg:grid-cols-[1.2fr_2fr] 2xl:grid-cols-[1fr_2.3fr] 2xl:gap-20">
           {/* brand block */}
           <div>
             <Link to="/" className="inline-flex">
               <BrandLogo size={34} tagline />
             </Link>
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/50 light:text-slate-500">
+            <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/50 light:text-slate-500 lg:max-w-xs">
               The company behind ITOps Monitor, Kada Nigrani, and CyberSachet — real-time monitoring products for
               infrastructure, servers, websites, and security.
             </p>
@@ -160,26 +159,28 @@ export function MarketingFooter() {
             </div>
           </div>
 
-          {/* link columns */}
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 2xl:gap-x-16">
-            {COLUMNS.map((column, ci) => <Reveal key={column.heading} delay={ci * 0.08}>
-                <nav aria-label={column.heading}>
+          {/* link columns. On phones: Products as one full-width list (name left, status right),
+              then Platform and Resources side by side. From `sm` up: three columns, as on desktop. */}
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 sm:gap-8 2xl:gap-x-16">
+            {COLUMNS.map(column => {
+              const wide = column.heading === "Products";
+              return <nav key={column.heading} aria-label={column.heading} className={wide ? "order-first col-span-2 sm:order-none sm:col-span-1" : ""}>
                   <p className="text-xs font-medium uppercase tracking-[0.12em] text-white/40 light:text-slate-400">{column.heading}</p>
-                  <ul className="mt-4 space-y-3">
+                  <ul className={wide ? "mt-3 sm:mt-4 sm:space-y-3" : "mt-4 space-y-3"}>
                     {column.links.map(link => {
                   const inner = <>
                           <span className="border-b border-transparent transition-colors group-hover:border-white/30 light:group-hover:border-slate-900/30">
                             {link.label}
                           </span>
-                          {link.badge && <span className="rounded-full bg-emerald-400/10 light:bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-emerald-300 light:text-emerald-600">
+                          {link.badge && <span className="shrink-0 rounded-full bg-emerald-400/10 light:bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-emerald-300 light:text-emerald-600">
                               {link.badge}
                             </span>}
-                          <span aria-hidden className="opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-60">
+                          <span aria-hidden className="hidden opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-60 sm:inline">
                             {link.download ? "↓" : "→"}
                           </span>
                         </>;
-                  const cls = "group inline-flex items-center gap-1.5 text-sm text-white/60 light:text-slate-600 transition-colors hover:text-white light:hover:text-slate-900 light:hover:text-slate-900";
-                  return <li key={link.label}>
+                  const cls = `group items-center gap-1.5 text-sm text-white/60 light:text-slate-600 transition-colors hover:text-white light:hover:text-slate-900 ${wide ? "flex justify-between py-2.5 sm:inline-flex sm:justify-start sm:py-0" : "inline-flex"}`;
+                  return <li key={link.label} className={wide ? "border-b border-white/[0.07] light:border-slate-900/[0.07] last:border-0 sm:border-0" : ""}>
                           {link.download ? <a href={link.to} download className={cls}>
                               {inner}
                             </a> : <Link to={link.to} className={cls}>
@@ -188,13 +189,13 @@ export function MarketingFooter() {
                         </li>;
                 })}
                   </ul>
-                </nav>
-              </Reveal>)}
+                </nav>;
+            })}
           </div>
         </div>
 
         {/* newsletter */}
-        <div className="mt-14 flex flex-col gap-4 rounded-2xl border border-white/10 light:border-slate-900/8 bg-white/[0.02] light:bg-slate-900/[0.02] p-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-12 flex flex-col gap-4 rounded-2xl border border-white/10 light:border-slate-900/8 bg-white/[0.02] light:bg-slate-900/[0.02] p-5 sm:mt-14 sm:flex-row sm:items-center sm:justify-between sm:p-6">
           <div>
             <p className="text-sm font-medium text-white light:text-slate-900">Product updates, no noise</p>
             <p className="mt-1 text-xs text-white/45 light:text-slate-500">New modules, check types, and platform news. Unsubscribe anytime.</p>
@@ -203,9 +204,9 @@ export function MarketingFooter() {
         </div>
 
         {/* legal row */}
-        <div className="mt-10 flex flex-col items-start justify-between gap-3 border-t border-white/10 light:border-slate-900/8 pt-6 text-xs text-white/35 light:text-slate-400 sm:flex-row sm:items-center">
+        <div className="mt-10 flex flex-col items-stretch justify-between gap-4 border-t border-white/10 light:border-slate-900/8 pt-6 text-xs text-white/35 light:text-slate-400 sm:flex-row sm:items-center sm:gap-3">
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            <p>© {new Date().getFullYear()} ITOps Solution. All rights reserved.</p>
+            <p className="w-full sm:w-auto">© {new Date().getFullYear()} ITOps Solution. All rights reserved.</p>
             <Link to="/privacy" className="transition-colors hover:text-white/70 light:hover:text-slate-600 light:hover:text-slate-700">
               Privacy Policy
             </Link>
@@ -216,7 +217,7 @@ export function MarketingFooter() {
               Cookie Policy
             </Link>
           </div>
-          <div className="flex items-center gap-5">
+          <div className="flex items-center justify-between gap-5">
             <p>Built for teams who'd rather sleep than firefight.</p>
             <button onClick={() => window.scrollTo({
             top: 0,

@@ -557,9 +557,25 @@ html.light [data-scrollable]::-webkit-scrollbar-thumb {
   backface-visibility: hidden;
 }
 
-.content-auto {
-  content-visibility: auto;
-  contain-intrinsic-size: 1px 700px;
+/* On phones, very large blurred glow layers each need a big GPU texture, and
+   forcing them onto their own layer makes iPhone Safari drop content when it
+   runs short of memory. Keep the page light there. */
+@media (max-width: 767px) {
+  .gpu-layer {
+    transform: none;
+    will-change: auto;
+    backface-visibility: visible;
+  }
+
+  .gpu-layer[class*=" blur-["],
+  .pointer-events-none[class*=" blur-[11"],
+  .pointer-events-none[class*=" blur-[12"],
+  .pointer-events-none[class*=" blur-[13"],
+  .pointer-events-none[class*=" blur-[14"],
+  .pointer-events-none[class*=" blur-[15"],
+  .pointer-events-none[class*=" blur-[16"] {
+    display: none;
+  }
 }
 
 /* Custom sleek scrollbar for sidebar navigation */

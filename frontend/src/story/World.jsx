@@ -4,6 +4,7 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useInView, useMotionValueEvent, useScroll } from "motion/react";
+import { useSeen } from "../hooks/useSeen";
 
 /* ── hooks ── */
 
@@ -45,7 +46,10 @@ export function Scene({ id, act, stages, vh = 60, className = "", children }) {
 /** Marks its children `data-on` the first time they scroll into view. */
 export function InView({ as: Tag = "div", className = "", amount = 0.35, children, ...rest }) {
   const ref = useRef(null);
-  const seen = useInView(ref, { once: true, amount });
+  // either signal reveals it: the observer, or the element's measured position
+  const observed = useInView(ref, { once: true, amount });
+  const measured = useSeen(ref, 90);
+  const seen = observed || measured;
   const live = useInView(ref, { amount: 0 });
   return <Tag ref={ref} data-on={seen ? "1" : "0"} data-live={live ? "1" : "0"} className={className} {...rest}>
     {typeof children === "function" ? children(seen, live) : children}
