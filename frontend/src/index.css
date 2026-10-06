@@ -712,3 +712,63 @@ html.light .cyber-badge {
   opacity: 0.3;
   animation: pulse-glow 1.8s ease-in-out infinite;
 }
+/* ── Page-to-page loader (components/RouteLoader.jsx) ── */
+.route-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  background: #0b0f19;
+  animation: route-loader-in 0.18s ease both;
+}
+
+html.light .route-loader {
+  background: #f6f7fb;
+}
+
+.route-loader[data-state="leaving"] {
+  animation: route-loader-out 0.3s ease both;
+  pointer-events: none;
+}
+
+.route-loader img {
+  width: auto;
+  height: 44px;
+  animation: route-loader-pulse 1.4s ease-in-out infinite;
+}
+
+.route-loader-bar {
+  position: relative;
+  width: 132px;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+html.light .route-loader-bar {
+  background: rgba(15, 23, 42, 0.12);
+}
+
+.route-loader-bar i {
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  border-radius: 2px;
+  background: var(--grad-brand);
+  animation: route-loader-slide 1.1s ease-in-out infinite;
+}
+
+@keyframes route-loader-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes route-loader-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes route-loader-pulse { 0%, 100% { opacity: 0.75; transform: scale(0.96); } 50% { opacity: 1; transform: scale(1); } }
+@keyframes route-loader-slide { from { transform: translateX(-110%); } to { transform: translateX(260%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .route-loader img, .route-loader-bar i { animation: none; }
+  .route-loader-bar i { width: 100%; opacity: 0.6; }
+}

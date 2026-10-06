@@ -3,6 +3,7 @@ import { Navigate, Outlet, Route, Routes, useLocation, useNavigationType } from 
 import { useAuth } from "./context/AuthContext";
 import { usePortalType } from "./hooks/usePortalType";
 import { BrandLoading } from "./components/BrandLogo";
+import { RouteLoader } from "./components/RouteLoader";
 
 const CommandPalette = lazy(() => import("./components/CommandPalette").then(m => ({ default: m.CommandPalette })));
 const Layout = lazy(() => import("./components/Layout").then(m => ({ default: m.Layout })));
@@ -179,7 +180,23 @@ const APP_SHELL_PATH_RE = /^\/(dashboard|training|profile|monitors|network|dns|h
 function isAuthenticatedShellPath(pathname) {
   return APP_SHELL_PATH_RE.test(pathname) || (pathname.startsWith("/admin") && pathname !== "/admin/login");
 }
+// Once the first page is idle, fetch the code for the main navigation pages so
+// that tapping one of them doesn't start with a download.
+function usePrefetchMainPages() {
+  useEffect(() => {
+    const fetchAll = () => {
+      [() => import("./pages/PlatformStory"), () => import("./pages/ProductsShowcase"), () => import("./pages/PricingStory"), () => import("./pages/AboutStory"), () => import("./pages/SupportStory")]
+        .forEach((load, i) => setTimeout(() => load().catch(() => {}), i * 400));
+    };
+    const idle = window.requestIdleCallback ?? (cb => setTimeout(cb, 2500));
+    const cancel = window.cancelIdleCallback ?? clearTimeout;
+    const id = idle(fetchAll, { timeout: 6000 });
+    return () => cancel(id);
+  }, []);
+}
+
 export default function App() {
+  usePrefetchMainPages();
   const { mfaPending } = useAuth();
   const location = useLocation();
   const navigationType = useNavigationType();
@@ -221,6 +238,7 @@ export default function App() {
     return <Suspense fallback={<BrandLoading />}><MfaChallenge /></Suspense>;
   }
   return <>
+    <RouteLoader />
     <Suspense fallback={null}>
       <CommandPalette disabled={isAuthenticatedShellPath(location.pathname)} />
     </Suspense>
