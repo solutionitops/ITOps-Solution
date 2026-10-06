@@ -44,7 +44,7 @@ function UpgradeButton({
     mutationFn: () => createCheckoutSession(plan)
   });
   if (plan === "ENTERPRISE") {
-    return <a href="mailto:sales@itops-monitor.local" className="mt-4 block rounded-full border border-white/20 px-3 py-2 text-center text-xs font-medium text-white/80 light:text-slate-700 transition-colors hover:bg-white/10">
+    return <a href="mailto:support@itopssolution.tech" className="mt-4 block rounded-full border border-white/20 px-3 py-2 text-center text-xs font-medium text-white/80 light:text-slate-700 transition-colors hover:bg-white/10">
         Contact Sales
       </a>;
   }
@@ -199,7 +199,7 @@ export default function Team() {
         })}
         </div>
         <p className="mt-3 text-xs text-white/35 light:text-slate-400">
-          Professional and Business upgrade instantly by card. Enterprise is custom — email sales@itops-monitor.local or contact your account manager.
+          Professional and Business upgrade instantly by card. Enterprise is custom — email support@itopssolution.tech or contact your account manager.
         </p>
       </div>
 

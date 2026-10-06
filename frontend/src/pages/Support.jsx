@@ -176,14 +176,14 @@ export default function Support() {
                   </span>
                   +977 980-335-0658
                 </a>
-                <a href="mailto:sales@itops-monitor.local" className="flex items-center gap-2.5 text-white/65 light:text-slate-600 transition-colors hover:text-white light:hover:text-slate-900 light:hover:text-slate-900">
+                <a href="mailto:support@itopssolution.tech" className="flex items-center gap-2.5 text-white/65 light:text-slate-600 transition-colors hover:text-white light:hover:text-slate-900 light:hover:text-slate-900">
                   <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-white/10 light:border-slate-900/10 bg-white/[0.03] light:bg-slate-900/[0.03] text-violet-300 light:text-violet-600">
                     <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" aria-hidden>
                       <path d="M4 6h16v12H4z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
                       <path d="M4 7l8 6 8-6" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
                     </svg>
                   </span>
-                  sales@itops-monitor.local
+                  support@itopssolution.tech
                 </a>
                 <p className="flex items-center gap-2.5 text-white/65 light:text-slate-600">
                   <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-white/10 light:border-slate-900/10 bg-white/[0.03] light:bg-slate-900/[0.03] text-emerald-300 light:text-emerald-600">

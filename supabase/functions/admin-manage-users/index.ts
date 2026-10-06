@@ -7,11 +7,18 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
+// FINDING-02: Restrict CORS to the configured allowed origin.
+// Set ALLOWED_ORIGIN in Supabase Secrets (e.g. "https://your-app.vercel.app").
+// Defaults to "*" only when unset so local dev still works, but in production
+// this MUST be set to your actual frontend domain.
+const ALLOWED_ORIGIN = Deno.env.get("ALLOWED_ORIGIN") ?? "*";
+
+// FINDING-18: Freeze the object so no response handler can accidentally mutate it.
+const CORS = Object.freeze({
+  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
   "Access-Control-Allow-Headers": "authorization, content-type, apikey, x-client-info",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+});
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
@@ -41,7 +48,12 @@ Deno.serve(async (req) => {
     .eq("user_id", userData.user.id)
     .maybeSingle();
   if (!adminRow) return json({ error: "Not authorized — platform admins only" }, 403);
-  const role = (adminRow as { role?: string }).role;
+
+  // FINDING-10: Default to null explicitly so the guards below are fail-closed:
+  // a null/undefined role will always be blocked, not skipped (old fail-open
+  // pattern was `role && !includes(role)` which short-circuits on null, granting
+  // every action to un-migrated admin rows).
+  const role = (adminRow as { role?: string | null }).role ?? null;
 
   const body = await req.json().catch(() => ({}));
   const action = body.action as string | undefined;
@@ -49,7 +61,8 @@ Deno.serve(async (req) => {
   if (action === "create") {
     // Provisioning covers support's day-to-day customer onboarding and a
     // reseller's own sales — both need it. Billing/content_editor don't.
-    if (role && !["super_admin", "support", "reseller"].includes(role)) {
+    // FINDING-10: fail-closed — null role blocks the action.
+    if (!role || !["super_admin", "support", "reseller"].includes(role)) {
       return json({ error: "Not authorized — support, reseller, or super admin access required" }, 403);
     }
 
@@ -99,7 +112,8 @@ Deno.serve(async (req) => {
   }
 
   if (action === "delete") {
-    if (role && !["super_admin", "support"].includes(role)) {
+    // FINDING-10: fail-closed — null role blocks the action.
+    if (!role || !["super_admin", "support"].includes(role)) {
       return json({ error: "Not authorized — support or super admin access required" }, 403);
     }
 
@@ -116,7 +130,8 @@ Deno.serve(async (req) => {
   if (action === "update") {
     // Same reach as reset_password — editing a name isn't a higher-trust
     // action than resetting the credential that gets you into the account.
-    if (role && !["super_admin", "support", "reseller"].includes(role)) {
+    // FINDING-10: fail-closed — null role blocks the action.
+    if (!role || !["super_admin", "support", "reseller"].includes(role)) {
       return json({ error: "Not authorized — support, reseller, or super admin access required" }, 403);
     }
 
@@ -142,7 +157,8 @@ Deno.serve(async (req) => {
   if (action === "reset_password") {
     // Same reach as provisioning — a support/reseller/super_admin who can
     // create an account can also help its owner back into it.
-    if (role && !["super_admin", "support", "reseller"].includes(role)) {
+    // FINDING-10: fail-closed — null role blocks the action.
+    if (!role || !["super_admin", "support", "reseller"].includes(role)) {
       return json({ error: "Not authorized — support, reseller, or super admin access required" }, 403);
     }
 

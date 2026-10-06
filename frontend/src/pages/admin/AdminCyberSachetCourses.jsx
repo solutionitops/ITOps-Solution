@@ -6,7 +6,7 @@ import { useToast } from "../../components/Toast";
 import { EmptyState, ErrorState } from "../../components/EmptyState";
 import { Skeleton } from "../../components/Skeleton";
 import { useConfirm } from "../../components/ConfirmDialog";
-import { CATEGORY_LABELS } from "../../data/cybersachetCourses";
+import { CATEGORY_LABELS } from "../../data/cybersachetCourseCategories";
 
 const LEVELS = ["beginner", "intermediate", "advanced"];
 const PLAN_TIERS = [

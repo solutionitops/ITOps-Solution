@@ -284,47 +284,47 @@ function AssignCourseButton({ course, members }) {
 }
 
 export const COURSE_IMAGES = {
-  "phishing-awareness": "/courses/phishing.png",
+  "phishing-awareness": "/covers/cybersachet.jpg",
   "password-security-mfa": "/courses/password_mfa.png",
   "social-engineering": "/courses/social_engineering.png",
-  "malware-ransomware": "/courses/malware.png",
+  "malware-ransomware": "/covers/edr.jpg",
   "data-handling-privacy": "/courses/data_privacy.png",
   "mobile-device-security": "/courses/mobile_security.png",
   "physical-security-workplace-awareness": "/courses/physical_security.png",
 
   // Moonsav ITOps Academy Slugs
-  "linux-fundamentals": "/courses/physical_security.png",
-  "linux-fundamentals-for-it-operations": "/courses/physical_security.png",
-  "networking-fundamentals": "/courses/mobile_security.png",
-  "networking-fundamentals-for-it-operations": "/courses/mobile_security.png",
-  "cloud-computing-essentials": "/courses/cloud.png",
-  "introduction-to-devops-and-cicd": "/courses/social_engineering.png",
-  "devops-cicd": "/courses/social_engineering.png",
-  "docker-and-container-fundamentals": "/courses/password_mfa.png",
-  "docker-containers": "/courses/password_mfa.png",
-  "kubernetes-fundamentals": "/courses/phishing.png",
-  "kubernetes-fundamentals-pods-and-cluster-triage": "/courses/phishing.png",
-  "soc-fundamentals": "/courses/malware.png"
+  "linux-fundamentals": "/covers/servers.jpg",
+  "linux-fundamentals-for-it-operations": "/covers/servers.jpg",
+  "networking-fundamentals": "/covers/network.jpg",
+  "networking-fundamentals-for-it-operations": "/covers/network.jpg",
+  "cloud-computing-essentials": "/covers/website-api.jpg",
+  "introduction-to-devops-and-cicd": "/covers/devops.jpg",
+  "devops-cicd": "/covers/devops.jpg",
+  "docker-and-container-fundamentals": "/covers/devops.jpg",
+  "docker-containers": "/covers/devops.jpg",
+  "kubernetes-fundamentals": "/covers/servers.jpg",
+  "kubernetes-fundamentals-pods-and-cluster-triage": "/covers/servers.jpg",
+  "soc-fundamentals": "/covers/security.jpg"
 };
 
 export const CATEGORY_IMAGES = {
-  "email-security": "/courses/phishing.png",
+  "email-security": "/covers/cybersachet.jpg",
   "identity": "/courses/password_mfa.png",
-  "cybersecurity": "/courses/social_engineering.png",
-  "endpoint-security": "/courses/mobile_security.png",
+  "cybersecurity": "/covers/security.jpg",
+  "endpoint-security": "/covers/edr.jpg",
   "data-protection": "/courses/data_privacy.png",
   "physical-security": "/courses/physical_security.png",
-  "os-fundamentals": "/courses/physical_security.png",
-  "linux": "/courses/physical_security.png",
-  "networking": "/courses/mobile_security.png",
-  "cloud-computing": "/courses/cloud.png",
-  "cloud": "/courses/cloud.png",
-  "devops": "/courses/social_engineering.png",
-  "containers": "/courses/password_mfa.png",
-  "docker": "/courses/password_mfa.png",
-  "kubernetes": "/courses/phishing.png",
-  "infrastructure": "/courses/mobile_security.png",
-  "soc": "/courses/malware.png"
+  "os-fundamentals": "/covers/servers.jpg",
+  "linux": "/covers/servers.jpg",
+  "networking": "/covers/network.jpg",
+  "cloud-computing": "/covers/website-api.jpg",
+  "cloud": "/covers/website-api.jpg",
+  "devops": "/covers/devops.jpg",
+  "containers": "/covers/devops.jpg",
+  "docker": "/covers/devops.jpg",
+  "kubernetes": "/covers/servers.jpg",
+  "infrastructure": "/covers/network.jpg",
+  "soc": "/covers/security.jpg"
 };
 
 const UNIFIED_CTA_BG = "bg-gradient-to-r from-rose-500 via-pink-600 to-purple-600 text-white hover:from-rose-400 hover:to-purple-500 shadow-md shadow-rose-500/25";

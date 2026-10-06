@@ -8,7 +8,7 @@ import { AnimatedCounter } from "../components/AnimatedCounter";
 import { SkeletonRows } from "../components/Skeleton";
 import { EmptyState, ErrorState } from "../components/EmptyState";
 import { CategoryIcon } from "../components/CyberSachetTheme";
-import { CATEGORY_LABELS } from "../data/cybersachetCourses";
+import { CATEGORY_LABELS } from "../data/cybersachetCourseCategories";
 import { AcademyMark } from "../components/AcademyBrand";
 
 const LEVEL_TONE = {

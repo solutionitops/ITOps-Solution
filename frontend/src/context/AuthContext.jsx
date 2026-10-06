@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../api/supabaseClient";
+import { clearOrganizationIdCache } from "../api/endpoints";
 const AuthContext = createContext(undefined);
 // Stashed by InviteAccept.jsx right before a Google sign-in/sign-up redirect
 // — OAuth signups never carry the options.data payload handle_new_user()
@@ -10,6 +11,11 @@ const AuthContext = createContext(undefined);
 // (leaves the default org handle_new_user() just created) and an existing
 // account signing in with Google to accept an invite (leaves its real org).
 export const PENDING_INVITE_STORAGE_KEY = "pending_invite_token";
+// FINDING-09: Paired expiry key — written alongside the token so a stale
+// token abandoned mid-OAuth is not accidentally redeemed by the next user
+// who logs in from the same browser session.
+const PENDING_INVITE_EXPIRES_KEY = "pending_invite_expires";
+const INVITE_TOKEN_TTL_MS = 5 * 60 * 1000; // 5 minutes
 async function loadProfile() {
   const {
     data: {
@@ -27,9 +33,19 @@ async function loadProfile() {
 
   const pendingInviteToken = sessionStorage.getItem(PENDING_INVITE_STORAGE_KEY);
   if (pendingInviteToken) {
+    // FINDING-09: Check expiry before redeeming — abandon the token if it
+    // has been sitting there longer than 5 minutes (user abandoned OAuth,
+    // came back later, or a different account triggered this load).
+    const expiresAt = Number(sessionStorage.getItem(PENDING_INVITE_EXPIRES_KEY) ?? 0);
+    const isExpired = Date.now() > expiresAt;
     sessionStorage.removeItem(PENDING_INVITE_STORAGE_KEY);
-    const { error: inviteError } = await supabase.rpc("switch_organization_via_invite", { p_token: pendingInviteToken });
-    if (inviteError) console.warn("Invite redemption failed:", inviteError.message);
+    sessionStorage.removeItem(PENDING_INVITE_EXPIRES_KEY);
+    if (!isExpired) {
+      const { error: inviteError } = await supabase.rpc("switch_organization_via_invite", { p_token: pendingInviteToken });
+      if (inviteError) console.warn("Invite redemption failed:", inviteError.message);
+    } else {
+      console.warn("Pending invite token expired before OAuth completed — skipping redemption.");
+    }
   }
 
   // Ensure org + membership exist — self-heals users whose handle_new_user
@@ -138,10 +154,17 @@ export function AuthProvider({
     });
     const {
       data: listener
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      // FINDING-15: Skip the expensive loadProfile() call for events that do
+      // not change profile state. TOKEN_REFRESHED fires every hour for active
+      // users and would trigger 4 unnecessary Supabase queries each time.
+      // MFA_CHALLENGE_VERIFIED is handled explicitly via resolveMfaChallenge().
+      if (event === "TOKEN_REFRESHED" || event === "MFA_CHALLENGE_VERIFIED") return;
+
       if (!session) {
         lastUserIdRef.current = null;
         queryClient.clear();
+        clearOrganizationIdCache();
         applyProfile(null);
         return;
       }
@@ -151,6 +174,7 @@ export function AuthProvider({
       // previous account is still sitting in the cache when it renders.
       if (session.user.id !== lastUserIdRef.current) {
         queryClient.clear();
+        clearOrganizationIdCache();
       }
       loadProfile().then(profile => {
         if (!active) return;
@@ -241,11 +265,20 @@ export function AuthProvider({
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) throw new Error(error.message);
   }, []);
-  const logout = useCallback(() => {
-    void supabase.auth.signOut();
+  // FINDING-07: Await signOut so the server-side session is actually revoked
+  // before the UI clears. Still clears local state even if the network call
+  // fails — the UI is always correct, and the session expires server-side
+  // eventually even if revocation didn't complete.
+  const logout = useCallback(async () => {
     lastUserIdRef.current = null;
     queryClient.clear();
+    clearOrganizationIdCache();
     applyProfile(null);
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.warn("signOut network error (session will expire server-side):", err);
+    }
   }, [applyProfile, queryClient]);
   // Verifies the 6-digit code from the user's authenticator app against
   // their enrolled TOTP factor and, only on success, loads the real profile
@@ -263,10 +296,15 @@ export function AuthProvider({
   // The account has a verified factor but the person at the login screen
   // can't produce a code for it (lost device, etc.) — signing out is the
   // only safe option; there's no "skip MFA" path once a factor is enrolled.
-  const cancelMfaChallenge = useCallback(() => {
-    void supabase.auth.signOut();
+  // FINDING-07: Await signOut to revoke the server-side session properly.
+  const cancelMfaChallenge = useCallback(async () => {
     lastUserIdRef.current = null;
     applyProfile(null);
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.warn("signOut network error (session will expire server-side):", err);
+    }
   }, [applyProfile]);
   const value = useMemo(() => ({
     user,

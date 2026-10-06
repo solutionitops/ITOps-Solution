@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="120 160 725 510" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-label="ITOps Solution Emblem">
+  <title>ITOps Solution Emblem</title>
+  <defs>
+    
+    <!-- Server Gradients -->
+    <linearGradient id="server-center-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#021033"/>
+      <stop offset="50%" stop-color="#042058"/>
+      <stop offset="100%" stop-color="#010a1f"/>
+    </linearGradient>
+    <linearGradient id="server-side-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#010d29"/>
+      <stop offset="50%" stop-color="#03163d"/>
+      <stop offset="100%" stop-color="#010717"/>
+    </linearGradient>
+    <linearGradient id="server-top-bevel" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.9"/>
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#00e5ff" stop-opacity="0.9"/>
+    </linearGradient>
+
+    <!-- Cloud Ribbon Gradients -->
+    <linearGradient id="cloud-ribbon-grad" x1="0%" y1="0%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#d946ef"/>
+      <stop offset="20%" stop-color="#a855f7"/>
+      <stop offset="45%" stop-color="#0052cc"/>
+      <stop offset="70%" stop-color="#00d2ff"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+    <linearGradient id="cloud-magenta-loop" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ec4899"/>
+      <stop offset="40%" stop-color="#d946ef"/>
+      <stop offset="80%" stop-color="#9333ea"/>
+      <stop offset="100%" stop-color="#0052cc"/>
+    </linearGradient>
+    <linearGradient id="cloud-cyan-loop" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00e5ff"/>
+      <stop offset="50%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#003399"/>
+    </linearGradient>
+    <linearGradient id="cloud-outer-glow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.8"/>
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#00e5ff" stop-opacity="0.8"/>
+    </linearGradient>
+
+    <!-- Shield Gradients -->
+    <linearGradient id="shield-rim-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00e5ff"/>
+      <stop offset="35%" stop-color="#0284c7"/>
+      <stop offset="70%" stop-color="#0044cc"/>
+      <stop offset="100%" stop-color="#021033"/>
+    </linearGradient>
+    <linearGradient id="shield-face-left" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7"/>
+      <stop offset="60%" stop-color="#0369a1"/>
+      <stop offset="100%" stop-color="#075985"/>
+    </linearGradient>
+    <linearGradient id="shield-face-right" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#002b80"/>
+      <stop offset="60%" stop-color="#001a4d"/>
+      <stop offset="100%" stop-color="#020d26"/>
+    </linearGradient>
+    <radialGradient id="shield-flare" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.95"/>
+      <stop offset="25%" stop-color="#38bdf8" stop-opacity="0.6"/>
+      <stop offset="60%" stop-color="#0284c7" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#00e5ff" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Wordmark Gradients -->
+    <linearGradient id="itops-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00d2ff"/>
+      <stop offset="30%" stop-color="#00a3ff"/>
+      <stop offset="70%" stop-color="#0055ff"/>
+      <stop offset="100%" stop-color="#002288"/>
+    </linearGradient>
+    <linearGradient id="solution-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#001854"/>
+      <stop offset="40%" stop-color="#000e38"/>
+      <stop offset="100%" stop-color="#00051a"/>
+    </linearGradient>
+    <radialGradient id="dot-cyan-grad" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="40%" stop-color="#00e5ff"/>
+      <stop offset="85%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#003399"/>
+    </radialGradient>
+
+    <!-- Tagline Gradients -->
+    <linearGradient id="tagline-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00e5ff"/>
+      <stop offset="30%" stop-color="#0284c7"/>
+      <stop offset="70%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#d946ef"/>
+    </linearGradient>
+
+    <!-- Filters -->
+    <filter id="glow-cyan" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="glow-flare" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  
+  </defs>
+  <style>
+    svg { overflow: visible; }
+  </style>
+  <g id="servers">
+    <!-- Left Server Rack -->
+    <g id="server-left">
+      <!-- Side depth bevel -->
+      <polygon points="346,330 356,314 350,490 342,485" fill="#010a24" />
+      <!-- Front face chassis -->
+      <polygon points="356,314 416,318 414,494 350,490" fill="url(#server-side-grad)" stroke="#00d2ff" stroke-width="1.2" stroke-opacity="0.7"/>
+      <!-- Top Bevel Highlight -->
+      <polygon points="346,330 356,314 416,318 408,322" fill="url(#server-top-bevel)" opacity="0.85"/>
+      <!-- 6 Blade Bays -->
+      
+        <rect x="357" y="328" width="54" height="20" rx="3" fill="#020817" stroke="#003366" stroke-width="0.8"/>
+        <rect x="362" y="336" width="26" height="3.5" rx="1.7" fill="#0055aa" opacity="0.6"/>
+      
+        <rect x="357" y="354" width="54" height="20" rx="3" fill="#020817" stroke="#003366" stroke-width="0.8"/>
+        <rect x="362" y="362" width="26" height="3.5" rx="1.7" fill="#0055aa" opacity="0.6"/>
+      
+        <rect x="357" y="380" width="54" height="20" rx="3" fill="#020817" stroke="#003366" stroke-width="0.8"/>
+        <rect x="362" y="388" width="26" height="3.5" rx="1.7" fill="#0055aa" opacity="0.6"/>
+      
+        <rect x="357" y="406" width="54" height="20" rx="3" fill="#020817" stroke="#003366" stroke-width="0.8"/>
+        <rect x="362" y="414" width="26" height="3.5" rx="1.7" fill="#0055aa" opacity="0.6"/>
+      
+        <rect x="357" y="432" width="54" height="20" rx="3" fill="#020817" stroke="#003366" stroke-width="0.8"/>
+        <rect x="362" y="440" width="26" height="3.5" rx="1.7" fill="#0055aa" opacity="0.6"/>
+      
+        <rect x="357" y="458" width="54" height="20" rx="3" fill="#020817" stroke="#003366" stroke-width="0.8"/>
+        <rect x="362" y="466" width="26" height="3.5" rx="1.7" fill="#0055aa" opacity="0.6"/>
+      
+    </g>
+
+    <!-- Right Server Rack -->
+    <g id="server-right">
+      <!-- Side depth bevel -->
+      <polygon points="606,314 616,330 620,485 612,490" fill="#010a24" />
+      <!-- Front face chassis -->
+      <polygon points="546,318 606,314 612,490 548,494" fill="url(#server-side-grad)" stroke="#00d2ff" stroke-width="1.2" stroke-opacity="0.7"/>
+      <!-- Top Bevel Highlight -->
+      <polygon points="546,318 606,314 616,330 554,322" fill="url(#server-top-bevel)" opacity="0.85"/>
+      <!-- 6 Blade Bays -->
+      
+        <rect x="551" y="328" width="54" height="20" rx="3" fill="#020817" stroke="#003366" stroke-width="0.8"/>
+        <rect x="574" y="336" width="26" height="3.5" rx="1.7" fill="#0055aa" opacity="0.6"/>
+      
+        <rect x="551" y="354" width="54" height="20" rx="3" fill="#020817" stroke="#003366" stroke-width="0.8"/>
+        <rect x="574" y="362" width="26" height="3.5" rx="1.7" fill="#0055aa" opacity="0.6"/>
+      
+        <rect x="551" y="380" width="54" height="20" rx="3" fill="#020817" stroke="#003366" stroke-width="0.8"/>
+        <rect x="574" y="388" width="26" height="3.5" rx="1.7" fill="#0055aa" opacity="0.6"/>
+      
+        <rect x="551" y="406" width="54" height="20" rx="3" fill="#020817" stroke="#003366" stroke-width="0.8"/>
+        <rect x="574" y="414" width="26" height="3.5" rx="1.7" fill="#0055aa" opacity="0.6"/>
+      
+        <rect x="551" y="432" width="54" height="20" rx="3" fill="#020817" stroke="#003366" stroke-width="0.8"/>
+        <rect x="574" y="440" width="26" height="3.5" rx="1.7" fill="#0055aa" opacity="0.6"/>
+      
+        <rect x="551" y="458" width="54" height="20" rx="3" fill="#020817" stroke="#003366" stroke-width="0.8"/>
+        <rect x="574" y="466" width="26" height="3.5" rx="1.7" fill="#0055aa" opacity="0.6"/>
+      
+    </g>
+
+    <!-- Center Server Rack (Tallest, Front-Facing) -->
+    <g id="server-center">
+      <!-- Outer main chassis -->
+      <rect x="431" y="276" width="100" height="225" rx="6" fill="url(#server-center-grad)" stroke="#00e5ff" stroke-width="1.6" stroke-opacity="0.85"/>
+      <!-- Top Bevel specular -->
+      <path d="M433 283 Q481 277 529 283 L526 288 Q481 282 436 288 Z" fill="url(#server-top-bevel)"/>
+      <!-- 5 Blade Bays -->
+      
+        <rect x="441" y="296" width="80" height="24" rx="3.5" fill="#020817" stroke="#004488" stroke-width="1"/>
+        <rect x="449" y="306" width="38" height="4" rx="2" fill="#003377" opacity="0.7"/>
+      
+        <rect x="441" y="328" width="80" height="24" rx="3.5" fill="#020817" stroke="#004488" stroke-width="1"/>
+        <rect x="449" y="338" width="38" height="4" rx="2" fill="#003377" opacity="0.7"/>
+      
+        <rect x="441" y="360" width="80" height="24" rx="3.5" fill="#020817" stroke="#004488" stroke-width="1"/>
+        <rect x="449" y="370" width="38" height="4" rx="2" fill="#003377" opacity="0.7"/>
+      
+        <rect x="441" y="392" width="80" height="24" rx="3.5" fill="#020817" stroke="#004488" stroke-width="1"/>
+        <rect x="449" y="402" width="38" height="4" rx="2" fill="#003377" opacity="0.7"/>
+      
+        <rect x="441" y="424" width="80" height="24" rx="3.5" fill="#020817" stroke="#004488" stroke-width="1"/>
+        <rect x="449" y="434" width="38" height="4" rx="2" fill="#003377" opacity="0.7"/>
+      
+    </g>
+
+    <!-- Server Indicator Lights Group -->
+    <g id="server-lights">
+      <!-- Left Rack Lights (6 rows: bar + 3 LEDs) -->
+      <g id="server-left-lights">
+        
+          <rect x="362" y="336" width="24" height="3.5" rx="1.7" fill="#00e5ff" filter="url(#glow-cyan)"/>
+          <circle cx="392" cy="338" r="2" fill="#ffffff" filter="url(#glow-cyan)"/>
+          <circle cx="398" cy="338" r="2" fill="#00e5ff"/>
+          <circle cx="404" cy="338" r="2" fill="#38bdf8"/>
+        
+          <rect x="362" y="362" width="24" height="3.5" rx="1.7" fill="#00e5ff" filter="url(#glow-cyan)"/>
+          <circle cx="392" cy="364" r="2" fill="#ffffff" filter="url(#glow-cyan)"/>
+          <circle cx="398" cy="364" r="2" fill="#00e5ff"/>
+          <circle cx="404" cy="364" r="2" fill="#38bdf8"/>
+        
+          <rect x="362" y="388" width="24" height="3.5" rx="1.7" fill="#00e5ff" filter="url(#glow-cyan)"/>
+          <circle cx="392" cy="390" r="2" fill="#ffffff" filter="url(#glow-cyan)"/>
+          <circle cx="398" cy="390" r="2" fill="#00e5ff"/>
+          <circle cx="404" cy="390" r="2" fill="#38bdf8"/>
+        
+          <rect x="362" y="414" width="24" height="3.5" rx="1.7" fill="#00e5ff" filter="url(#glow-cyan)"/>
+          <circle cx="392" cy="416" r="2" fill="#ffffff" filter="url(#glow-cyan)"/>
+          <circle cx="398" cy="416" r="2" fill="#00e5ff"/>
+          <circle cx="404" cy="416" r="2" fill="#38bdf8"/>
+        
+          <rect x="362" y="440" width="24" height="3.5" rx="1.7" fill="#00e5ff" filter="url(#glow-cyan)"/>
+          <circle cx="392" cy="442" r="2" fill="#ffffff" filter="url(#glow-cyan)"/>
+          <circle cx="398" cy="442" r="2" fill="#00e5ff"/>
+          <circle cx="404" cy="442" r="2" fill="#38bdf8"/>
+        
+          <rect x="362" y="466" width="24" height="3.5" rx="1.7" fill="#00e5ff" filter="url(#glow-cyan)"/>
+          <circle cx="392" cy="468" r="2" fill="#ffffff" filter="url(#glow-cyan)"/>
+          <circle cx="398" cy="468" r="2" fill="#00e5ff"/>
+          <circle cx="404" cy="468" r="2" fill="#38bdf8"/>
+        
+      </g>
+
+      <!-- Center Rack Lights (5 rows: bar + 3 LEDs) -->
+      <g id="server-center-lights">
+        
+          <rect x="449" y="306" width="36" height="4" rx="2" fill="#00e5ff" filter="url(#glow-cyan)"/>
+          <circle cx="496" cy="308" r="2.4" fill="#ffffff" filter="url(#glow-cyan)"/>
+          <circle cx="505" cy="308" r="2.4" fill="#00e5ff"/>
+          <circle cx="514" cy="308" r="2.4" fill="#38bdf8"/>
+        
+          <rect x="449" y="338" width="36" height="4" rx="2" fill="#00e5ff" filter="url(#glow-cyan)"/>
+          <circle cx="496" cy="340" r="2.4" fill="#ffffff" filter="url(#glow-cyan)"/>
+          <circle cx="505" cy="340" r="2.4" fill="#00e5ff"/>
+          <circle cx="514" cy="340" r="2.4" fill="#38bdf8"/>
+        
+          <rect x="449" y="370" width="36" height="4" rx="2" fill="#00e5ff" filter="url(#glow-cyan)"/>
+          <circle cx="496" cy="372" r="2.4" fill="#ffffff" filter="url(#glow-cyan)"/>
+          <circle cx="505" cy="372" r="2.4" fill="#00e5ff"/>
+          <circle cx="514" cy="372" r="2.4" fill="#38bdf8"/>
+        
+          <rect x="449" y="402" width="36" height="4" rx="2" fill="#00e5ff" filter="url(#glow-cyan)"/>
+          <circle cx="496" cy="404" r="2.4" fill="#ffffff" filter="url(#glow-cyan)"/>
+          <circle cx="505" cy="404" r="2.4" fill="#00e5ff"/>
+          <circle cx="514" cy="404" r="2.4" fill="#38bdf8"/>
+        
+          <rect x="449" y="434" width="36" height="4" rx="2" fill="#00e5ff" filter="url(#glow-cyan)"/>
+          <circle cx="496" cy="436" r="2.4" fill="#ffffff" filter="url(#glow-cyan)"/>
+          <circle cx="505" cy="436" r="2.4" fill="#00e5ff"/>
+          <circle cx="514" cy="436" r="2.4" fill="#38bdf8"/>
+        
+      </g>
+
+      <!-- Right Rack Lights (6 rows: 3 LEDs + bar) -->
+      <g id="server-right-lights">
+        
+          <circle cx="558" cy="338" r="2" fill="#38bdf8"/>
+          <circle cx="564" cy="338" r="2" fill="#00e5ff"/>
+          <circle cx="570" cy="338" r="2" fill="#ffffff" filter="url(#glow-cyan)"/>
+          <rect x="575" y="336" width="24" height="3.5" rx="1.7" fill="#00e5ff" filter="url(#glow-cyan)"/>
+        
+          <circle cx="558" cy="364" r="2" fill="#38bdf8"/>
+          <circle cx="564" cy="364" r="2" fill="#00e5ff"/>
+          <circle cx="570" cy="364" r="2" fill="#ffffff" filter="url(#glow-cyan)"/>
+          <rect x="575" y="362" width="24" height="3.5" rx="1.7" fill="#00e5ff" filter="url(#glow-cyan)"/>
+        
+          <circle cx="558" cy="390" r="2" fill="#38bdf8"/>
+          <circle cx="564" cy="390" r="2" fill="#00e5ff"/>
+          <circle cx="570" cy="390" r="2" fill="#ffffff" filter="url(#glow-cyan)"/>
+          <rect x="575" y="388" width="24" height="3.5" rx="1.7" fill="#00e5ff" filter="url(#glow-cyan)"/>
+        
+          <circle cx="558" cy="416" r="2" fill="#38bdf8"/>
+          <circle cx="564" cy="416" r="2" fill="#00e5ff"/>
+          <circle cx="570" cy="416" r="2" fill="#ffffff" filter="url(#glow-cyan)"/>
+          <rect x="575" y="414" width="24" height="3.5" rx="1.7" fill="#00e5ff" filter="url(#glow-cyan)"/>
+        
+          <circle cx="558" cy="442" r="2" fill="#38bdf8"/>
+          <circle cx="564" cy="442" r="2" fill="#00e5ff"/>
+          <circle cx="570" cy="442" r="2" fill="#ffffff" filter="url(#glow-cyan)"/>
+          <rect x="575" y="440" width="24" height="3.5" rx="1.7" fill="#00e5ff" filter="url(#glow-cyan)"/>
+        
+          <circle cx="558" cy="468" r="2" fill="#38bdf8"/>
+          <circle cx="564" cy="468" r="2" fill="#00e5ff"/>
+          <circle cx="570" cy="468" r="2" fill="#ffffff" filter="url(#glow-cyan)"/>
+          <rect x="575" y="466" width="24" height="3.5" rx="1.7" fill="#00e5ff" filter="url(#glow-cyan)"/>
+        
+      </g>
+    </g>
+  </g>
+
+  <!-- ==================== 2. CLOUD: 3D VOLUMETRIC RIBBON ==================== -->
+  <g id="cloud">
+    <!-- Animated Centerline Stroke Reveal -->
+    <path id="cloud-stroke" d="M 370 540 C 260 560 150 540 135 440 C 120 350 180 290 240 265 C 260 200 350 169 481 169 C 610 169 700 200 720 265 C 780 290 840 350 778 440 C 740 530 640 560 530 540" 
+          fill="none" stroke="url(#cloud-ribbon-grad)" stroke-width="52" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Complete 3D Cloud Volumetric Body & Shading -->
+    <g id="cloud-fill">
+      <!-- Main Upper Cloud Arch (3 Domes) -->
+      <path d="M 175 425 C 130 425 122 365 145 320 C 168 275 220 260 265 268 C 285 200 375 169 481 169 C 585 169 675 200 695 268 C 740 260 792 275 815 320 C 838 365 830 425 785 425 C 770 330 710 278 630 270 C 590 230 520 215 481 215 C 442 215 372 230 332 270 C 252 278 192 330 175 425 Z" 
+            fill="url(#cloud-ribbon-grad)" />
+
+      <!-- Top Specular Bevel Highlight along the crown -->
+      <path d="M 270 265 C 330 205 405 174 481 174 C 557 174 632 205 692 265 C 640 220 560 195 481 195 C 402 195 322 220 270 265 Z" 
+            fill="url(#cloud-outer-glow)" />
+
+      <!-- Left Outer Arch & Infinity Loop (Magenta/Purple Ribbon) -->
+      <path d="M 145 320 C 122 365 130 425 175 425 C 190 425 210 400 230 370 C 200 400 170 435 155 480 C 135 540 180 595 240 595 C 290 595 340 560 380 520 C 410 490 430 475 450 470 C 410 480 370 510 330 540 C 290 570 250 578 220 570 C 185 560 165 525 175 480 C 185 440 215 410 245 385 C 220 330 170 300 145 320 Z" 
+            fill="url(#cloud-magenta-loop)" />
+
+      <!-- Right Outer Arch & Lower Cradle (Electric Cyan/Blue Ribbon) -->
+      <path d="M 815 320 C 838 365 830 425 785 425 C 770 425 750 400 730 370 C 760 400 790 435 805 480 C 825 540 780 595 720 595 C 670 595 620 560 580 520 C 550 490 530 475 510 470 C 550 480 590 510 630 540 C 670 570 710 578 740 570 C 775 560 795 525 785 480 C 775 440 745 410 715 385 C 740 330 790 300 815 320 Z" 
+            fill="url(#cloud-cyan-loop)" />
+
+      <!-- Glossy edge highlights -->
+      <path d="M 155 480 C 135 540 180 595 240 595 C 290 595 340 560 380 520" 
+            fill="none" stroke="#f472b6" stroke-width="4.5" stroke-linecap="round" opacity="0.8"/>
+      <path d="M 805 480 C 825 540 780 595 720 595 C 670 595 620 560 580 520" 
+            fill="none" stroke="#38bdf8" stroke-width="4.5" stroke-linecap="round" opacity="0.8"/>
+    </g>
+  </g>
+
+  <!-- ==================== 3. SECURITY: SHIELD & PADLOCK ==================== -->
+  <g id="shield">
+    <!-- Ground Lens Flare -->
+    <ellipse cx="481" cy="658" rx="85" ry="12" fill="url(#shield-flare)" filter="url(#glow-flare)"/>
+
+    <!-- Shield Outer 3D Beveled Rim -->
+    <path id="shield-rim" d="M 481 460 L 392 502 L 392 550 C 392 610 440 648 481 658 C 522 648 570 610 570 550 L 570 502 Z" 
+          fill="url(#shield-rim-grad)" stroke="#00e5ff" stroke-width="2.5" filter="url(#glow-cyan)"/>
+
+    <!-- Shield Inner Facets with Central Vertical Crease -->
+    <!-- Left Facet (Light Blue) -->
+    <path d="M 481 468 L 402 506 L 402 546 C 402 600 445 634 481 644 Z" 
+          fill="url(#shield-face-left)"/>
+    <!-- Right Facet (Dark Royal Blue) -->
+    <path d="M 481 468 L 560 506 L 560 546 C 560 600 517 634 481 644 Z" 
+          fill="url(#shield-face-right)"/>
+
+    <!-- Specular rim vertices -->
+    <circle cx="481" cy="460" r="3.5" fill="#ffffff" filter="url(#glow-cyan)"/>
+    <circle cx="392" cy="502" r="3" fill="#ffffff"/>
+    <circle cx="570" cy="502" r="3" fill="#ffffff"/>
+    <circle cx="481" cy="658" r="4" fill="#ffffff" filter="url(#glow-cyan)"/>
+
+    <!-- Padlock Assembly -->
+    <g id="lock">
+      <!-- Padlock Shackle (Drops & Latches Down) -->
+      <path id="lock-shackle" d="M 463 526 V 498 A 18 18 0 0 1 499 498 V 526 H 490 V 498 A 9 9 0 0 0 472 498 V 526 Z" 
+            fill="#ffffff" stroke="#e0f2fe" stroke-width="1.2"/>
+
+      <!-- Padlock Solid White Body with Keyhole Cutout -->
+      <g id="lock-body">
+        <rect x="448" y="524" width="66" height="54" rx="9" fill="#ffffff" stroke="#bae6fd" stroke-width="1.2"/>
+        <!-- Keyhole Cutout (Circle + Tapered Slot) -->
+        <circle cx="481" cy="544" r="5.5" fill="#001c78"/>
+        <polygon points="478,548 484,548 486,564 476,564" fill="#001c78"/>
+      </g>
+    </g>
+  </g>
+</svg>

@@ -216,7 +216,19 @@ Deno.serve(async (req) => {
   }
   await Promise.all(Array.from({ length: CHECK_CONCURRENCY }, worker));
 
-  return new Response(JSON.stringify({ checked: dueMonitors?.length ?? 0 }), {
+  const batchLimitHit = (dueMonitors?.length ?? 0) >= 200;
+  if (batchLimitHit) {
+    // FINDING-08: More than 200 monitors were due simultaneously. Some monitors
+    // were skipped this tick and will be caught on the next cron invocation.
+    // If this is recurring, reduce check intervals or add more workers.
+    console.warn(JSON.stringify({
+      warning: "MONITOR_BATCH_LIMIT_HIT",
+      processed: dueMonitors?.length ?? 0,
+      message: "Some due monitors were skipped this tick. Consider reducing intervals or increasing concurrency."
+    }));
+  }
+
+  return new Response(JSON.stringify({ checked: dueMonitors?.length ?? 0, batchLimitHit }), {
     headers: { "Content-Type": "application/json" },
   });
 });

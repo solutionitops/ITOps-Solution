@@ -231,12 +231,12 @@ export function AuroraBackground({
 }) {
   const c = TINTS[tint];
   return <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      <div className="absolute -left-40 -top-40 h-[560px] w-[560px] rounded-full" style={{
+      <div className="gpu-layer absolute -left-40 -top-40 h-[560px] w-[560px] rounded-full" style={{
       background: c.glow,
       filter: "blur(90px)",
       animation: "pbg-drift-a 16s ease-in-out infinite"
     }} />
-      <div className="absolute -right-32 top-10 h-[460px] w-[460px] rounded-full" style={{
+      <div className="gpu-layer absolute -right-32 top-10 h-[460px] w-[460px] rounded-full" style={{
       background: c.soft,
       filter: "blur(100px)",
       animation: "pbg-drift-b 20s ease-in-out infinite"
@@ -410,27 +410,27 @@ export function EnterpriseAuroraBackground({ intensity = "simplified", tint = "b
     <div className="pointer-events-none absolute inset-0 overflow-hidden" style={{ background: isLight ? "#f8fafc" : "#0b1020" }}>
       {/* soft radial glows — present at every intensity, the base "depth" layer */}
       <div
-        className="absolute -left-1/4 -top-1/4 h-[70%] w-[70%] rounded-full"
+        className="gpu-layer absolute -left-1/4 -top-1/4 h-[70%] w-[70%] rounded-full"
         style={{ background: `radial-gradient(circle, ${accent}26 0%, transparent 70%)`, filter: "blur(10px)", animation: "aurora-glow-a 26s ease-in-out infinite" }}
       />
       <div
-        className="absolute -right-1/4 bottom-0 h-[65%] w-[65%] rounded-full"
+        className="gpu-layer absolute -right-1/4 bottom-0 h-[65%] w-[65%] rounded-full"
         style={{ background: "radial-gradient(circle, #22d3ee1f 0%, transparent 70%)", filter: "blur(10px)", animation: "aurora-glow-b 32s ease-in-out infinite" }}
       />
 
       {showWaves && (
         <>
           <div
-            className="absolute left-[-10%] top-[10%] h-[220px] w-[130%] opacity-60"
+            className="gpu-layer absolute left-[-10%] top-[10%] h-[220px] w-[130%] opacity-60"
             style={{ background: "linear-gradient(100deg, transparent 0%, #3b82f633 20%, #22d3ee2e 45%, transparent 70%)", filter: "blur(40px)", animation: "aurora-wave-a 22s ease-in-out infinite" }}
           />
           <div
-            className="absolute left-[-15%] top-[45%] h-[260px] w-[130%] opacity-50"
+            className="gpu-layer absolute left-[-15%] top-[45%] h-[260px] w-[130%] opacity-50"
             style={{ background: "linear-gradient(100deg, transparent 5%, #22d3ee2e 30%, #3b82f628 55%, transparent 80%)", filter: "blur(46px)", animation: "aurora-wave-b 28s ease-in-out infinite" }}
           />
           {/* one small purple highlight — an accent, deliberately not a second dominant hue */}
           <div
-            className="absolute right-[8%] top-[18%] h-40 w-40 rounded-full"
+            className="gpu-layer absolute right-[8%] top-[18%] h-40 w-40 rounded-full"
             style={{ background: "radial-gradient(circle, #a78bfa2e 0%, transparent 72%)", filter: "blur(30px)", animation: "aurora-glow-a 24s ease-in-out infinite reverse" }}
           />
         </>

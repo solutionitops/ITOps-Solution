@@ -163,7 +163,7 @@ function HealthBadge({ monitor }) {
 // next to the name where it's actually useful at a glance.
 function MonitorCards({ monitors, onDelete }) {
   return <div className="divide-y divide-white/10 light:divide-slate-900/8">
-      {monitors.map((monitor, i) => <motion.div key={monitor.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: i * 0.03, ease: EASE }} className="p-4">
+      {monitors.map((monitor, i) => <motion.div key={monitor.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: Math.min(i, 8) * 0.03, ease: EASE }} className="p-4">
           <div className="flex items-start justify-between gap-3">
             <Link to={`/monitors/${monitor.id}`} className="font-medium text-white light:text-slate-900 hover:underline">
               {monitor.name}
@@ -226,7 +226,7 @@ function MonitorTable({
         y: 0
       }} transition={{
         duration: 0.3,
-        delay: i * 0.03,
+        delay: Math.min(i, 8) * 0.03,
         ease: EASE
       }} className="transition-colors hover:bg-white/[0.02] light:hover:bg-slate-900/[0.02]">
             <td className="px-4 py-3 font-medium text-white light:text-slate-900">

@@ -98,7 +98,7 @@ export default function Academy() {
 
       <main className="pt-32 pb-24 space-y-24">
         {/* HERO SECTION */}
-        <section className="relative overflow-hidden pt-12 pb-20">
+        <section id="hero" className="relative overflow-hidden pt-12 pb-20">
           {/* Ambient Glows */}
           <div className="pointer-events-none absolute inset-0">
             <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 h-96 w-[40rem] rounded-full bg-gradient-to-tr from-cyan-500/20 via-blue-600/20 to-purple-600/20 blur-3xl opacity-60" />

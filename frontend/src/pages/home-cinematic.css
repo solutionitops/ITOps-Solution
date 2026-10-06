@@ -1,0 +1,15 @@
+/* Cinematic home page. Everything is scoped to .sx so the rest of the site keeps
+   its own fonts, reset and theme. */
+.sx {
+  /* Tailwind's font-sans / font-serif / font-mono all resolve to Space Mono here */
+  --font-sans: "Space Mono", monospace;
+  --font-serif: "Space Mono", monospace;
+  --font-mono: "Space Mono", monospace;
+  background: #000;
+  color: #fff;
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.sx video { background: #000; }
+.sx :focus-visible { outline: 2px solid #fff; outline-offset: 3px; }

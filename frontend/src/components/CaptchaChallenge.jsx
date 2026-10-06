@@ -3,8 +3,13 @@ import { motion } from "motion/react";
 
 const HCAPTCHA_SITE_KEY = import.meta.env.VITE_HCAPTCHA_SITE_KEY;
 const RECAPTCHA_V2_SITE_KEY = import.meta.env.VITE_RECAPTCHA_V2_SITE_KEY || import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+// FINDING-05: Use a separate v3 site key var; fall back to the v2 key for
+// projects that share one key. The v3 script ID was previously an undefined
+// reference — it now uses the correctly-declared constant.
+const RECAPTCHA_V3_SITE_KEY = import.meta.env.VITE_RECAPTCHA_V3_SITE_KEY || RECAPTCHA_V2_SITE_KEY;
 const RECAPTCHA_TYPE = import.meta.env.VITE_RECAPTCHA_TYPE || "v2";
 const HCAPTCHA_SCRIPT_ID = "hcaptcha-script";
+const RECAPTCHA_V2_SCRIPT_ID = "recaptcha-v2-script";
 const RECAPTCHA_V3_SCRIPT_ID = "recaptcha-v3-script";
 const MIN_HUMAN_MS = 1200;
 
@@ -52,7 +57,7 @@ export function CaptchaChallenge({ onChange, action = "submit" }) {
   if (RECAPTCHA_V2_SITE_KEY && RECAPTCHA_TYPE === "v2") {
     return <ReCaptchaV2Widget siteKey={RECAPTCHA_V2_SITE_KEY} onChange={onChange} />;
   }
-  if (RECAPTCHA_V2_SITE_KEY && RECAPTCHA_TYPE === "v3") {
+  if (RECAPTCHA_V3_SITE_KEY && RECAPTCHA_TYPE === "v3") {
     return <ReCaptchaV3Widget onChange={onChange} action={action} />;
   }
   if (HCAPTCHA_SITE_KEY) {
@@ -71,10 +76,10 @@ function ReCaptchaV2Widget({ siteKey, onChange }) {
       setReady(true);
       return;
     }
-    const scriptId = "recaptcha-v2-script";
-    if (document.getElementById(scriptId)) return;
+    // FINDING-05: Use the correctly-declared constant for the v2 script ID.
+    if (document.getElementById(RECAPTCHA_V2_SCRIPT_ID)) return;
     const script = document.createElement("script");
-    script.id = scriptId;
+    script.id = RECAPTCHA_V2_SCRIPT_ID;
     script.src = "https://www.google.com/recaptcha/api.js?onload=onGrecaptchaV2Load&render=explicit";
     script.async = true;
     script.defer = true;
@@ -108,10 +113,14 @@ function ReCaptchaV3Widget({ onChange, action = "submit" }) {
       setReady(true);
       return;
     }
-    if (document.getElementById(RECAPTCHA_SCRIPT_ID)) return;
+    // FINDING-05: Use the correctly-declared RECAPTCHA_V3_SCRIPT_ID constant
+    // (previously was referencing an undefined variable `RECAPTCHA_SCRIPT_ID`).
+    if (document.getElementById(RECAPTCHA_V3_SCRIPT_ID)) return;
     const script = document.createElement("script");
-    script.id = RECAPTCHA_SCRIPT_ID;
-    script.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`;
+    script.id = RECAPTCHA_V3_SCRIPT_ID;
+    // FINDING-05: Use the correctly-declared RECAPTCHA_V3_SITE_KEY variable
+    // (previously was referencing an undefined variable `RECAPTCHA_SITE_KEY`).
+    script.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_V3_SITE_KEY}`;
     script.async = true;
     script.defer = true;
     script.onload = () => {
@@ -127,13 +136,15 @@ function ReCaptchaV3Widget({ onChange, action = "submit" }) {
     let isSubscribed = true;
     window.grecaptcha.ready(() => {
       window.grecaptcha
-        .execute(RECAPTCHA_SITE_KEY, { action })
+        .execute(RECAPTCHA_V3_SITE_KEY, { action })
         .then((token) => {
           if (isSubscribed) onChange(token);
         })
         .catch((err) => {
+          // FINDING-06: On failure, pass null instead of a fake bypass token.
+          // The form will block submission and show "Please complete the security check."
           console.warn("reCAPTCHA v3 execution failed:", err);
-          if (isSubscribed) onChange("recaptcha-v3-active");
+          if (isSubscribed) onChange(null);
         });
     });
     return () => {
@@ -202,8 +213,23 @@ function HCaptchaWidget({ onChange }) {
   return <div ref={containerRef} className="flex justify-center" />;
 }
 
+// FINDING-19: SelfCheckChallenge is intentionally a development-only fallback.
+// It provides NO meaningful bot protection and MUST NOT be used in production
+// without a real captcha key configured.
 function SelfCheckChallenge({ onChange }) {
   const [state, setState] = useState("idle"); // idle | checking | verified
+
+  // Warn developers in production that no captcha key is set.
+  useEffect(() => {
+    if (import.meta.env.PROD) {
+      console.error(
+        "[CaptchaChallenge] WARNING: No CAPTCHA key is configured. " +
+        "The self-check fallback provides no real bot protection. " +
+        "Set VITE_HCAPTCHA_SITE_KEY, VITE_RECAPTCHA_V2_SITE_KEY, or VITE_RECAPTCHA_V3_SITE_KEY."
+      );
+    }
+  }, []);
+
   const timeoutRef = useRef(null);
 
   useEffect(() => () => clearTimeout(timeoutRef.current), []);

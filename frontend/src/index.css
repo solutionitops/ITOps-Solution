@@ -118,7 +118,7 @@ body {
   color: var(--text-base);
   font-family: "Readex Pro", system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+  text-rendering: optimizeSpeed;
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
@@ -334,28 +334,232 @@ html.light .enterprise-grid {
   animation: sonar-ping 1.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
 }
 
-/* Thin premium scrollbar */
-* {
+/* ── Platform orbit (InfrastructureTopology) ─────────────────────
+   `--orbit-tint` is registered as a <color> so the whole stage can
+   cross-fade to the active module's hue instead of snapping. */
+@property --orbit-tint {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #0ea5e9;
+}
+
+@property --beam-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* Dash pattern is 4/6, so a 100px step (10 periods) loops seamlessly. */
+@keyframes orbit-dash {
+  to {
+    stroke-dashoffset: -100;
+  }
+}
+
+@keyframes orbit-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Elliptical "solar wind" wave expanding from the core to the orbit. */
+@keyframes orbit-ripple {
+  0% {
+    transform: scale(0.18);
+    opacity: 0;
+  }
+
+  15% {
+    opacity: 0.75;
+  }
+
+  100% {
+    transform: scale(1.14);
+    opacity: 0;
+  }
+}
+
+@keyframes orbit-sonar {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+@keyframes orbit-drift {
+
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(6%, -8%, 0) scale(1.12);
+  }
+}
+
+@keyframes orbit-twinkle {
+
+  0%,
+  100% {
+    transform: scale(0.6);
+    opacity: 0.15;
+  }
+
+  50% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+}
+
+@keyframes orbit-gradient-pan {
+  to {
+    background-position: 200% center;
+  }
+}
+
+@keyframes orbit-beam {
+  to {
+    --beam-angle: 360deg;
+  }
+}
+
+@keyframes orbit-wheel {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  70%,
+  100% {
+    transform: translateY(6px);
+    opacity: 0;
+  }
+}
+
+.animate-orbit-dash {
+  animation: orbit-dash 14s linear infinite;
+}
+
+.animate-orbit-dash-rev {
+  animation: orbit-dash 22s linear infinite reverse;
+}
+
+.animate-orbit-spin-slow {
+  animation: orbit-spin 14s linear infinite;
+}
+
+/* Two corona ray fields turning against each other make the core shimmer. */
+.animate-sun-rays {
+  animation: orbit-spin 70s linear infinite;
+}
+
+.animate-sun-rays-rev {
+  animation: orbit-spin 110s linear infinite reverse;
+}
+
+.animate-orbit-ripple {
+  animation: orbit-ripple 5.4s cubic-bezier(0.2, 0.6, 0.35, 1) infinite;
+}
+
+.animate-orbit-sonar {
+  animation: orbit-sonar 2.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.animate-orbit-drift {
+  animation: orbit-drift 18s ease-in-out infinite;
+}
+
+.animate-orbit-twinkle {
+  animation: orbit-twinkle 4s ease-in-out infinite;
+}
+
+.animate-orbit-wheel {
+  animation: orbit-wheel 1.6s ease-in-out infinite;
+}
+
+/* Gradient headline text that slowly pans along its gradient. */
+.orbit-gradient-text {
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: orbit-gradient-pan 7s linear infinite;
+}
+
+/* A light beam that travels around a card's border. Only the 1.25px
+   padding ring survives the mask, so the card body stays untouched. */
+.orbit-beam-border {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.25px;
+  pointer-events: none;
+  background: conic-gradient(from var(--beam-angle),
+      transparent 0deg,
+      transparent 230deg,
+      var(--beam-color) 320deg,
+      transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: orbit-beam 4.5s linear infinite;
+}
+
+/* Scoped smooth scrollbars (avoid universal * selector which thrashes DOM nodes) */
+html,
+body,
+.custom-scrollbar,
+[data-scrollable] {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
-*::-webkit-scrollbar {
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+.custom-scrollbar::-webkit-scrollbar,
+[data-scrollable]::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-*::-webkit-scrollbar-thumb {
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+.custom-scrollbar::-webkit-scrollbar-thumb,
+[data-scrollable]::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.15);
   border-radius: 8px;
 }
 
-html.light * {
+html.light,
+html.light body,
+html.light .custom-scrollbar,
+html.light [data-scrollable] {
   scrollbar-color: rgba(15, 23, 42, 0.18) transparent;
 }
 
-html.light *::-webkit-scrollbar-thumb {
+html.light::-webkit-scrollbar-thumb,
+html.light body::-webkit-scrollbar-thumb,
+html.light .custom-scrollbar::-webkit-scrollbar-thumb,
+html.light [data-scrollable]::-webkit-scrollbar-thumb {
   background: rgba(15, 23, 42, 0.18);
+}
+
+/* Performance enhancements: GPU layer isolation and off-screen containment */
+.gpu-layer {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.content-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 700px;
 }
 
 /* Custom sleek scrollbar for sidebar navigation */
@@ -363,19 +567,132 @@ html.light *::-webkit-scrollbar-thumb {
   width: 6px;
   height: 6px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(148, 163, 184, 0.35);
   border-radius: 9999px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(99, 102, 241, 0.6);
 }
+
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.18);
 }
+
 .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(99, 102, 241, 0.6);
+}
+
+/* ── Cyber-Ops Command Center Aesthetic Tokens & Animations ── */
+.cyber-glass {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+}
+
+html.light .cyber-glass {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.75) 100%);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+}
+
+.cyber-badge {
+  font-family: "Geist Mono", monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  background: rgba(0, 240, 255, 0.08);
+  color: #67eafb;
+}
+
+html.light .cyber-badge {
+  border: 1px solid rgba(2, 125, 140, 0.25);
+  background: rgba(2, 125, 140, 0.06);
+  color: #027d8c;
+}
+
+.radar-sweep-beam {
+  position: absolute;
+  inset: -100%;
+  background: conic-gradient(from 0deg at 50% 50%, rgba(0, 240, 255, 0.18) 0deg, transparent 55deg, transparent 360deg);
+  animation: radar-sweep 5s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes radar-sweep {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.cyber-glow-box {
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cyber-glow-box::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.35), transparent 50%, rgba(167, 139, 250, 0.35));
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.cyber-glow-box:hover::after {
+  opacity: 1;
+}
+
+@keyframes laser-scan {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+
+  30% {
+    opacity: 1;
+  }
+
+  70% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(350%);
+    opacity: 0;
+  }
+}
+
+.circuit-dot {
+  position: relative;
+}
+
+.circuit-dot::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.3;
+  animation: pulse-glow 1.8s ease-in-out infinite;
 }

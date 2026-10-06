@@ -14,17 +14,17 @@ const EASE = [0.16, 1, 0.3, 1];
  * here claims a capability, it just decides how the page looks).
  * ────────────────────────────────────────────────────────────────────── */
 export const PRODUCT_IDENTITY = {
-  "website-api-monitoring": { category: "Monitoring", tint: "cyan", bg: "radar" },
-  "security-monitoring": { category: "Security", tint: "emerald", bg: "radar" },
-  "kada-nigrani": { category: "Monitoring", tint: "blue", bg: "radar", extra: "Linux agent · one-line install" },
-  "infrastructure-monitor": { category: "Monitoring", tint: "violet", bg: "radar" },
-  "devops-monitor": { category: "Monitoring", tint: "amber", bg: "radar" },
-  "alerting-incident-response": { category: "Operations", tint: "rose", bg: "radar" },
-  "moonsav-edr": { category: "Endpoint Security", tint: "red", bg: "storm" },
-  cybersachet: { category: "Training", tint: "rose", bg: "storm" },
-  academy: { category: "Training", tint: "amber", bg: "radar" }
+  "website-api-monitoring": { category: "Monitoring", tint: "cyan", bg: "radar", cover: "/covers/website-api.jpg" },
+  "security-monitoring": { category: "Security", tint: "emerald", bg: "radar", cover: "/covers/security.jpg" },
+  "kada-nigrani": { category: "Monitoring", tint: "blue", bg: "radar", cover: "/covers/servers.jpg", extra: "Linux agent · one-line install" },
+  "infrastructure-monitor": { category: "Monitoring", tint: "violet", bg: "radar", cover: "/covers/network.jpg" },
+  "devops-monitor": { category: "Monitoring", tint: "amber", bg: "radar", cover: "/covers/devops.jpg" },
+  "alerting-incident-response": { category: "Operations", tint: "rose", bg: "radar", cover: "/covers/incidents.jpg" },
+  "moonsav-edr": { category: "Endpoint Security", tint: "red", bg: "storm", cover: "/covers/edr.jpg" },
+  cybersachet: { category: "Training", tint: "rose", bg: "storm", cover: "/covers/cybersachet.jpg" },
+  academy: { category: "Training", tint: "amber", bg: "radar", cover: "/covers/academy.jpg" }
 };
-const DEFAULT_IDENTITY = { category: "Platform", tint: "white", bg: "radar" };
+const DEFAULT_IDENTITY = { category: "Platform", tint: "white", bg: "radar", cover: "/covers/website-api.jpg" };
 export function getProductIdentity(itemKey) {
   return PRODUCT_IDENTITY[itemKey] ?? DEFAULT_IDENTITY;
 }
@@ -114,7 +114,19 @@ export function ProductHero({ itemKey, title, subtitle, body, status, capabiliti
   const identity = getProductIdentity(itemKey);
   const liveCount = capabilities.filter(c => c.status === "live").length;
   const roadmapCount = capabilities.length - liveCount;
-  return <section className="relative isolate overflow-hidden rounded-3xl bg-[#0b1020] light:bg-white light:border light:border-slate-900/10 light:shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_20px_60px_-30px_rgba(15,23,42,0.15)]">
+  return <section className="relative isolate overflow-hidden rounded-3xl bg-[#0b1020] border border-white/10 light:bg-white light:border-slate-900/10 light:shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_20px_60px_-30px_rgba(15,23,42,0.15)]">
+      {/* High-res Module Cover Background Overlay */}
+      {identity.cover && (
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden select-none">
+          <img
+            src={identity.cover}
+            alt=""
+            className="h-full w-full object-cover opacity-25 dark:opacity-30 filter contrast-125 brightness-90 transition-transform duration-1000 scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0b1020] via-[#0b1020]/80 to-transparent light:from-white light:via-white/80 light:to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0b1020]/95 via-[#0b1020]/70 to-transparent light:from-white/95 light:via-white/75 light:to-transparent" />
+        </div>
+      )}
       <ProductBackground itemKey={itemKey} />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-black light:to-white" />
       <div className="relative z-10 grid gap-10 p-6 pb-12 pt-10 md:p-12 md:pb-16 md:pt-14 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:gap-14">

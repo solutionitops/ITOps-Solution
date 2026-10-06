@@ -28,6 +28,12 @@ export async function fetchPlanCatalog() {
     maxHosts: row.max_hosts ?? 1
   })).sort((a, b) => PLAN_ORDER.indexOf(a.plan) - PLAN_ORDER.indexOf(b.plan));
 }
+// FINDING-11: Simple in-memory cache for the current org ID keyed by session
+// user ID. Prevents N+1 round trips when multiple queries fire simultaneously
+// in the same render cycle (Dashboard, Monitors, etc. all call this on mount).
+// Cleared whenever the logged-in user changes so it never serves stale data.
+let _orgIdCache = null; // { userId: string, organizationId: string } | null
+
 async function currentOrganizationId() {
   const {
     data: {
@@ -35,6 +41,11 @@ async function currentOrganizationId() {
     }
   } = await supabase.auth.getSession();
   if (!session) throw new Error("Not signed in");
+
+  // Return cached value if the same user is still logged in.
+  if (_orgIdCache && _orgIdCache.userId === session.user.id) {
+    return _orgIdCache.organizationId;
+  }
 
   // Resolved via the caller's membership row rather than a bare
   // `.from("organizations").single()` — a platform admin can see every
@@ -44,7 +55,15 @@ async function currentOrganizationId() {
     error
   } = await supabase.from("memberships").select("organization_id").eq("user_id", session.user.id).single();
   if (error || !data) throw new Error(error?.message ?? "No organization found for the current user");
+
+  _orgIdCache = { userId: session.user.id, organizationId: data.organization_id };
   return data.organization_id;
+}
+
+// Call this on logout / user switch so the cache never serves a previous
+// user's org ID to a newly-logged-in session.
+export function clearOrganizationIdCache() {
+  _orgIdCache = null;
 }
 export async function fetchDashboardSummary() {
   const {
@@ -253,16 +272,22 @@ export async function deleteAsset(id) {
 }
 export async function fetchIncidents(status) {
   const organizationId = await currentOrganizationId();
+  const LIMIT = 200;
   let query = supabase.from("incidents").select("*, monitor:monitors(id, name, url)").eq("organization_id", organizationId).order("started_at", {
     ascending: false
-  }).limit(200);
+  }).limit(LIMIT);
   if (status) query = query.eq("status", status);
   const {
     data,
     error
   } = await query;
   if (error) throw new Error(error.message);
-  return (data ?? []).map(mapIncident);
+  const items = (data ?? []).map(mapIncident);
+  // FINDING-17: Surface a truncation flag as an array property so callers expecting
+  // an array (Dashboard, AppSearch, NotificationCenter) don't break, while
+  // Incidents page can inspect incidents?.truncated.
+  items.truncated = items.length >= LIMIT;
+  return items;
 }
 export async function fetchAlertChannels() {
   const organizationId = await currentOrganizationId();

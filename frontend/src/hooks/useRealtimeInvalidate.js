@@ -23,7 +23,11 @@ export function useRealtimeInvalidate(tables, queryKeys) {
   keysRef.current = queryKeys;
   useEffect(() => {
     if (!organization) return;
-    const channel = supabase.channel(`org-${organization.id}-rt-${Date.now()}`);
+    // FINDING-12: Use a stable, deterministic channel name (no Date.now() suffix).
+    // The old pattern could leave orphaned subscriptions if the cleanup ran late,
+    // because each re-subscribe created a unique channel that couldn't be matched
+    // to the previous one for proper teardown.
+    const channel = supabase.channel(`org-${organization.id}-realtime`);
     for (const table of tablesRef.current) {
       channel.on("postgres_changes", {
         event: "*",

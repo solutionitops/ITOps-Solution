@@ -5,6 +5,8 @@
   <script>
     const q = new URLSearchParams(location.search);
     document.documentElement.className = q.get("theme") === "light" ? "light" : "dark";
+    // ThemeProvider reads the stored theme, so seed it from the query too.
+    localStorage.setItem("itops-theme", document.documentElement.className);
     if (q.get("shift")) {
       // Headless screenshots always capture at scrollTop 0, so emulate a
       // scrolled page by lifting the document instead.

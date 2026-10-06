@@ -37,6 +37,11 @@ const PRODUCT_META = {
     gradient: "linear-gradient(135deg, #1e1b4b, #dc2626)",
     glyph: <path d="M12 3l7 3v5c0 4.6-3 8.6-7 10-4-1.4-7-5.4-7-10V6l7-3zm-3 9l2 2 4-4.5" stroke="#fff" strokeWidth="1.7" fill="none" strokeLinecap="round" strokeLinejoin="round" />
   },
+  cybersachet: {
+    label: "CyberSachet",
+    gradient: "linear-gradient(135deg, #9d174d, #f472b6)",
+    glyph: <path d="M12 3l7 3v5c0 4.6-3 8.6-7 10-4-1.4-7-5.4-7-10V6l7-3zm0 6v4m0 3h.01" stroke="#fff" strokeWidth="1.7" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+  },
   academy: {
     label: "Moonsav ITOps Academy",
     gradient: "linear-gradient(135deg, #f59e0b, #6366f1)",

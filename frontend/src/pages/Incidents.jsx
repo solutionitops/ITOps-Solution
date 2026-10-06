@@ -250,6 +250,11 @@ export default function Incidents() {
                 </motion.li>;
         })}
           </ul>}
+        {incidents?.truncated && (
+          <div className="border-t border-amber-500/20 bg-amber-500/10 px-4 py-2.5 text-center text-xs text-amber-200 light:text-amber-800">
+            Showing the 200 most recent incidents — older incidents are archived.
+          </div>
+        )}
       </SpotlightCard>
     </div>;
 }

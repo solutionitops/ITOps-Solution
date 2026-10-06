@@ -1,38 +1,33 @@
 <!doctype html>
 <html lang="en" class="dark">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <title>ITOps Solution — Infrastructure, Website & Security Monitoring</title>
-    <meta
-      name="description"
-      content="ITOps Solution builds real-time monitoring products: ITOps Monitor for websites, APIs and security, Kada Nigrani for servers, and CyberSachet for security awareness. Know before your customers do."
-    />
-    <meta name="theme-color" content="#0b0f19" />
 
-    <!-- Open Graph / social sharing -->
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="ITOps Solution" />
-    <meta property="og:title" content="ITOps Solution — Infrastructure, Website & Security Monitoring" />
-    <meta
-      property="og:description"
-      content="Real-time monitoring products for websites, APIs, servers, and security. Monitor everything. Prevent downtime."
-    />
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="ITOps Solution — Monitor everything. Prevent downtime." />
-    <meta
-      name="twitter:description"
-      content="Uptime, keyword, status-code and DNS checks, SSL & security scoring, server monitoring agents, incidents and public status pages."
-    />
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="alternate icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/favicon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <title>ITOps Solution — Infrastructure, Website & Security Monitoring</title>
+  <meta name="description"
+    content="ITOps Solution builds real-time monitoring products: ITOps Monitor for websites, APIs and security, Kada Nigrani for servers, and CyberSachet for security awareness. Know before your customers do." />
+  <meta name="theme-color" content="#0b0f19" />
 
-    <script type="application/ld+json">
+  <!-- Open Graph / social sharing -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ITOps Solution" />
+  <meta property="og:title" content="ITOps Solution — Infrastructure, Website & Security Monitoring" />
+  <meta property="og:description"
+    content="Real-time monitoring products for websites, APIs, servers, and security. Monitor everything. Prevent downtime." />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="ITOps Solution — Monitor everything. Prevent downtime." />
+  <meta name="twitter:description"
+    content="Uptime, keyword, status-code and DNS checks, SSL & security scoring, server monitoring agents, incidents and public status pages." />
+
+  <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "Organization",
@@ -41,9 +36,40 @@
         "sameAs": []
       }
     </script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+
+  <!-- Brand intro preloader (see BRAND-LOADER.md). The 6s CSS animation hides it even if JS never runs. -->
+  <style>
+    #itops-preloader {
+      position: fixed; inset: 0; z-index: 2147483647;
+      display: grid; place-items: center;
+      background: #0b0f19;
+      transition: opacity .6s ease, visibility .6s;
+      animation: itops-preloader-out .6s ease 6s forwards;
+    }
+    #itops-preloader.is-light { background: #f6f7fb; }
+    #itops-preloader img { width: min(88vw, 760px); height: auto; aspect-ratio: 1578 / 512; visibility: hidden; }
+    #itops-preloader img.is-ready { visibility: visible; }
+    #itops-preloader.is-done { opacity: 0; visibility: hidden; }
+    @keyframes itops-preloader-out { to { opacity: 0; visibility: hidden; } }
+  </style>
+</head>
+
+<body>
+  <div id="itops-preloader" aria-hidden="true"><img alt="" decoding="async" /></div>
+  <script>
+    // Plays on every full page load (never on in-app route changes); theme follows ThemeContext's
+    // "itops-theme" key (default dark). Hides when BOTH the page has loaded AND the intro has played (3.6s) + 0.5s hold.
+    (function () {
+      var p = document.getElementById("itops-preloader"), img = p.firstElementChild, n = 0, dark = true;
+      try { dark = localStorage.getItem("itops-theme") !== "light"; } catch (e) {}
+      function done() { if (++n === 2) { p.classList.add("is-done"); setTimeout(function () { p.remove(); }, 700); } }
+      img.onload = function () { img.className = "is-ready"; setTimeout(done, matchMedia("(prefers-reduced-motion: reduce)").matches ? 400 : 4100); };
+      img.onerror = done; addEventListener("load", done);
+      p.className = dark ? "" : "is-light"; img.src = dark ? "/itops-loader-dark.svg" : "/itops-loader.svg";
+    })();
+  </script>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
 </html>

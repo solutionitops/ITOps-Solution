@@ -165,7 +165,10 @@ export default function InviteAccept() {
     // OAuth redirect completes and a real session exists — OAuth signups
     // never carry the options.data payload handle_new_user() reads an
     // invite_token from, so redemption happens just after, not at signup.
+    // FINDING-09: Write a 5-minute expiry alongside the token so a stale
+    // token isn't accidentally redeemed by a different user.
     sessionStorage.setItem(PENDING_INVITE_STORAGE_KEY, token);
+    sessionStorage.setItem("pending_invite_expires", String(Date.now() + 5 * 60 * 1000));
     try {
       await loginWithGoogle();
     } catch (err) {

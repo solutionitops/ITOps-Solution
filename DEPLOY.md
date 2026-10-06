@@ -45,10 +45,21 @@ Pushes any new `supabase/migrations/*.sql` and redeploys the edge functions
 
 ## Super-admin (platform owner)
 
-Migration `0022_seed_superadmin.sql` seeds the platform owner on deploy:
+> [!CAUTION]
+> **MANDATORY FIRST-DEPLOY STEP:** The migration seeds a default platform-admin
+> account so the panel is accessible immediately after deploy. You **MUST** log
+> into `/admin/login` and change the password before any customer goes live.
+> The seed email and password are **NOT** committed here for security reasons —
+> find them in your private `.env` or secrets manager (see below).
 
-- **email:** `babulearn57@gmail.com`
-- **password:** `admin@123`  *(rotate after first login)*
+Migration `0022_seed_superadmin.sql` seeds the platform owner on deploy.
+Set these values as Supabase secrets **before** running `deploy.sh`:
+
+```bash
+# Store privately — never commit to the repo
+SEED_ADMIN_EMAIL="<your-admin-email>"
+SEED_ADMIN_PASSWORD="<rotate-after-first-login>"   # min 12 chars, change immediately
+```
 
 On the **first deploy** it also wipes all test data (monitors, orgs, users) for a
 clean slate; on **subsequent deploys** it never wipes — it only ensures the
